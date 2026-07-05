@@ -91,7 +91,7 @@ fear water man remember fear   # the ache returns — it says "fear" twice
 me and dark spirit question    # reaching for a question it has no glyph to end
 ```
 
-these are not illustrations. they are `./l 42` word for word, and because one organism is deterministic in its seed, your build will say exactly the same things back to you.
+these are not illustrations. they are five of the fourteen lines it speaks in a single life — `./l 42` verbatim, in order but not consecutive (`water and man stone woman` lives between the third and the fourth). because one organism is deterministic in its seed, your build speaks the same fourteen, these among them, exactly.
 
 the chorus — four cells, each woken on a different quarter of the book, diverging in character before they ever meet (a real `./l chorus 4 7`; forks race, so unlike the solo it is not bit-identical run to run, but every line below is verbatim from one):
 
