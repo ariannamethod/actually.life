@@ -154,10 +154,19 @@ the colony breathes and dies.
     kills the hard endgame loop (a looping dreamer starves on its own
     predictability). Endgame now murmurs varied permutations, not a stuck cycle.
     Lives/dies (2548), deterministic, ASan-clean.
-  - **③ Coherence-selected speech (pending).** speak costs energy, refunded by
-    coherence → the colony evolves toward coherent voices with zero supervision.
+  - **③ Coherence-selected speech (done).** speak returns its mean coherence;
+    caller charges `energy -= SPEAK_COST*SPEAK_LEN*(1-coh)` — coherent speech is
+    nearly free, babble drains. incoherent cells die faster → living cells skew
+    coherent: coherence as a fitness cost, selection through the ether. HONEST
+    scope: individual selection, NOT heritable evolution — the governor spawns
+    fresh random bodies, so coherence isn't inherited; heritable warm-start births
+    are a separate piece. Lives/dies (2436), deterministic, ASan-clean.
 
-**Next:** idea ③, then finish the README (Oleg's draft, quote-heavy).
+**Karpathy trilogy COMPLETE.** The one online field now pays for itself three ways:
+attention (①), appetite (②), fitness (③). Zero training, one file.
+
+**Next:** finish the README (Oleg's draft → Claude edits). Optional later: heritable
+governor births (turns ③'s selection into real evolution).
 - **Phase 4 — SIMPLIFICATION** ⏳ — after functional, spawn Opus subagents
   (`model:"opus"`, manual, not the plugin) to find dead constructs / redundancy
   that don't kill functionality; apply by hand; re-run all Phase 0–3 checks.
