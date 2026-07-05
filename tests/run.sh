@@ -14,8 +14,8 @@ cd "$(dirname "$0")/.." || exit 2
 ROOT=$(pwd)
 CC=${CC:-cc}
 L=/tmp/al_test.$$
-SOLO_MD5=7be825c4e117183849a0a7fe06b72db0   # md5 of ./l 42 waste.log — the frozen solo trajectory (PROTEOSTASIS on)
-FROZEN_MD5=a490a453858581bc11a9d9624d1a95b3 # ...and with proteostasis OFF (NL_NOCORRODE+NL_NOREPAIR) — the pre-living-body trajectory
+SOLO_MD5=814edcf481762691b5296c94460a800c   # md5 of ./l 42 waste.log — the frozen solo trajectory (proteostasis + self-model on)
+FROZEN_MD5=a490a453858581bc11a9d9624d1a95b3 # ...with EVERY new organ off (NL_NOCORRODE+NL_NOREPAIR+NL_NOSELF) — the pre-living-body trajectory
 
 PASS=0; FAIL=0
 ok(){ PASS=$((PASS+1)); printf '  \033[32m✓\033[0m %s\n' "$1"; }
@@ -99,10 +99,10 @@ echo "$MOUTH" | grep -q 'ate:' && ok "mouth digests input (no word spat back une
 
 # ── 8b. PROTEOSTASIS: the body is autopoietic — it corrodes and is rebuilt by eating ─
 echo; echo "proteostasis (the living, self-repairing body)"
-# gate invariant: with corrosion AND repair OFF, the organism is the pre-living-body one
-NL_NOCORRODE=1 NL_NOREPAIR=1 "$L" 42 >/dev/null 2>&1; OFF=$(md5of lifeis/waste.log)
-[ "$OFF" = "$FROZEN_MD5" ] && ok "proteostasis fully OFF reproduces the frozen-body trajectory (clean gated add)" \
-                           || no "proteostasis-OFF drifted from the frozen-body hash" "got $OFF"
+# gate invariant: with EVERY new organ OFF, the organism is bit-for-bit the pre-living-body one
+NL_NOCORRODE=1 NL_NOREPAIR=1 NL_NOSELF=1 "$L" 42 >/dev/null 2>&1; OFF=$(md5of lifeis/waste.log)
+[ "$OFF" = "$FROZEN_MD5" ] && ok "all new organs OFF reproduce the frozen-body trajectory (clean gated adds)" \
+                           || no "organs-OFF drifted from the frozen-body hash" "got $OFF"
 # load-bearing: corrosion ON but repair OFF, SAME food — the body must dissolve and die EARLIER
 FULL=$("$L" 42 2>&1 | grep -o 'died at tick [0-9]*' | grep -o '[0-9]*' | head -1)
 ROT=$(NL_NOREPAIR=1 "$L" 42 2>&1 | grep -o 'died at tick [0-9]*' | grep -o '[0-9]*' | head -1)
@@ -115,6 +115,23 @@ fi
 HOLD=$(NL_DEBUG=1 "$L" 42 2>&1 >/dev/null | grep -o 'death=[0-9.]*' | head -1)
 echo "$HOLD" | grep -q 'death=50[0-9]' && ok "a fed body holds its mass through life ($HOLD ≈ birth 503)" \
                                        || no "fed body did not hold its mass" "$HOLD"
+
+# ── 8c. ProtoSelf: a second-order self-model that earns its keep (feeling, built) ────
+echo; echo "the proto-self (a forecast of its own interior, load-bearing)"
+# genuine map, not a label: turning it on changes the trajectory
+SELF_ON=$("$L" 42 >/dev/null 2>&1; md5of lifeis/waste.log)
+NL_NOSELF=1 "$L" 42 >/dev/null 2>&1; SELF_OFF=$(md5of lifeis/waste.log)
+[ "$SELF_ON" != "$SELF_OFF" ] && ok "the self-model changes the organism's dynamics (a map, not a label)" \
+                              || no "NL_NOSELF changed nothing — the self-model is inert"
+# load-bearing (Damasio's test 5): a cell that forecasts+damps its own storm out-survives a self-blind one
+sw=0; sl=0
+for s in 1 42 99 256 777 2024; do
+  a=$("$L" $s 2>&1 | grep -o 'died at tick [0-9]*' | grep -o '[0-9]*' | head -1)
+  b=$(NL_NOSELF=1 "$L" $s 2>&1 | grep -o 'died at tick [0-9]*' | grep -o '[0-9]*' | head -1)
+  [ -n "$a" ] && [ -n "$b" ] && { [ "$a" -gt "$b" ] && sw=$((sw+1)); [ "$a" -lt "$b" ] && sl=$((sl+1)); }
+done
+[ "$sw" -gt "$sl" ] && ok "the self-model confers a survival advantage (wins $sw / loses $sl across seeds — allostasis earns its keep)" \
+                    || no "the self-model gave no survival advantage (wins $sw loses $sl)"
 
 # ── 9. AddressSanitizer / UBSan (opt-in: the strongest correctness pass) ───────
 if [ "${1:-}" = "--asan" ]; then

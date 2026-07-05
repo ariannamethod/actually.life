@@ -595,6 +595,8 @@ static float g_field_row[VOCAB_CAP];             /* row sums, for normalization 
 static float g_coh_floor = 0.0f;                 /* drifting silence-gate (Stanley) */
 static int   g_field_on  = 1;                    /* NL_NOFIELD=1 lifts the field (A/B) */
 static int   g_lineage   = -1;                   /* Ⓒ: the cell's root ancestor — kinship for the ether */
+static int   g_self_on   = 1;                    /* ProtoSelf: NL_NOSELF=1 lifts the self-model (A/B) */
+static float g_self_felt = 0.0f;                 /* ProtoSelf: |interior − its own forecast| — surprise ABOUT the self */
 
 static float digest(Model* m, Modes* mo, float* scar, const int* glyphs, int prev0, int n){
     static float before[RANK*E];
@@ -723,10 +725,14 @@ static void field_fold(float* logits, const int* recent, int recent_n){
 }
 
 /* choose — the organism picks ONE glyph from the fork. NOT argmax: a seeded,
- * passion-weighted draw. the metric (logit) is the input, not the verdict. this
- * is where it becomes a subject — choice = subjectivity. */
+ * passion-weighted draw. the metric (logit) is the input, not the verdict. arousal
+ * widens the draw — and with the self-model on, arousal is not the raw interior |S| but
+ * FELT: how far the interior departed from the organism's OWN forecast of itself. an
+ * agitation it predicted leaves it calm; only the UNforeseen widens the choice. that is
+ * a second-order map consulted by the actor — a proto-self biasing the act, not a label. */
 static int choose(const float* logits, const Modes* mo, const float* scar){
-    float temp = CHOOSE_TEMP0 + CHOOSE_S*fabsf(mo->S)
+    float arousal = g_self_on ? g_self_felt : fabsf(mo->S);       /* feeling is about the unexpected, not the raw state */
+    float temp = CHOOSE_TEMP0 + CHOOSE_S*arousal
                + CHOOSE_DISS*tanhf(0.05f*fabsf(mo->dissonance));  /* passion -> spontaneity */
     static float p[VOCAB_CAP]; float mx=-1e30f;
     int hi = VOCAB + g_n_emerged;                                 /* born glyphs only */
@@ -745,6 +751,32 @@ static int choose(const float* logits, const Modes* mo, const float* scar){
     float acc=0.0f;
     for(int i=0;i<VOCAB_CAP;i++){ acc+=p[i]; if(p[i]>0.0f && acc>=r) return i; }
     return 0;
+}
+
+/* ── ProtoSelf (Damasio's "feeling of what happens", built) ──────────────────────
+ * a second-order map: the organism carries a running FORECAST of its own next interior
+ * (S, dissonance) from its current interior, and learns that forecast online (LMS). the
+ * ERROR of the forecast — how far it departed from what it expected of itself — is `felt`,
+ * homeostatic surprise ABOUT the self, and it is read back into choose() as arousal. this
+ * is not the interior state S (that would be first-order, a thermostat's temperature acting
+ * on its relay); it is a MODEL of the interior that the actor consults. a thermostat holds
+ * no forecast of its own future temperature; this does. the felt signal is load-bearing:
+ * a cell whose agitation it foresaw stays calm and draws tightly (cheap), so a working
+ * self-model lowers thrash and out-survives a self-blind one. NL_NOSELF lifts it (A/B). */
+#define SELF_K    3               /* features: bias, S, dissonance */
+#define SELF_LR   0.02f           /* online least-mean-squares rate for the self-forecast */
+#define SELF_RELAX 0.30f          /* ALLOSTASIS: the cell damps its OWN forecast agitation before it turns lethal */
+typedef struct { float wS[SELF_K], wD[SELF_K]; float pS, pD; } ProtoSelf;
+static void self_predict(ProtoSelf* ps, float S, float D){       /* forecast the interior at tick's end from its start */
+    float f[SELF_K]={1.0f,S,D};
+    ps->pS=0.0f; ps->pD=0.0f;
+    for(int k=0;k<SELF_K;k++){ ps->pS+=ps->wS[k]*f[k]; ps->pD+=ps->wD[k]*f[k]; }
+}
+static float self_update(ProtoSelf* ps, float S0, float D0, float S1, float D1){ /* learn; return felt */
+    float f[SELF_K]={1.0f,S0,D0};
+    float eS=S1-ps->pS, eD=D1-ps->pD;                            /* the interior surprised its own forecast by this much */
+    for(int k=0;k<SELF_K;k++){ ps->wS[k]+=SELF_LR*eS*f[k]; ps->wD[k]+=SELF_LR*eD*f[k]; }
+    return fabsf(eS)+fabsf(eD);
 }
 /* ── THE ETHER — one cell's voice becomes another's food ─────────────────────
  * eat the chorus: read the most recent utterance from ANOTHER cell out of the
@@ -1020,6 +1052,9 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     int   dream_on = (getenv("NL_NODREAM")==NULL);
     int   soma_on  = (getenv("NL_NOCORRODE")==NULL);   /* PROTEOSTASIS: soma decay (destruction) */
     int   repair_on= (getenv("NL_NOREPAIR")==NULL);    /* PROTEOSTASIS: consolidation (production) */
+    g_self_on      = (getenv("NL_NOSELF")==NULL);      /* ProtoSelf: the second-order self-model (A/B) */
+    g_self_felt    = 0.0f;
+    ProtoSelf ps; memset(&ps,0,sizeof ps);             /* the forecast starts flat — it must learn its own interior */
     float scar_total=0.0f;
     int   recent[CTX]; int recent_n=0;
     long  dream_streak=0;
@@ -1036,6 +1071,10 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     int   fed=(food?1:0);                           /* ether-born cells start hungry, on the chorus */
     while(energy>0.0f && tick<200000){          /* cap = falsification guard: it MUST die */
         tick++;
+        float S0=mo.S, D0=mo.dissonance;            /* the interior at tick's start — what the self-model forecasts FROM */
+        if(g_self_on){ self_predict(&ps,S0,D0);      /* ProtoSelf: forecast this tick's interior before it happens */
+            mo.S -= SELF_RELAX * ps.pS;              /* ALLOSTASIS: pre-damp the FORECAST agitation — regulate ahead of the */
+        }                                            /* threat, not merely react to it; a cell that foresees its own storm survives it */
         if(soma_on) soma_decay(m);                  /* PROTEOSTASIS destruction: the body corrodes with time */
         float integ = (soma_on && birth_norm>0.0f) ? wv_norm(m)/birth_norm : 1.0f; if(integ>1.0f) integ=1.0f;
         energy -= RENT * (1.0f + (scar_on? SCAR_RENT*scar_total : 0.0f)      /* wounds cost, and so does a corroded body: */
@@ -1073,6 +1112,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         }
         scar_total=0.0f; for(int i=0;i<VOCAB_CAP;i++) scar_total+=scar[i];
         if(homeo_on){ mo.dissonance *= DISS_DECAY; mo.S -= S_RELAX*mo.S; }
+        if(g_self_on) g_self_felt=self_update(&ps,S0,D0,mo.S,mo.dissonance); /* ProtoSelf: the interior settled — how far did it stray from its own forecast? */
         if(fabsf(mo.S) >= S_DEATH){ contour_died=1; break; }
         if(recent_n>0){                                   /* the field's confidence about what follows */
             float coh=field_coherence(recent[recent_n-1]);

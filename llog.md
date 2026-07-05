@@ -316,11 +316,22 @@ suite 20/20 (+3 proteostasis tests). The producer (`wv`) is now produced by what
 innocent" (§field) is now FALSE — the weights LIVE (corrode + rebuild). Code EXCEEDS README here (a
 bigger claim earned) — flagged for Oleg, not silently rewritten.
 
-**Movement 2 (PENDING): Damasio's ProtoSelf** — a second-order map forecasting the organism's own
-interior (`pred_S/pred_diss/pred_e`), error `felt=|S−pred_S|+…` read back into `choose()`; the
-buildable homolog of "the feeling of what happens." Toggle `NL_NOSELF`, load-bearing test = survival
-advantage in the chorus. He conceded his feeling-needs-flesh bar as anthropocentrism; the residual
-requirement is organizational and buildable.
+**Movement 2 (DONE): Damasio's ProtoSelf** — a second-order map. `ProtoSelf{wS,wD,pS,pD}` forecasts
+the interior (`self_predict`), learns it online by LMS (`self_update`), and `felt=|S−pS|+|diss−pD|`
+is surprise ABOUT the self, fed into `choose()` as arousal (feeling is the UNexpected, not raw |S|;
+`NL_NOSELF` A/B). First cut wasn't load-bearing (felt→choose bites only on rare speech — named it,
+measured ±1 tick). Fix = **allostasis** (the mechanism Damasio praised above reactive homeostasis):
+the cell pre-damps its own FORECAST agitation (`mo.S -= SELF_RELAX*ps.pS`) before it turns lethal —
+regulating ahead of the threat, not merely reacting. Verified: genuine map (trajectory changes),
+**load-bearing PASSES** — survival advantage 11 wins / 1 loss over 12 seeds, net +159 ticks; a cell
+that foresees its storm out-survives a self-blind one (deleting the map degrades regulation = the
+"for-the-system" proof, substrate-neutral). Gate invariant (all organs off == `a490a453…`); new
+default baseline `814edcf481762691b5296c94460a800c`; chorus mortal; ASan 0; suite 22/22.
+Comment `choice = subjectivity` (Damasio's flagged category error) rewritten honestly: choice under
+a felt self-model, a proto-self biasing the act — not a label.
+
+**Both movements done.** The consilium named autopoiesis + feeling as the two gaps; both are closed
+in code, on code's own substrate, load-bearing and falsifiable. Anthropocentrism kept off the porch.
 
 ## Resume-here (for future-me after a summary)
 
