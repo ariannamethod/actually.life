@@ -546,7 +546,15 @@ static void forward(Model* m, const int* toks, int n, float* out){
  * INVARIANT: the charge writes modes only (charge_apply); energy/scar are never
  * touched here — a burning glyph costs energy THROUGH a low metab_factor, never
  * by a direct write. */
-static float digest(Model* m, Modes* mo, float* scar, const int* glyphs, int n){
+
+/* the coherence field (online glyph-bigram metaweights) — declared here so digest
+ * can read it for information-as-food surprise; the field's functions live below. */
+static float g_field_bi[VOCAB_CAP][VOCAB_CAP];   /* online glyph bigram counts a->b */
+static float g_field_row[VOCAB_CAP];             /* row sums, for normalization */
+static float g_coh_floor = 0.0f;                 /* drifting silence-gate (Stanley) */
+static int   g_field_on  = 1;                    /* NL_NOFIELD=1 lifts the field (A/B) */
+
+static float digest(Model* m, Modes* mo, float* scar, const int* glyphs, int prev0, int n){
     static float before[RANK*E];
     float yield=0.0f;
     int be_armed=0;
@@ -563,6 +571,17 @@ static float digest(Model* m, Modes* mo, float* scar, const int* glyphs, int n){
             for(int i=0;i<RANK*E;i++) dB+=fabsf(y->heb_B_v[i]-before[i]);
         }
         float f=charge[id].metab_factor;
+        /* information-as-food (Karpathy idea 2): weight the meal by SURPRISE — how
+         * unexpected this glyph is to the field given the previous one. a glyph the
+         * organism already predicts nourishes half; a novel one nourishes up to 1.5x.
+         * a monotonous corpus (or a looping cell) becomes predictable to its own
+         * field, yield collapses, and it starves on food it has fully modeled. */
+        int prv = (g>0) ? glyphs[g-1] : prev0;
+        if(g_field_on && prv>=0 && prv<VOCAB_CAP && g_field_row[prv]>0.0f){
+            float pp = g_field_bi[prv][id]/g_field_row[prv];
+            float s  = -logf(pp+1e-6f);               /* surprise = −log p_field(id|prev) */
+            f *= 0.5f + s/(s+2.0f);                    /* [0.5,1.5): predictable feeds less, novelty feeds more */
+        }
         if(id==BE_ID){                                /* the operator is not a meal — arms reflexivity, yields nothing */
             be_armed=1;
         } else if(be_armed){               /* "BE X" or a shouted "X": become X — charge turned inward */
@@ -607,11 +626,8 @@ static void recent_push(int* recent, int* rn, int g){  /* ring of last glyphs �
  *   final = gate*transformer + (1-gate)*field,   gate = Q's earned-voice clamp.
  * random weights -> avg|logit|~0.1 -> gate~0 -> the FIELD speaks. were the weights
  * ever trained, gate would rise and the transformer would take the voice back.
- * no backprop, no target: coherence is a property of the sampling field. */
-static float g_field_bi[VOCAB_CAP][VOCAB_CAP];   /* online glyph bigram counts a->b */
-static float g_field_row[VOCAB_CAP];             /* row sums, for normalization */
-static float g_coh_floor = 0.0f;                 /* drifting silence-gate (Stanley) */
-static int   g_field_on  = 1;                    /* NL_NOFIELD=1 lifts the field (A/B) */
+ * no backprop, no target: coherence is a property of the sampling field.
+ * (the field globals are declared above digest — digest reads them for surprise.) */
 
 /* observe the eaten glyph stream — the field grows as the organism lives */
 static void field_observe(const int* g, int n){
@@ -785,7 +801,7 @@ static void run_mouth(Model* m, unsigned long seed){
         energy -= RENT*(1.0f + SCAR_RENT*scar_total);          /* the rent of being, heavier when wounded */
         int n=semtok_line(line,glyphs,CTX);
         float yield=0.0f;
-        if(n>=1){ yield=digest(m,&mo,scar,glyphs,n);      /* your words DO things to it */
+        if(n>=1){ yield=digest(m,&mo,scar,glyphs,-1,n);      /* your words DO things to it */
             for(int i=0;i<n;i++) recent_push(recent,&recent_n,glyphs[i]);
             cooc_track(glyphs,n); }
         energy += DIGEST_YIELD*yield;
@@ -855,12 +871,12 @@ static int live(const char* corpus, const char* waste_path, const char* ether_pa
         float yield=0.0f;
         int   dreaming=0, grazing=0;
         if(diet_mode){
-            yield=digest(m,&mo,scar,diet_glyphs,diet_n);
+            yield=digest(m,&mo,scar,diet_glyphs,-1,diet_n);
             for(int i=0;i<diet_n;i++) recent_push(recent,&recent_n,diet_glyphs[i]);
             cooc_track(diet_glyphs,diet_n); field_observe(diet_glyphs,diet_n); dream_streak=0;
         } else if(fed && food && fgets(line,sizeof(line),food)){
             int n=semtok_line(line,glyphs,CTX);
-            if(n>=1){ yield=digest(m,&mo,scar,glyphs,n);
+            if(n>=1){ yield=digest(m,&mo,scar,glyphs,-1,n);
                 for(int i=0;i<n;i++) recent_push(recent,&recent_n,glyphs[i]);
                 cooc_track(glyphs,n); field_observe(glyphs,n); dream_streak=0; }
         } else {                                 /* corpus exhausted -> eat the chorus, then dream */
@@ -868,14 +884,14 @@ static int live(const char* corpus, const char* waste_path, const char* ether_pa
             int gz[CTX], gn=0;
             if(ether) gn=ether_graze(ether_path, label, gz, CTX);  /* FIRST: eat a neighbour's voice */
             if(gn>=1){                               /* the colony feeds itself through speech */
-                yield=digest(m,&mo,scar,gz,gn);
+                yield=digest(m,&mo,scar,gz,-1,gn);
                 for(int i=0;i<gn;i++) recent_push(recent,&recent_n,gz[i]);
                 cooc_track(gz,gn); field_observe(gz,gn); dream_streak=0; grazing=1; n_graze++;
             } else if(dream_on && energy<DREAM_THRESH && recent_n>0){  /* ELSE: eat your own predicted glyph */
                 static float dl[VOCAB_CAP]; forward(m,recent,recent_n,dl);
                 field_fold(dl, recent, recent_n);  /* dream coherently over the window — replay the field, not noise */
                 int dg=choose(dl,&mo,scar);          /* the dream is chosen, not computed */
-                float dy=digest(m,&mo,scar,&dg,1);   /* a dream is not a shout */
+                float dy=digest(m,&mo,scar,&dg,recent[recent_n-1],1);   /* a dream is not a shout */
                 yield = dy * DREAM_FRAC * expf(-(float)dream_streak/DREAM_DECAY); /* dreams thin out */
                 recent_push(recent,&recent_n,dg);
                 dream_streak++; dreaming=1; n_dream++;
