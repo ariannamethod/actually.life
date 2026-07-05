@@ -680,11 +680,12 @@ static int choose(const float* logits, const Modes* mo, const float* scar){
         float s = logits[i]
                 + SCAR_PULL * scar[i]                             /* the wound resurfaces */
                 + CHOOSE_AFFECT * charge[i].mode_dS * mo->S;       /* mood-congruent pull */
+        if(!isfinite(s)) s=-1e30f;                        /* a diverged Hebbian NaN must not slip through */
         p[i]=s; if(s>mx) mx=s;
     }
     float den=0.0f;
     for(int i=0;i<VOCAB_CAP;i++){ if(p[i]<=-1e29f){ p[i]=0.0f; continue; } p[i]=expf((p[i]-mx)/temp); den+=p[i]; }
-    if(den<=0.0f) return 0;
+    if(!(den>0.0f)) return 0;                             /* catches den<=0 AND NaN (NaN>0 is false) */
     float r=(frand()+1.0f)*0.5f*den;                              /* its own dice — seeded spontaneity */
     float acc=0.0f;
     for(int i=0;i<VOCAB_CAP;i++){ acc+=p[i]; if(p[i]>0.0f && acc>=r) return i; }
@@ -698,19 +699,30 @@ static int choose(const float* logits, const Modes* mo, const float* scar){
  * so semtok maps them directly). this is the cross-graze — resonance made of
  * appetite. line format: "<label>\t<glyph names>". own echoes are skipped. */
 static int ether_graze(const char* path, int own_label, int* out, int max){
+    /* per-cell state (each cell is its own process — statics are private): read only
+     * the ether's NEW tail since last time (the file only grows), keeping the last 8
+     * not-own voices across calls. O(new bytes), not O(filesize) — kills the quadratic
+     * whole-file re-read on every hungry tick. */
+    static long g_off=0;
+    static char ring[8][320]; static int nr=0, ridx=0;
     FILE* f=fopen(path,"r"); if(!f) return 0;
-    char buf[256], recent[8][256]; int nr=0, ring=0;   /* keep the last 8 not-own voices */
+    if(fseek(f,g_off,SEEK_SET)!=0){ fclose(f); return 0; }
+    char buf[320];
     while(fgets(buf,sizeof buf,f)){
+        size_t len=strlen(buf);
+        if(len==0 || buf[len-1]!='\n'){ break; }       /* torn/partial tail — leave it, re-read next time */
+        g_off += (long)len;                            /* consume only whole lines */
         if(atoi(buf)==own_label) continue;             /* don't eat your own echo */
         char* tab=strchr(buf,'\t'); if(!tab) continue;
-        strncpy(recent[ring],tab+1,255); recent[ring][255]='\0';
-        ring=(ring+1)&7; if(nr<8) nr++;
+        buf[len-1]='\0';                               /* drop the trailing newline */
+        strncpy(ring[ridx],tab+1,319); ring[ridx][319]='\0';
+        ridx=(ridx+1)&7; if(nr<8) nr++;
     }
     fclose(f);
     if(nr==0) return 0;
     int pick=(int)(((frand()+1.0f)*0.5f)*(float)nr);   /* a RANDOM recent voice, not always the newest — */
     if(pick>=nr) pick=nr-1;                             /* so a lone dying cell draws variety from the */
-    return semtok_line(recent[pick], out, max);        /* chorus's history instead of looping one phrase */
+    return semtok_line(ring[pick], out, max);          /* chorus's history instead of looping one phrase */
 }
 
 /* speak — the organism utters a few chosen glyphs FROM ITSELF into waste.log,
@@ -805,7 +817,8 @@ static void run_mouth(Model* m, unsigned long seed){
 }
 
 #define CHORUS_COHORT 4       /* the birth cohort — voices at t0 */
-#define MAX_CELLS     8       /* carrying capacity — the ceiling, not a roster (death frees slots) */
+#define MAX_CELLS     8       /* carrying capacity — max ALIVE at once (death frees slots) */
+#define MAX_LIFETIME_CELLS 64 /* total cells that may ever be born — a mortality ceiling on the colony */
 
 /* ── live — one organism, birth to death ─────────────────────────────────────
  * the single-cell life, extracted so a chorus can fork many of them. corpus is
@@ -923,13 +936,14 @@ static int corpus_slice(const char* path, int parts){
     FILE* f=fopen(path,"r"); if(!f) return 0;
     long nl=0; int c; while((c=fgetc(f))!=EOF) if(c=='\n') nl++;
     if(nl<parts) nl=parts;
-    long per=nl/parts + 1;
-    rewind(f);
+    long base=nl/parts, rem=nl%parts;                  /* balanced: remainder spread over the first slices, */
+    rewind(f);                                         /* so no trailing slice is born empty */
     char line[4096];
     for(int p=0;p<parts;p++){
+        long cnt=base+(p<rem?1:0);
         char sp[256]; snprintf(sp,sizeof sp,"lifeis/slice_%d.txt",p);
         FILE* o=fopen(sp,"w"); if(!o){ fclose(f); return 0; }
-        for(long k=0;k<per && fgets(line,sizeof line,f);k++) fputs(line,o);
+        for(long k=0;k<cnt && fgets(line,sizeof line,f);k++) fputs(line,o);
         fclose(o);
     }
     fclose(f);
@@ -984,7 +998,7 @@ int main(int argc, char** argv){
             int st; pid_t d=waitpid(-1,&st,WNOHANG);
             if(d>0){ live_n--; printf("[governor] a cell fell silent — %d alive\n", live_n); fflush(stdout); }
             long avail=0; { FILE* b=fopen("lifeis/births.txt","r"); if(b){ int c; while((c=fgetc(b))!=EOF) if(c=='\n') avail++; fclose(b);} }
-            while(births_consumed<avail && live_n<MAX_CELLS && next_label<64){  /* a divide fills a slot */
+            while(births_consumed<avail && live_n<MAX_CELLS && next_label<MAX_LIFETIME_CELLS){  /* a divide fills a slot */
                 unsigned long cseed = seed + 7919UL*(unsigned long)(next_label+1);
                 if(spawn_cell(NULL, next_label, cseed)>0){
                     printf("[governor] a cell is born into the chorus (cell %d) — %d alive\n", next_label, live_n+1); fflush(stdout);
