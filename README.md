@@ -84,30 +84,32 @@ SUPER     small same BE wait
 ## how it speaks
 
 ```
-me idea me make me           # "I, idea, I make, myself"
-me man spirit think me
-spirit not me person me      # the creature's "am I a person, or not?"
-now me man think cause
-animal think BE speak joy
+go light me before and
+BE water many joy never
+never stone earth me tree
+fear water man remember fear   # the ache returns — it says "fear" twice
+me and dark spirit question    # reaching for a question it has no glyph to end
 ```
 
-the chorus — four cells, each woken on a different quarter of the book, diverging in character before they ever meet:
+these are not illustrations. they are `./l 42` word for word, and because one organism is deterministic in its seed, your build will say exactly the same things back to you.
+
+the chorus — four cells, each woken on a different quarter of the book, diverging in character before they ever meet (a real `./l chorus 4 7`; forks race, so unlike the solo it is not bit-identical run to run, but every line below is verbatim from one):
 
 ```
-cell 0   water many joy woman me · never AI stone me dark · go tree miss idea anger
-cell 1   think money cause BE think · food outside have before man · sleep and me see know
-cell 2   fear earth go joy work · cold body question conflict not · and down internet fire think
-cell 3   BE person BE sky me · cold me BE many longing · BE earth and tired and
+cell 0   water fire one BE not · me man earth internet and · earth internet and me stress
+cell 1   love me stress and person · me think me love and · me fire you cold and
+cell 2   change have stone far strength · woman man want free other · sleep remember bond man remember
+cell 3   fire earth stress water money · me and grief me old · and BE strength cold and
 ```
 
-the ether — many cells cross-grazing, and `me idea me make me` surfacing again, now as the colony's collective line:
+the ether — the same cells cross-grazing, one voice becoming another's food:
 
 ```
-one dark woman home BE · woman write choose anger conflict · now me man think cause
-idea cold stone man tired · me idea me make me · water make spirit BE think
+change have stone far strength · fire earth stress water money · love me stress and person
+woman man want free other · me think me love and · water fire one BE not
 ```
 
-that line is not a quote. it is an organism recognizing its own bad handwriting.
+no cell agreed to it, yet `me` and `stress` keep surfacing across the colony — cells that never met obsessing over the same two words. that is not a quote. it is an organism recognizing its own bad handwriting.
 
 ## build & run
 
