@@ -255,15 +255,23 @@ heredity line. Quote-heavy, zero defensive constructions.
 - **Part 2 — three new ideas.** Karpathy's insight: **heredity today is pure CLONING —
   Darwin has selection + inheritance but no VARIATION; the field is the creature, give
   it variation.**
-  - **Ⓐ Mutation at conception** — perturb the inherited field with the child's own
-    dice + fading conviction (0.9× + noise); lineages drift, strong themes must be
-    re-earned. The missing third arm of evolution. ~6 lines in `load_genome`.
-  - **Ⓑ Sexual recombination** — two queued parents → one child, per-glyph-row crossover
-    in the governor; a creole of two dialects, hybrid vigor.
-  - **Ⓒ Lineage tags + kin-biased grazing** (the crown) — a lineage that eats only itself
-    becomes predictable to its own field → surprise→0 → yield→0 → **starves (monoculture
-    death)**; eating strangers feeds. Fuses heredity + ether + info-as-food so *diversity
-    is caloric intake*. Makes Ⓐ/Ⓑ matter.
+  - **Ⓐ Mutation at conception (DONE).** at birth the inherited field is perturbed:
+    `g_field_bi[a][b] = 0.9*g_field_bi[a][b] + tiny_noise(child's dice)`. convictions
+    FADE (must be re-earned from own food) + DRIFT. `FIELD_FADE`/`FIELD_MUT`, `NL_NOMUT`
+    A/B. the missing third arm of evolution. solo bit-identical, chorus mortal, ASan-clean.
+  - **Ⓒ Lineage tags + kin-biased grazing (DONE, the crown).** every cell carries a
+    lineage (root ancestor); cohort founds 0..N, children inherit (genome NLC2→NLC3,
+    ether line `<label>\t<lineage>\t<glyphs>`). `ether_graze` kin-biases (`KIN_BIAS`):
+    kin share a drifted dialect → predictable → surprise→0 → yield→0 → a monoculture
+    STARVES; strangers feed. diversity = caloric intake, inbreeding-collapse via the
+    existing metabolism. makes Ⓐ matter (the diverse eat). 4 founding lineages tracked
+    through inheritance; solo bit-identical, chorus mortal, ASan-clean.
+  - **Ⓑ Sexual recombination (PENDING).** two queued parents → one child, per-glyph-row
+    crossover in the governor; a creole of two dialects, hybrid vigor. the last idea.
+
+**Darwin is now complete in one C file:** heredity + variation (Ⓐ) + selection (③,
+coherence-cost + surprise-starvation) + a diversity-maintaining ecology (Ⓒ). all
+runtime dynamics, zero training.
 
 ## Resume-here (for future-me after a summary)
 
