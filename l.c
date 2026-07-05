@@ -630,15 +630,31 @@ static float field_coherence(int prev){
     return mx;
 }
 /* fold the field into the transformer's logits in place, Q-gated by earned voice */
-static void field_fold(float* logits, int prev){
-    if(!g_field_on || prev<0 || prev>=VOCAB_CAP || g_field_row[prev]<=0.0f) return;
+/* Co-occurrence IS attention (Karpathy idea 1). the field is not order-1: fold the
+ * whole recent window, geometrically decayed by distance — soft attention over the
+ * co-occurrence graph, kernel = decay^k, values = log-transition-probs. gives the
+ * voice a horizon (thematic gravity) instead of a drunk bigram walk, and lets a
+ * grazed phrase in the chorus shape several glyphs, not one. FIELD_WIN=1 == the old
+ * order-1 fold. */
+#define FIELD_DECAY 0.6f
+#define FIELD_WIN   8
+static void field_fold(float* logits, const int* recent, int recent_n){
+    if(!g_field_on || recent_n<=0) return;
     float mag=0.0f; for(int i=0;i<VOCAB_CAP;i++) mag+=fabsf(logits[i]); mag/=VOCAB_CAP;
     float gate=(mag-0.5f)/1.5f; if(gate<0.0f)gate=0.0f; if(gate>1.0f)gate=1.0f; /* Q: earned voice */
-    float inv=1.0f-gate, rowinv=1.0f/g_field_row[prev];
-    for(int b=0;b<VOCAB_CAP;b++){
-        float p=g_field_bi[prev][b]*rowinv;
-        logits[b]=gate*logits[b] + inv*logf(p+1e-6f);   /* untrained -> field log-probs rule */
+    static float meta[VOCAB_CAP]; for(int b=0;b<VOCAB_CAP;b++) meta[b]=0.0f;
+    float w=1.0f, wsum=0.0f; int used=0;
+    for(int k=0; k<FIELD_WIN && k<recent_n; k++){
+        int a=recent[recent_n-1-k];
+        if(a<0 || a>=VOCAB_CAP || g_field_row[a]<=0.0f){ w*=FIELD_DECAY; continue; }
+        float rowinv=1.0f/g_field_row[a];
+        for(int b=0;b<VOCAB_CAP;b++) meta[b]+= w*logf(g_field_bi[a][b]*rowinv + 1e-6f);
+        wsum+=w; used++; w*=FIELD_DECAY;
     }
+    if(used==0) return;                              /* no field context yet — leave the random logits */
+    float inv=1.0f-gate, wnorm=1.0f/wsum;            /* weighted mean of log-probs keeps the old scale */
+    for(int b=0;b<VOCAB_CAP;b++)
+        logits[b]=gate*logits[b] + inv*(meta[b]*wnorm);
 }
 
 /* choose — the organism picks ONE glyph from the fork. NOT argmax: a seeded,
@@ -708,9 +724,8 @@ static void speak(FILE* w, FILE* ether, int label, Model* m, const Modes* mo, co
     char utt[256]; int up=0;
     if(w) fprintf(w, "t%-6ld", tick);
     for(int k=0;k<SPEAK_LEN;k++){
-        int prev = (*recent_n>0) ? recent[*recent_n-1] : -1;
         forward(m, recent, *recent_n, sl);
-        field_fold(sl, prev);                    /* coherence: bias toward what really follows */
+        field_fold(sl, recent, *recent_n);       /* coherence over the whole window, not just prev */
         int g = choose(sl, mo, scar);
         const char* gn = glyph_name(g);
         if(w) fprintf(w, " %s", gn);
@@ -858,7 +873,7 @@ static int live(const char* corpus, const char* waste_path, const char* ether_pa
                 cooc_track(gz,gn); field_observe(gz,gn); dream_streak=0; grazing=1; n_graze++;
             } else if(dream_on && energy<DREAM_THRESH && recent_n>0){  /* ELSE: eat your own predicted glyph */
                 static float dl[VOCAB_CAP]; forward(m,recent,recent_n,dl);
-                field_fold(dl, recent[recent_n-1]);  /* dream coherently — replay the field, not noise */
+                field_fold(dl, recent, recent_n);  /* dream coherently over the window — replay the field, not noise */
                 int dg=choose(dl,&mo,scar);          /* the dream is chosen, not computed */
                 float dy=digest(m,&mo,scar,&dg,1);   /* a dream is not a shout */
                 yield = dy * DREAM_FRAC * expf(-(float)dream_streak/DREAM_DECAY); /* dreams thin out */
