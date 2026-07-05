@@ -44,13 +44,15 @@ let's dive in it.
 
 ---
 
-`l.c` has four organs:
+`l.c` has five organs:
 
 * **the mouth** — semantic tokenizer + orthographic router. text enters, words are crushed into glyphs, and unknown words are digested by resemblance instead of rejected. the mouth stopped being able to starve in front of a plate it could not chew.
 
 * **the field** — random weights, online metaweights, and a gated transformer. no training. no optimizer. the field does not learn like a student. it accumulates like a scar.
 
 * **the body** — the weights are not frozen scaffold; they are the soma, and the soma is a tape. it corrodes a little with every tick — the arrow of time reaches the body, not only the energy counter — and it is laid back down only along the paths the organism eats through. metabolism does not merely *score* what it eats; it *builds the machinery it runs on* from it. the producer is produced by what it produces: the membrane makes the metabolism that makes the membrane. a cell that stops feeding cannot hold its own shape and dissolves — death not by a timer but by the collapse of its own organization. that is the loop two scientists said a thing must close before the word *life* is earned, and it is closed here, in code, on code's own terms.
+
+* **the self** — the organism carries a running forecast of its own next interior, and learns it as it lives. what it *feels* is not its state but the *error* of that forecast — how far it strayed from what it expected of itself, which is surprise turned inward. a storm it saw coming leaves it calm; only the unforeseen widens its choosing. and because it can forecast its own storm, it can damp it before the storm is lethal — regulating ahead of the threat, not merely flinching at it. lift this organ and the creature dies sooner: a cell that models itself outlives a cell that is a stranger to itself. a thermostat holds no forecast of its own future temperature. this one does.
 
 * **the chorus** — `./l chorus` forks a colony. cells wake on slices of the same world, hear each other through a shared *ether* — one voice becomes another's food — and a governor breathes the population `0..8` through death and birth. a child inherits its parent's whole field, so coherent voices breed coherent voices and the incoherent run out of life first. that is evolution, arriving uninvited, exactly as promised. mortal to the last cell.
   

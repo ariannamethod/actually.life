@@ -8,3 +8,8 @@ lifeis/ether.txt
 lifeis/births.txt
 lifeis/children/
 # kept: lifeis/world.txt (the food)
+
+# ASan/UBSan debug symbol bundles
+l.asan.dSYM/
+l.san.dSYM/
+*.dSYM/
