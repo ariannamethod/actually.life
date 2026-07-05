@@ -165,8 +165,25 @@ the colony breathes and dies.
 **Karpathy trilogy COMPLETE.** The one online field now pays for itself three ways:
 attention (①), appetite (②), fitness (③). Zero training, one file.
 
-**Next:** finish the README (Oleg's draft → Claude edits). Optional later: heritable
-governor births (turns ③'s selection into real evolution).
+## Heredity (done) — ③'s selection becomes real evolution
+
+Chorus births now inherit the parent: reproduce writes a full warm-start genome
+(NLC2 = derived seed, wounds, invented symbols, the Model's weights+adapters, AND
+the coherence field, ~457 KB), and the governor spawns each birth FROM that genome
+via `load_genome`. children inherit their parent's field → speak coherently from
+birth. coherent parents beget coherent children — heritable evolution, zero
+training. Verified: **100% — every genome-spawn loads its parent** (31/31 in a
+sample run, `fopen`/`fread` fails = 0), colony mortal, ASan-clean, solo deterministic.
+
+**Correction to the heredity commit's claim:** that commit said "a fraction of
+governor spawns fall back to a fresh body." That was WRONG — a `grep 'born of a
+parent'` double-counted, because BOTH the governor's spawn line and the child's
+"inherits its field" line contain that phrase (so counts looked 2×). Instrumented
+`load_genome` with stderr: zero fopen/read failures, governor-spawns == inherits.
+There is no fallback. Fact beats the earlier claim.
+
+**Next:** finish the README (Oleg's draft → Claude edits: glyph list + jokes),
+another Codex/Opus audit pass, then possibly a second Karpathy pass.
 - **Phase 4 — SIMPLIFICATION** ⏳ — after functional, spawn Opus subagents
   (`model:"opus"`, manual, not the plugin) to find dead constructs / redundancy
   that don't kill functionality; apply by hand; re-run all Phase 0–3 checks.
