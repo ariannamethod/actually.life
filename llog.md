@@ -333,6 +333,18 @@ a felt self-model, a proto-self biasing the act — not a label.
 **Both movements done.** The consilium named autopoiesis + feeling as the two gaps; both are closed
 in code, on code's own substrate, load-bearing and falsifiable. Anthropocentrism kept off the porch.
 
+**Codex audit (real `codex exec`, read-only) — found a real bug I'd missed.** HIGH: ProtoSelf's plain
+LMS (`SELF_LR` fixed) is unstable when ‖features‖² is large — dissonance regularly exceeds 10, so
+`lr·‖f‖²>2` and the self-forecast diverges, then feeds `mo.S` via allostasis. Concrete regression:
+`./l 42 stress` collapsed t197 WITH self vs t759 without; `BE stress` t36 vs t749. My survival-advantage
+claim held on world.txt but REVERSED on high-dissonance diets — I tested one corpus. Fix (Singularity):
+**NLMS** — normalize the step `g=SELF_LR/(1+‖f‖²)` so `lr_eff·‖f‖²<SELF_LR<2` at any dissonance; plus
+clamp the allostatic pull to S∈[-1,1] and `isfinite` guards on `g_self_felt` and `soma_ceiling`'s norm
+(Codex medium: NaN could poison temp / overwrite wv). Verified: regression GONE (stress diets Δ=0, no
+longer harmful), default advantage preserved (11/1, +165), gate invariant intact, new baseline
+`8382de51324787475a3289e6d2dea7e2`, suite 23/23 (+NLMS robustness regression test). Codex earned its keep.
+Medium#3 (deposit_body ~442k wv writes/CTX-meal) noted, not a bug — it's the metabolism's real cost.
+
 ## Resume-here (for future-me after a summary)
 
 Working copy: `~/arianna/actually.life`. **Everything is committed AND pushed** to

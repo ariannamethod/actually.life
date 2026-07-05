@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.." || exit 2
 ROOT=$(pwd)
 CC=${CC:-cc}
 L=/tmp/al_test.$$
-SOLO_MD5=814edcf481762691b5296c94460a800c   # md5 of ./l 42 waste.log — the frozen solo trajectory (proteostasis + self-model on)
+SOLO_MD5=8382de51324787475a3289e6d2dea7e2   # md5 of ./l 42 waste.log — the frozen solo trajectory (proteostasis + NLMS self-model on)
 FROZEN_MD5=a490a453858581bc11a9d9624d1a95b3 # ...with EVERY new organ off (NL_NOCORRODE+NL_NOREPAIR+NL_NOSELF) — the pre-living-body trajectory
 
 PASS=0; FAIL=0
@@ -132,6 +132,16 @@ for s in 1 42 99 256 777 2024; do
 done
 [ "$sw" -gt "$sl" ] && ok "the self-model confers a survival advantage (wins $sw / loses $sl across seeds — allostasis earns its keep)" \
                     || no "the self-model gave no survival advantage (wins $sw loses $sl)"
+# robustness (Codex-found regression): on HIGH-dissonance diets the NLMS self-model must NOT
+# destabilize — it once diverged and cut life from t759 to t197. it may not shorten life here.
+rok=1
+for d in "stress" "BE stress" "fear pain conflict"; do
+  a=$("$L" 42 "$d" 2>&1 | grep -o 'died at tick [0-9]*' | grep -o '[0-9]*' | head -1)
+  b=$(NL_NOSELF=1 "$L" 42 "$d" 2>&1 | grep -o 'died at tick [0-9]*' | grep -o '[0-9]*' | head -1)
+  [ -n "$a" ] && [ -n "$b" ] && [ "$a" -lt "$((b - b/10))" ] && rok=0   # fail if self-ON dies >10% earlier
+done
+[ "$rok" -eq 1 ] && ok "the self-model does not destabilize on high-dissonance diets (NLMS-stable)" \
+                 || no "the self-model shortens life on a high-dissonance diet — LMS divergence regression"
 
 # ── 9. AddressSanitizer / UBSan (opt-in: the strongest correctness pass) ───────
 if [ "${1:-}" = "--asan" ]; then

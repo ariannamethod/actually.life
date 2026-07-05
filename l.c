@@ -432,7 +432,7 @@ static float deposit_body(Model* m, const int* g, int n){
  * and it bounds the positive feedback both scientists flagged — the body redistributes,
  * it does not blow up. */
 static void soma_ceiling(Model* m, float cap){
-    float bn=wv_norm(m); if(bn<=cap || bn<=0.0f) return;
+    float bn=wv_norm(m); if(bn<=cap || bn<=0.0f || !isfinite(bn)) return;  /* a NaN norm must not overwrite the whole body with NaN */
     float s=cap/bn;
     for(int l=0;l<NL;l++){ float* wv=m->L[l].wv; for(int i=0;i<E*E;i++) wv[i]*=s; }
 }
@@ -772,10 +772,12 @@ static void self_predict(ProtoSelf* ps, float S, float D){       /* forecast the
     ps->pS=0.0f; ps->pD=0.0f;
     for(int k=0;k<SELF_K;k++){ ps->pS+=ps->wS[k]*f[k]; ps->pD+=ps->wD[k]*f[k]; }
 }
-static float self_update(ProtoSelf* ps, float S0, float D0, float S1, float D1){ /* learn; return felt */
+static float self_update(ProtoSelf* ps, float S0, float D0, float S1, float D1){ /* learn (NLMS); return felt */
     float f[SELF_K]={1.0f,S0,D0};
+    float nf=0.0f; for(int k=0;k<SELF_K;k++) nf+=f[k]*f[k];      /* ‖f‖²: dissonance runs large, so NORMALIZE the step — */
+    float g=SELF_LR/(1.0f+nf);                                   /* NLMS keeps lr_eff·‖f‖² < SELF_LR < 2, stable at any |D| */
     float eS=S1-ps->pS, eD=D1-ps->pD;                            /* the interior surprised its own forecast by this much */
-    for(int k=0;k<SELF_K;k++){ ps->wS[k]+=SELF_LR*eS*f[k]; ps->wD[k]+=SELF_LR*eD*f[k]; }
+    for(int k=0;k<SELF_K;k++){ ps->wS[k]+=g*eS*f[k]; ps->wD[k]+=g*eD*f[k]; }
     return fabsf(eS)+fabsf(eD);
 }
 /* ── THE ETHER — one cell's voice becomes another's food ─────────────────────
@@ -1073,7 +1075,8 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         tick++;
         float S0=mo.S, D0=mo.dissonance;            /* the interior at tick's start — what the self-model forecasts FROM */
         if(g_self_on){ self_predict(&ps,S0,D0);      /* ProtoSelf: forecast this tick's interior before it happens */
-            mo.S -= SELF_RELAX * ps.pS;              /* ALLOSTASIS: pre-damp the FORECAST agitation — regulate ahead of the */
+            float pd=ps.pS; if(pd>1.0f)pd=1.0f; else if(pd<-1.0f)pd=-1.0f;  /* S lives in ~[-1,1]; bound the anticipatory pull */
+            if(isfinite(pd)) mo.S -= SELF_RELAX*pd;  /* ALLOSTASIS: pre-damp the FORECAST agitation — regulate ahead of the */
         }                                            /* threat, not merely react to it; a cell that foresees its own storm survives it */
         if(soma_on) soma_decay(m);                  /* PROTEOSTASIS destruction: the body corrodes with time */
         float integ = (soma_on && birth_norm>0.0f) ? wv_norm(m)/birth_norm : 1.0f; if(integ>1.0f) integ=1.0f;
@@ -1112,7 +1115,8 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         }
         scar_total=0.0f; for(int i=0;i<VOCAB_CAP;i++) scar_total+=scar[i];
         if(homeo_on){ mo.dissonance *= DISS_DECAY; mo.S -= S_RELAX*mo.S; }
-        if(g_self_on) g_self_felt=self_update(&ps,S0,D0,mo.S,mo.dissonance); /* ProtoSelf: the interior settled — how far did it stray from its own forecast? */
+        if(g_self_on){ g_self_felt=self_update(&ps,S0,D0,mo.S,mo.dissonance); /* ProtoSelf: the interior settled — how far did it stray from its own forecast? */
+                       if(!isfinite(g_self_felt)) g_self_felt=0.0f; }        /* a diverged self-model must not poison choose()'s temperature */
         if(fabsf(mo.S) >= S_DEATH){ contour_died=1; break; }
         if(recent_n>0){                                   /* the field's confidence about what follows */
             float coh=field_coherence(recent[recent_n-1]);
