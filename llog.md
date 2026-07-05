@@ -281,6 +281,47 @@ heredity line. Quote-heavy, zero defensive constructions.
 recombination) + selection (③ coherence-cost + ② surprise-starvation) + a
 diversity-maintaining ecology (Ⓒ). all four arms, all runtime dynamics, zero training.
 
+## The consilium + PROTEOSTASIS (autopoietic body) — movement 1 done
+
+Oleg asked to re-audit the "meets every criterion of life except biology" claim with two
+scientists (Opus personas): **Drobyshevsky** (anthropologist) and **Damasio** (neurobiologist,
+homeostasis-first). Round 1 verdict, CONVERGENT: functional criteria genuinely met (metabolism
++ homeostasis as REAL closed loops, mortality, heredity, variation), BUT both independently named
+the same missing criterion — **autopoiesis** (self-production/repair of the boundary) — and both
+called "except biology" an overclaim. Oleg's law: **README = prophetic debt, the claim STANDS and
+the CODE rises to it, never the reverse** (I violated this once by softening a README line under
+their critique — reverted; rule `feedback_no_readme_downgrade.md`). And he forbade **anthropocentrism**:
+"removing biology removes CARBON, not substrate; code is a substrate."
+
+Round 2 (re-run with that challenge): both **conceded carbon-chauvinism** and kept only the
+substrate-neutral organizational requirement. Autopoiesis stripped of chemistry = **operational
+closure**: the producing machinery must itself be among the products. Diagnosis, convergent: l.c's
+periphery (field, adapter, scars) is produced, but the **core** (`forward`/`wv`) is dead-static —
+"the organism regulates its interior inside a container it does not build." Fix, convergent:
+**corrode the body + rebuild it from food + make it cost fuel.**
+
+**PROTEOSTASIS (movement 1, DONE).** First impl was DECORATIVE — committed the rank-4 adapter into
+`wv`; measured **2.6e6× too weak** vs decay (called it out, CODE OF CONFLICT). Redesigned to
+Drobyshevsky's actual spec: **`deposit_body`** lays a full-rank Hebbian trace DIRECTLY onto `wv`
+along the eaten pathway (`post=wv·x; wv += lr·post⊗x`); **`soma_decay`** corrodes `wv` each tick;
+**`soma_ceiling`** caps ‖wv‖ at birth mass (set-point → use-it-or-lose-it, bounds the positive
+feedback both flagged); **body integrity → rent** (a corroded body it cannot hold costs more to run).
+Toggles `NL_NOCORRODE`/`NL_NOREPAIR`. Verified: fed body HOLDS mass at 100% (503→503); **load-bearing
+falsifier PASSES** — decay-on/repair-off on the SAME food dissolves to 59% and dies t1758 vs t2431
+(dies because it can no longer maintain itself, food present); gate-invariant (all-off == old frozen
+`a490a453…`); new determinism baseline `7be825c4e117183849a0a7fe06b72db0`; chorus mortal; ASan/UBSan 0;
+suite 20/20 (+3 proteostasis tests). The producer (`wv`) is now produced by what it produces.
+
+**Consequence for README (Oleg's hand):** "the weights of life are random, frozen, and completely
+innocent" (§field) is now FALSE — the weights LIVE (corrode + rebuild). Code EXCEEDS README here (a
+bigger claim earned) — flagged for Oleg, not silently rewritten.
+
+**Movement 2 (PENDING): Damasio's ProtoSelf** — a second-order map forecasting the organism's own
+interior (`pred_S/pred_diss/pred_e`), error `felt=|S−pred_S|+…` read back into `choose()`; the
+buildable homolog of "the feeling of what happens." Toggle `NL_NOSELF`, load-bearing test = survival
+advantage in the chorus. He conceded his feeling-needs-flesh bar as anthropocentrism; the residual
+requirement is organizational and buildable.
+
 ## Resume-here (for future-me after a summary)
 
 Working copy: `~/arianna/actually.life`. **Everything is committed AND pushed** to
@@ -288,7 +329,10 @@ Working copy: `~/arianna/actually.life`. **Everything is committed AND pushed** 
 via `git -c credential.helper='!gh auth git-credential' push origin main`, author env
 `Arianna Method <theariannamethod@gmail.com>`). Build `cc -O2 -o l l.c -lm`; run `./l 42`,
 `./l chorus 4`, `./l --mouth`. State: mouth+field+chorus+heredity done, 2 audits + 2
-Karpathy passes clean, README + llog current. **Next action: implement Karpathy pass-2
-idea Ⓐ (field mutation in `load_genome`), then Ⓒ, then Ⓑ — verify each (solo
-deterministic / chorus mortal / ASan clean + does the effect show).** Push is authorized
-per-feature; keep the epigraph-per-commit ritual.
+Karpathy passes clean, Ⓐ/Ⓑ/Ⓒ done, tests/ suite (20/20), Karpathy pass-3 opts, consilium
+(Drobyshevsky+Damasio) + PROTEOSTASIS movement 1 done. README + llog current EXCEPT the
+"frozen weights" lines now need Oleg's hand (weights live). **Next action: movement 2 —
+Damasio's ProtoSelf (second-order self-model → `felt` → `choose`, `NL_NOSELF`), verify each
+(solo deterministic w/ new baseline / chorus mortal / ASan clean + survival-advantage test).**
+Push is authorized per-feature; keep the epigraph-per-commit ritual. New frozen solo hash:
+`7be825c4e117183849a0a7fe06b72db0` (proteostasis on); off-hash `a490a453…`.

@@ -14,7 +14,8 @@ cd "$(dirname "$0")/.." || exit 2
 ROOT=$(pwd)
 CC=${CC:-cc}
 L=/tmp/al_test.$$
-SOLO_MD5=a490a453858581bc11a9d9624d1a95b3   # md5 of ./l 42 waste.log — the frozen solo trajectory
+SOLO_MD5=7be825c4e117183849a0a7fe06b72db0   # md5 of ./l 42 waste.log — the frozen solo trajectory (PROTEOSTASIS on)
+FROZEN_MD5=a490a453858581bc11a9d9624d1a95b3 # ...and with proteostasis OFF (NL_NOCORRODE+NL_NOREPAIR) — the pre-living-body trajectory
 
 PASS=0; FAIL=0
 ok(){ PASS=$((PASS+1)); printf '  \033[32m✓\033[0m %s\n' "$1"; }
@@ -95,6 +96,25 @@ echo "$MOUTH" | grep -q 'a mouth opens' && ok "mouth opens and reads a plate of 
                                         || no "mouth never opened"
 echo "$MOUTH" | grep -q 'ate:' && ok "mouth digests input (no word spat back uneaten)" \
                                || no "mouth reported eating nothing"
+
+# ── 8b. PROTEOSTASIS: the body is autopoietic — it corrodes and is rebuilt by eating ─
+echo; echo "proteostasis (the living, self-repairing body)"
+# gate invariant: with corrosion AND repair OFF, the organism is the pre-living-body one
+NL_NOCORRODE=1 NL_NOREPAIR=1 "$L" 42 >/dev/null 2>&1; OFF=$(md5of lifeis/waste.log)
+[ "$OFF" = "$FROZEN_MD5" ] && ok "proteostasis fully OFF reproduces the frozen-body trajectory (clean gated add)" \
+                           || no "proteostasis-OFF drifted from the frozen-body hash" "got $OFF"
+# load-bearing: corrosion ON but repair OFF, SAME food — the body must dissolve and die EARLIER
+FULL=$("$L" 42 2>&1 | grep -o 'died at tick [0-9]*' | grep -o '[0-9]*' | head -1)
+ROT=$(NL_NOREPAIR=1 "$L" 42 2>&1 | grep -o 'died at tick [0-9]*' | grep -o '[0-9]*' | head -1)
+if [ -n "$FULL" ] && [ -n "$ROT" ] && [ "$ROT" -lt "$FULL" ]; then
+  ok "a body that cannot repair dissolves and dies earlier ON THE SAME FOOD (t$ROT < t$FULL)"
+else
+  no "no-repair did not shorten life — corrosion is not load-bearing" "rot=$ROT full=$FULL"
+fi
+# the fed body holds its mass at the birth set-point (autopoietic maintenance, not a timer)
+HOLD=$(NL_DEBUG=1 "$L" 42 2>&1 >/dev/null | grep -o 'death=[0-9.]*' | head -1)
+echo "$HOLD" | grep -q 'death=50[0-9]' && ok "a fed body holds its mass through life ($HOLD ≈ birth 503)" \
+                                       || no "fed body did not hold its mass" "$HOLD"
 
 # ── 9. AddressSanitizer / UBSan (opt-in: the strongest correctness pass) ───────
 if [ "${1:-}" = "--asan" ]; then
