@@ -547,6 +547,7 @@ static float g_field_bi[VOCAB_CAP][VOCAB_CAP];   /* online glyph bigram counts a
 static float g_field_row[VOCAB_CAP];             /* row sums, for normalization */
 static float g_coh_floor = 0.0f;                 /* drifting silence-gate (Stanley) */
 static int   g_field_on  = 1;                    /* NL_NOFIELD=1 lifts the field (A/B) */
+static int   g_lineage   = -1;                   /* Ⓒ: the cell's root ancestor — kinship for the ether */
 
 static float digest(Model* m, Modes* mo, float* scar, const int* glyphs, int prev0, int n){
     static float before[RANK*E];
@@ -650,6 +651,7 @@ static float field_coherence(int prev){
 #define FIELD_WIN   8
 #define FIELD_FADE  0.9f          /* heredity idea A: inherited convictions FADE each generation */
 #define FIELD_MUT   0.02f         /* ...and drift on the child's own dice — the missing arm, variation */
+#define KIN_BIAS    0.6f          /* Ⓒ: chance a hungry cell reaches for a KIN voice (echo-chamber temptation) */
 static void field_fold(float* logits, const int* recent, int recent_n){
     if(!g_field_on || recent_n<=0) return;
     float mag=0.0f; for(int i=0;i<VOCAB_CAP;i++) mag+=fabsf(logits[i]); mag/=VOCAB_CAP;
@@ -704,7 +706,7 @@ static int ether_graze(const char* path, int own_label, int* out, int max){
      * not-own voices across calls. O(new bytes), not O(filesize) — kills the quadratic
      * whole-file re-read on every hungry tick. */
     static long g_off=0;
-    static char ring[8][320]; static int nr=0, ridx=0;
+    static char ring[8][320]; static int ring_lin[8]; static int nr=0, ridx=0;
     FILE* f=fopen(path,"r"); if(!f) return 0;
     if(fseek(f,g_off,SEEK_SET)!=0){ fclose(f); return 0; }
     char buf[320];
@@ -712,17 +714,28 @@ static int ether_graze(const char* path, int own_label, int* out, int max){
         size_t len=strlen(buf);
         if(len==0 || buf[len-1]!='\n'){ break; }       /* torn/partial tail — leave it, re-read next time */
         g_off += (long)len;                            /* consume only whole lines */
-        if(atoi(buf)==own_label) continue;             /* don't eat your own echo */
-        char* tab=strchr(buf,'\t'); if(!tab) continue;
+        if(atoi(buf)==own_label) continue;             /* don't eat your own echo. line: <label>\t<lineage>\t<glyphs> */
+        char* t1=strchr(buf,'\t'); if(!t1) continue;
+        char* t2=strchr(t1+1,'\t'); if(!t2) continue;
         buf[len-1]='\0';                               /* drop the trailing newline */
-        strncpy(ring[ridx],tab+1,319); ring[ridx][319]='\0';
+        ring_lin[ridx]=atoi(t1+1);                     /* the speaker's lineage */
+        strncpy(ring[ridx],t2+1,319); ring[ridx][319]='\0';
         ridx=(ridx+1)&7; if(nr<8) nr++;
     }
     fclose(f);
     if(nr==0) return 0;
-    int pick=(int)(((frand()+1.0f)*0.5f)*(float)nr);   /* a RANDOM recent voice, not always the newest — */
-    if(pick>=nr) pick=nr-1;                             /* so a lone dying cell draws variety from the */
-    return semtok_line(ring[pick], out, max);          /* chorus's history instead of looping one phrase */
+    /* Ⓒ KIN-BIASED grazing: with KIN_BIAS, prefer a KIN voice (same lineage) — the echo-chamber
+     * temptation. but a shared lineage shares a dialect, so kin is PREDICTABLE to your field →
+     * surprise→0 → yield→0 (idea ②): a monoculture STARVES. eating strangers feeds on novelty.
+     * diversity becomes caloric intake, and no lineage can dominate without dying of itself. */
+    int pick=-1;
+    if(g_lineage>=0 && (frand()+1.0f)*0.5f < KIN_BIAS){
+        int kin[8], nk=0;
+        for(int i=0;i<nr;i++) if(ring_lin[i]==g_lineage) kin[nk++]=i;
+        if(nk>0){ int k=(int)(((frand()+1.0f)*0.5f)*(float)nk); if(k>=nk)k=nk-1; pick=kin[k]; }
+    }
+    if(pick<0){ pick=(int)(((frand()+1.0f)*0.5f)*(float)nr); if(pick>=nr)pick=nr-1; }  /* else a random recent voice */
+    return semtok_line(ring[pick], out, max);
 }
 
 /* speak — the organism utters a few chosen glyphs FROM ITSELF into waste.log,
@@ -744,7 +757,7 @@ static float speak(FILE* w, FILE* ether, int label, Model* m, const Modes* mo, c
         recent_push(recent, recent_n, g);
     }
     if(w) fprintf(w, "   [S%+.2f diss%+.1f]\n", (double)mo->S, (double)mo->dissonance);
-    if(ether){ fprintf(ether, "%d\t%s\n", label, utt); fflush(ether); }  /* let the colony hear */
+    if(ether){ fprintf(ether, "%d\t%d\t%s\n", label, g_lineage, utt); fflush(ether); }  /* label, lineage, voice */
     return coh_sum/(float)SPEAK_LEN;   /* mean coherence of the utterance */
 }
 
@@ -765,7 +778,8 @@ static int reproduce(const Model* m, const float* scar, unsigned long pseed, lon
     FILE* f=fopen(path,"wb"); if(!f) return 0;
     unsigned long cseed = hash_seed(pseed, tick);
     int ok = 1;
-    ok &= (fwrite("NLC2",1,4,f)==4);
+    ok &= (fwrite("NLC3",1,4,f)==4);
+    ok &= (fwrite(&g_lineage,sizeof(int),1,f)==1);       /* Ⓒ: the child inherits the parent's lineage */
     ok &= (fwrite(&cseed,sizeof cseed,1,f)==1);
     ok &= (fwrite(&tick,sizeof tick,1,f)==1);
     ok &= (fwrite(&g_n_emerged,sizeof(int),1,f)==1);
@@ -790,7 +804,8 @@ static int reproduce(const Model* m, const float* scar, unsigned long pseed, lon
 static unsigned long load_genome(const char* path, Model* m, float* scar){
     FILE* f=fopen(path,"rb"); if(!f) return 0;
     char magic[4]; unsigned long cseed=0; long tick; int ok=1;
-    ok &= (fread(magic,1,4,f)==4) && memcmp(magic,"NLC2",4)==0;
+    ok &= (fread(magic,1,4,f)==4) && memcmp(magic,"NLC3",4)==0;
+    ok &= (fread(&g_lineage,sizeof(int),1,f)==1);        /* Ⓒ: inherit the parent's lineage */
     ok &= (fread(&cseed,sizeof cseed,1,f)==1);
     ok &= (fread(&tick,sizeof tick,1,f)==1);
     ok &= (fread(&g_n_emerged,sizeof(int),1,f)==1);
@@ -903,6 +918,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                     g_n_emerged=0;
                     memset(g_field_bi,0,sizeof g_field_bi); memset(g_field_row,0,sizeof g_field_row);
                 } }
+    if(g_lineage<0) g_lineage=label;             /* Ⓒ: a cohort founder starts its own lineage from its label */
     int   scar_on = (getenv("NL_NOSCAR")==NULL);
     int   dream_on = (getenv("NL_NODREAM")==NULL);
     float scar_total=0.0f;
