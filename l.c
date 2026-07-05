@@ -479,7 +479,7 @@ static void cooc_track(const int* g, int n){ /* waking observation */
         if(a>=0&&a<VOCAB&&b>=0&&b<VOCAB) g_cooc[a][b]++; }
 }
 static void try_emerge(Model* m){            /* called ONLY in dream — birth a noticed pair */
-    if(g_n_emerged>=MAX_EMERGED) return;
+    if(g_n_emerged<0 || g_n_emerged>=MAX_EMERGED) return;   /* <0 guards a corrupt inherited genome (F1) */
     int ba=-1,bb=-1,best=GROWTH_THRESH-1;
     for(int a=0;a<VOCAB;a++) for(int b=0;b<VOCAB;b++)
         if(!g_born[a][b] && g_cooc[a][b]>best){ best=g_cooc[a][b]; ba=a; bb=b; }
@@ -874,7 +874,14 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     Modes mo = {0.0f, 0.0f};
     static float scar[VOCAB_CAP]; for(int i=0;i<VOCAB_CAP;i++) scar[i]=0.0f; /* permanent wounds (never decay) */
     if(genome){ unsigned long cs=load_genome(genome, m, scar);   /* HEREDITY: warm-start from a parent */
-                if(cs){ seed_rng(cs); printf("%s  born of a parent — inherits its field, wounds, symbols.\n", tag); } }
+                if(cs){ seed_rng(cs); remove(genome);            /* inherited — the genome file has done its job (caps disk) */
+                        printf("%s  born of a parent — inherits its field, wounds, symbols.\n", tag); }
+                else {  /* corrupt/truncated genome: load may have half-clobbered the globals — reset to a clean cell (F2) */
+                    free(m); m=model_new();
+                    for(int i=0;i<VOCAB_CAP;i++) scar[i]=0.0f;
+                    g_n_emerged=0;
+                    memset(g_field_bi,0,sizeof g_field_bi); memset(g_field_row,0,sizeof g_field_row);
+                } }
     int   scar_on = (getenv("NL_NOSCAR")==NULL);
     int   dream_on = (getenv("NL_NODREAM")==NULL);
     float scar_total=0.0f;
