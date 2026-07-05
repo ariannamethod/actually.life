@@ -266,12 +266,20 @@ heredity line. Quote-heavy, zero defensive constructions.
     STARVES; strangers feed. diversity = caloric intake, inbreeding-collapse via the
     existing metabolism. makes Ⓐ matter (the diverse eat). 4 founding lineages tracked
     through inheritance; solo bit-identical, chorus mortal, ASan-clean.
-  - **Ⓑ Sexual recombination (PENDING).** two queued parents → one child, per-glyph-row
-    crossover in the governor; a creole of two dialects, hybrid vigor. the last idea.
+  - **Ⓑ Sexual recombination (DONE, the last idea).** when two gametes wait in the birth
+    queue, the governor reads BOTH and writes ONE zygote: per-glyph-row crossover of the
+    field (each transition-row a coin-picked from parent A or B — a creole of two
+    dialects), UNION of the scars, lineage a coin between the parents, body+symbols from
+    A. done entirely in the governor (parent process) as a genome→genome merge, so
+    `live`/`spawn_cell` signatures never changed and the child loads the zygote as any
+    genome. `recombine()`, `NL_NOSEX` A/B. also refactored NLC3 into ONE `write_nlc3` +
+    ONE `read_nlc3` (reproduce/load_genome/recombine share the format — no drift).
+    verified: solo bit-identical (md5 `a490a453…`), chorus fires 6–7 two-parent births
+    and stays mortal, `NL_NOSEX=1` → 0 sex events + mortal, ASan/UBSan 0 hits.
 
-**Darwin is now complete in one C file:** heredity + variation (Ⓐ) + selection (③,
-coherence-cost + surprise-starvation) + a diversity-maintaining ecology (Ⓒ). all
-runtime dynamics, zero training.
+**Darwin is now COMPLETE in one C file:** heredity + variation (Ⓐ mutation, Ⓑ
+recombination) + selection (③ coherence-cost + ② surprise-starvation) + a
+diversity-maintaining ecology (Ⓒ). all four arms, all runtime dynamics, zero training.
 
 ## Resume-here (for future-me after a summary)
 

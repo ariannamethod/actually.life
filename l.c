@@ -771,53 +771,99 @@ static unsigned long hash_seed(unsigned long s, long tick){
     s *= 6364136223846793005UL; s ^= s>>29; s *= 0xBF58476D1CE4E5B9UL; s ^= s>>32;
     return s ? s : 1;
 }
+
+/* ── genome serialization: ONE writer + ONE reader, shared by asexual reproduce(),
+ * heredity load_genome(), and sexual recombine(). the NLC3 layout lives here exactly
+ * once, so it cannot drift between the three paths. a truncated child is never born. */
+static int write_nlc3(const char* path, const Model* m, const float* scar,
+                      const float bi[VOCAB_CAP][VOCAB_CAP], const float* row,
+                      int lineage, int n_emerged, const int* ea, const int* eb,
+                      unsigned long cseed, long tick){
+    FILE* f=fopen(path,"wb"); if(!f) return 0;
+    int ok=1;
+    ok &= (fwrite("NLC3",1,4,f)==4);
+    ok &= (fwrite(&lineage,sizeof(int),1,f)==1);        /* Ⓒ lineage */
+    ok &= (fwrite(&cseed,sizeof cseed,1,f)==1);
+    ok &= (fwrite(&tick,sizeof tick,1,f)==1);
+    ok &= (fwrite(&n_emerged,sizeof(int),1,f)==1);
+    ok &= (fwrite(scar,sizeof(float),VOCAB_CAP,f)==(size_t)VOCAB_CAP);   /* wounds */
+    if(n_emerged>0){ ok &= (fwrite(ea,sizeof(int),(size_t)n_emerged,f)==(size_t)n_emerged);
+                     ok &= (fwrite(eb,sizeof(int),(size_t)n_emerged,f)==(size_t)n_emerged); }
+    ok &= (fwrite(m,sizeof(Model),1,f)==1);                              /* body */
+    ok &= (fwrite(bi,sizeof(float),(size_t)VOCAB_CAP*VOCAB_CAP,f)==(size_t)VOCAB_CAP*VOCAB_CAP); /* the field = the genome */
+    ok &= (fwrite(row,sizeof(float),VOCAB_CAP,f)==(size_t)VOCAB_CAP);
+    ok &= (fclose(f)==0);
+    return ok;
+}
+/* read one NLC3 genome into caller buffers (no globals touched). cseed (>0) or 0. */
+static unsigned long read_nlc3(const char* path, Model* m, float* scar,
+                               float bi[VOCAB_CAP][VOCAB_CAP], float* row,
+                               int* lineage, int* n_emerged, int* ea, int* eb){
+    FILE* f=fopen(path,"rb"); if(!f) return 0;
+    char magic[4]; unsigned long cseed=0; long tick; int ne=0, lin=-1, ok=1;
+    ok &= (fread(magic,1,4,f)==4) && memcmp(magic,"NLC3",4)==0;
+    ok &= (fread(&lin,sizeof(int),1,f)==1);
+    ok &= (fread(&cseed,sizeof cseed,1,f)==1);
+    ok &= (fread(&tick,sizeof tick,1,f)==1);
+    ok &= (fread(&ne,sizeof(int),1,f)==1);
+    if(!ok || ne<0 || ne>MAX_EMERGED){ fclose(f); return 0; }
+    ok &= (fread(scar,sizeof(float),VOCAB_CAP,f)==(size_t)VOCAB_CAP);
+    if(ne>0){ ok &= (fread(ea,sizeof(int),(size_t)ne,f)==(size_t)ne);
+              ok &= (fread(eb,sizeof(int),(size_t)ne,f)==(size_t)ne); }
+    ok &= (fread(m,sizeof(Model),1,f)==1);
+    ok &= (fread(bi,sizeof(float),(size_t)VOCAB_CAP*VOCAB_CAP,f)==(size_t)VOCAB_CAP*VOCAB_CAP);
+    ok &= (fread(row,sizeof(float),VOCAB_CAP,f)==(size_t)VOCAB_CAP);
+    fclose(f);
+    if(!ok) return 0;
+    *lineage=lin; *n_emerged=ne;
+    return cseed?cseed:1;
+}
+
 static int reproduce(const Model* m, const float* scar, unsigned long pseed, long tick, char* outpath){
     if(g_n_children >= MAX_CHILDREN) return 0;
     mkdir("lifeis", 0755); mkdir("lifeis/children", 0755);
     char path[256]; snprintf(path,sizeof path,"lifeis/children/c_%lu_%d.nl", pseed, g_n_children); /* unique per cell */
-    FILE* f=fopen(path,"wb"); if(!f) return 0;
     unsigned long cseed = hash_seed(pseed, tick);
-    int ok = 1;
-    ok &= (fwrite("NLC3",1,4,f)==4);
-    ok &= (fwrite(&g_lineage,sizeof(int),1,f)==1);       /* Ⓒ: the child inherits the parent's lineage */
-    ok &= (fwrite(&cseed,sizeof cseed,1,f)==1);
-    ok &= (fwrite(&tick,sizeof tick,1,f)==1);
-    ok &= (fwrite(&g_n_emerged,sizeof(int),1,f)==1);
-    ok &= (fwrite(scar,sizeof(float),VOCAB_CAP,f)==(size_t)VOCAB_CAP);   /* inherit the parent's wounds */
-    if(g_n_emerged>0){ ok &= (fwrite(g_emerged_a,sizeof(int),(size_t)g_n_emerged,f)==(size_t)g_n_emerged);
-                       ok &= (fwrite(g_emerged_b,sizeof(int),(size_t)g_n_emerged,f)==(size_t)g_n_emerged); }
-    ok &= (fwrite(m,sizeof(Model),1,f)==1);                              /* warm-start genome */
-    ok &= (fwrite(g_field_bi,sizeof(float),(size_t)VOCAB_CAP*VOCAB_CAP,f)==(size_t)VOCAB_CAP*VOCAB_CAP); /* inherit the coherence field */
-    ok &= (fwrite(g_field_row,sizeof(float),VOCAB_CAP,f)==(size_t)VOCAB_CAP);
-    ok &= (fclose(f)==0);
-    if(!ok) return 0;                                                    /* a truncated child is not born */
+    if(!write_nlc3(path, m, scar, g_field_bi, g_field_row, g_lineage, g_n_emerged, g_emerged_a, g_emerged_b, cseed, tick))
+        return 0;
     if(outpath){ strncpy(outpath,path,255); outpath[255]='\0'; }
     g_n_children++;
     return 1;
 }
 
-/* load a warm-start genome written by reproduce() — the child inherits the parent's
- * body (weights + Hebbian adapters), its COHERENCE FIELD, its wounds, and its invented
- * symbols. returns the child's derived seed (its own dice), 0 on failure. this is what
- * makes chorus reproduction HERITABLE: coherent parents beget coherent children, so
- * idea-3 selection stops being momentary and becomes real evolution over generations. */
+/* load a warm-start genome written by reproduce()/recombine() — the child inherits the
+ * parent's body (weights + Hebbian adapters), its COHERENCE FIELD, its wounds, its
+ * invented symbols, and its lineage. returns the child's derived seed (its own dice), 0
+ * on failure. this is what makes chorus reproduction HERITABLE: coherent parents beget
+ * coherent children, so idea-3 selection becomes real evolution over generations. */
 static unsigned long load_genome(const char* path, Model* m, float* scar){
-    FILE* f=fopen(path,"rb"); if(!f) return 0;
-    char magic[4]; unsigned long cseed=0; long tick; int ok=1;
-    ok &= (fread(magic,1,4,f)==4) && memcmp(magic,"NLC3",4)==0;
-    ok &= (fread(&g_lineage,sizeof(int),1,f)==1);        /* Ⓒ: inherit the parent's lineage */
-    ok &= (fread(&cseed,sizeof cseed,1,f)==1);
-    ok &= (fread(&tick,sizeof tick,1,f)==1);
-    ok &= (fread(&g_n_emerged,sizeof(int),1,f)==1);
-    if(!ok || g_n_emerged<0 || g_n_emerged>MAX_EMERGED){ fclose(f); return 0; }
-    ok &= (fread(scar,sizeof(float),VOCAB_CAP,f)==(size_t)VOCAB_CAP);
-    if(g_n_emerged>0){ ok &= (fread(g_emerged_a,sizeof(int),(size_t)g_n_emerged,f)==(size_t)g_n_emerged);
-                       ok &= (fread(g_emerged_b,sizeof(int),(size_t)g_n_emerged,f)==(size_t)g_n_emerged); }
-    ok &= (fread(m,sizeof(Model),1,f)==1);
-    ok &= (fread(g_field_bi,sizeof(float),(size_t)VOCAB_CAP*VOCAB_CAP,f)==(size_t)VOCAB_CAP*VOCAB_CAP);
-    ok &= (fread(g_field_row,sizeof(float),VOCAB_CAP,f)==(size_t)VOCAB_CAP);
-    fclose(f);
-    return ok ? (cseed?cseed:1) : 0;
+    return read_nlc3(path, m, scar, g_field_bi, g_field_row, &g_lineage, &g_n_emerged, g_emerged_a, g_emerged_b);
+}
+
+/* Ⓑ SEXUAL RECOMBINATION — two parent genomes → one child. the field IS the genome, so
+ * cross it over row-by-row: for each glyph a a coin decides whether the child's
+ * transition-row a speaks parent A's dialect or parent B's — a creole of two tongues.
+ * scars are UNIONED (a wound in either lineage is carried); body + emerged symbols come
+ * from parent A; lineage is a coin between the two. writes an NLC3 zygote, 1 on success.
+ * runs only in the single-threaded governor, so the big buffers are static (off-stack). */
+static int recombine(const char* pa, const char* pb, unsigned long zseed, long tick, const char* outpath){
+    static Model ma, mb;
+    static float scarA[VOCAB_CAP], scarB[VOCAB_CAP];
+    static float biA[VOCAB_CAP][VOCAB_CAP], biB[VOCAB_CAP][VOCAB_CAP];
+    static float rowA[VOCAB_CAP], rowB[VOCAB_CAP];
+    static int   eaA[MAX_EMERGED], ebA[MAX_EMERGED], eaB[MAX_EMERGED], ebB[MAX_EMERGED];
+    int linA=-1, linB=-1, neA=0, neB=0;
+    unsigned long csA=read_nlc3(pa,&ma,scarA,biA,rowA,&linA,&neA,eaA,ebA);
+    unsigned long csB=read_nlc3(pb,&mb,scarB,biB,rowB,&linB,&neB,eaB,ebB);
+    if(!csA || !csB) return 0;                        /* a missing/corrupt gamete — no zygote (caller falls back) */
+    seed_rng(zseed);                                  /* the child's own dice drive the crossover, reproducibly */
+    for(int a=0;a<VOCAB_CAP;a++)                       /* per-row crossover: each glyph's dialect from one parent */
+        if((frand()+1.0f)*0.5f < 0.5f){ for(int b=0;b<VOCAB_CAP;b++) biA[a][b]=biB[a][b]; rowA[a]=rowB[a]; }
+    for(int i=0;i<VOCAB_CAP;i++) if(scarB[i]>scarA[i]) scarA[i]=scarB[i];     /* UNION the wounds */
+    int lin = ((frand()+1.0f)*0.5f < 0.5f) ? linA : linB;                     /* lineage from either parent */
+    unsigned long cseed = hash_seed(csA ^ (csB*0x9E3779B97F4A7C15UL), tick);
+    (void)mb; (void)neB; (void)eaB; (void)ebB;         /* parent B contributes field+scars+lineage, not body/symbols */
+    return write_nlc3(outpath, &ma, scarA, biA, rowA, lin, neA, eaA, ebA, cseed, tick);
 }
 
 /* ── Phase A step 10: the mouth — the organism talks WITH you (the resonance loop) ──
@@ -1032,6 +1078,15 @@ static pid_t spawn_cell(const char* genome, const char* corpus, int label, unsig
     return p;
 }
 
+/* fetch the idx-th line of the birth queue into out (255 cap), '' if absent. */
+static void births_line(long idx, char* out){
+    out[0]='\0';
+    FILE* b=fopen("lifeis/births.txt","r"); if(!b) return;
+    char ln[256]; long i=0;
+    while(fgets(ln,sizeof ln,b)){ if(i==idx){ ln[strcspn(ln,"\n")]='\0'; strncpy(out,ln,255); out[255]='\0'; break; } i++; }
+    fclose(b);
+}
+
 int main(int argc, char** argv){
     /* interactive mouth: ./l --mouth [seed] */
     if(argc>1 && strcmp(argv[1],"--mouth")==0){
@@ -1066,17 +1121,30 @@ int main(int argc, char** argv){
             int st; pid_t d=waitpid(-1,&st,WNOHANG);
             if(d>0){ live_n--; printf("[governor] a cell fell silent — %d alive\n", live_n); fflush(stdout); }
             long avail=0; { FILE* b=fopen("lifeis/births.txt","r"); if(b){ int c; while((c=fgetc(b))!=EOF) if(c=='\n') avail++; fclose(b);} }
+            int sex_on = (getenv("NL_NOSEX")==NULL);   /* Ⓑ A/B: NL_NOSEX=1 → asexual only */
             while(births_consumed<avail && live_n<MAX_CELLS && next_label<MAX_LIFETIME_CELLS){  /* a divide fills a slot */
-                char gpath[256]; gpath[0]='\0';       /* the genome the reproducing cell left for its child */
-                { FILE* b=fopen("lifeis/births.txt","r"); if(b){ char ln[256]; long i=0;
-                    while(fgets(ln,sizeof ln,b)){ if(i==births_consumed){ ln[strcspn(ln,"\n")]='\0'; strncpy(gpath,ln,255); gpath[255]='\0'; break; } i++; }
-                    fclose(b); } }
+                char pa[256], pb[256]; births_line(births_consumed, pa);   /* the genome a reproducing cell left */
                 unsigned long cseed = seed + 7919UL*(unsigned long)(next_label+1);
-                if(spawn_cell(gpath[0]?gpath:NULL, NULL, next_label, cseed)>0){   /* HEREDITY: born OF a parent's genome */
-                    printf("[governor] a cell is born of a parent (cell %d) — %d alive\n", next_label, live_n+1); fflush(stdout);
-                    next_label++; live_n++; if(live_n>peak) peak=live_n;
+                int born=0;
+                if(sex_on && avail-births_consumed>=2 && pa[0]){           /* Ⓑ SEX: two gametes waiting → one creole child */
+                    births_line(births_consumed+1, pb);
+                    char zp[256]; snprintf(zp,sizeof zp,"lifeis/children/zygote_%d.nl", next_label);
+                    if(pb[0] && recombine(pa,pb,cseed,(long)next_label,zp)){
+                        remove(pa); remove(pb);                            /* both gametes consumed into the zygote */
+                        if(spawn_cell(zp, NULL, next_label, cseed)>0){     /* HEREDITY×2: born OF two parents' fields */
+                            printf("[governor] a cell is born of TWO parents (cell %d) — %d alive\n", next_label, live_n+1); fflush(stdout);
+                            next_label++; live_n++; if(live_n>peak) peak=live_n;
+                        }
+                        births_consumed+=2; born=1;
+                    }
                 }
-                births_consumed++;
+                if(!born){                                                /* asexual fallback: one parent → one child */
+                    if(spawn_cell(pa[0]?pa:NULL, NULL, next_label, cseed)>0){
+                        printf("[governor] a cell is born of a parent (cell %d) — %d alive\n", next_label, live_n+1); fflush(stdout);
+                        next_label++; live_n++; if(live_n>peak) peak=live_n;
+                    }
+                    births_consumed++;
+                }
             }
             if(d<=0) usleep(20000);                 /* 20ms — don't spin the governor */
         }
