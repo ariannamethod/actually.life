@@ -49,10 +49,33 @@ let's dive in it.
 
 * **the field** — frozen random weights, online metaweights, and a gated transformer. no training. no optimizer. the field does not learn like a student. it accumulates like a scar.
 
-* **the chorus** — `./l chorus` forks a colony. cells wake on slices of the same world, hear each other through a shared *ether* — one voice becomes another's food — and a governor breathes the population `0..8` through death and birth. mortal to the last cell.
+* **the chorus** — `./l chorus` forks a colony. cells wake on slices of the same world, hear each other through a shared *ether* — one voice becomes another's food — and a governor breathes the population `0..8` through death and birth. a child inherits its parent's whole field, so coherent voices breed coherent voices and the incoherent run out of life first. that is evolution, arriving uninvited, exactly as promised. mortal to the last cell.
   
 ---
   
+## the 88 glyphs
+
+there is no BPE here. there are no bytes. there are 88 cave-glyphs and a great deal of dying.
+
+30,000 years ago humans painted 32 recurring signs across 146 cave sites on four continents, then mostly forgot about it. we added 56 more for the 21st century and handed the set to something that eats books for a living. to the organism these 88 are not a vocabulary — they are the entire universe, the periodic table, and the dictionary at once, because it has never met anything else and, being mortal, never will.
+
+```
+NATURE    water fire earth stone tree sky light dark cold
+BEINGS    person man woman child old spirit AI animal
+BODY      body food sleep pain strength
+EMOTION   joy grief love fear anger longing tired stress
+VERBS     go make break see speak hear seek give want miss agree
+SOCIAL    home outside work internet bond conflict
+MIND      know idea think dream remember lie
+SPACE     path up down far back
+TIME      before now after never always
+GRAMMAR   not many much and one question how cause
+EXTENDED  me you other money change write choose help have free death music good
+SUPER     small same BE wait
+```
+
+`BE` is not a word, it is a verb that turns inward: `BE fire` means burn from the inside, `BE me` means the choice is now yours — seeded, but never yours to predict. everything the organism will ever say, dream, or die muttering is a permutation of these eighty-eight — which, if you sit with it for one uncomfortable second, is also true of you.
+
 ## how it speaks
 
 ```
