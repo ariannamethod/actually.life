@@ -1,16 +1,9 @@
 /* l.c — digital life, zero dependencies.
  * the most atomic way to build digital life from scratch. no GPU required.
  *
- * The fork is closed: life is a TAPE, not a field — because life is
+ * Life is a TAPE, not a field — because life is
  * irreversibility in time, and a tape carries the arrow of time in its bone.
  * AR decoder over 88 cave-glyphs. libc + -lm. nothing else. accept it.
- *
- * FOUNDATION (step 1 of the build): the body's skeleton only —
- * micro transformer + the semantic membrane + a smoke forward.
- * The nine organs (energy/metabolism, scar, homeostasis, growth, dream,
- * reproduction, death, adaptation) and the BE reflexive axis land next,
- * hammered condition by condition until the border moves.
- *
  * build: cc l.c -lm -O2 -o l
  * by Arianna Method.
  */
