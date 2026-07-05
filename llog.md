@@ -136,8 +136,28 @@ the colony breathes and dies.
   `try_emerge` O(VOCAB²) per dream → incremental best-pair; governor's full
   `births.txt` scan every 20ms → offset; `semtok_word` ~600 strcmp/word → hash.
 
-**Next:** the Karpathy-Opus pass (simplify without breaking + 3 genius ideas),
-then the README (Oleg's draft, quote-heavy).
+## Karpathy pass (Opus subagent as Karpathy — now factually at Anthropic pre-training)
+
+- **Part 1 (simplify, done):** deleted the dead "shout" apparatus (28 lines, bit-
+  identical, ASan-clean, audited empirically vs the parent commit — the ALL-CAPS
+  test that would trigger the old shout path produced identical output) + the
+  `utt[0]` dead store. README micro-scaffold pushed (Oleg rewrites).
+- **Part 2 (3 genius ideas) — implementing one at a time, verified each:**
+  - **① Co-occurrence IS attention (done).** `field_fold` folds the whole
+    `recent[]` window, geometrically decayed (decay^k) — soft attention over the
+    co-occurrence graph, not order-1. FIELD_WIN=1 == old behavior. Voice gains a
+    horizon; chorus resonance propagates across glyphs. Lives/dies/deterministic/
+    ASan-clean.
+  - **② Information-as-food (done).** `digest` weighs yield by surprise
+    (`-log p_field(id|prev)`, factor [0.5,1.5]) — monotony starves, novelty feeds
+    (Friston). Added `prev0` so the single-glyph dream is surprise-weighted too:
+    kills the hard endgame loop (a looping dreamer starves on its own
+    predictability). Endgame now murmurs varied permutations, not a stuck cycle.
+    Lives/dies (2548), deterministic, ASan-clean.
+  - **③ Coherence-selected speech (pending).** speak costs energy, refunded by
+    coherence → the colony evolves toward coherent voices with zero supervision.
+
+**Next:** idea ③, then finish the README (Oleg's draft, quote-heavy).
 - **Phase 4 — SIMPLIFICATION** ⏳ — after functional, spawn Opus subagents
   (`model:"opus"`, manual, not the plugin) to find dead constructs / redundancy
   that don't kill functionality; apply by hand; re-run all Phase 0–3 checks.
