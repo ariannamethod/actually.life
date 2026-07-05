@@ -648,6 +648,8 @@ static float field_coherence(int prev){
  * order-1 fold. */
 #define FIELD_DECAY 0.6f
 #define FIELD_WIN   8
+#define FIELD_FADE  0.9f          /* heredity idea A: inherited convictions FADE each generation */
+#define FIELD_MUT   0.02f         /* ...and drift on the child's own dice — the missing arm, variation */
 static void field_fold(float* logits, const int* recent, int recent_n){
     if(!g_field_on || recent_n<=0) return;
     float mag=0.0f; for(int i=0;i<VOCAB_CAP;i++) mag+=fabsf(logits[i]); mag/=VOCAB_CAP;
@@ -885,7 +887,16 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     static float scar[VOCAB_CAP]; for(int i=0;i<VOCAB_CAP;i++) scar[i]=0.0f; /* permanent wounds (never decay) */
     if(genome){ unsigned long cs=load_genome(genome, m, scar);   /* HEREDITY: warm-start from a parent */
                 if(cs){ seed_rng(cs); remove(genome);            /* inherited — the genome file has done its job (caps disk) */
-                        printf("%s  born of a parent — inherits its field, wounds, symbols.\n", tag); }
+                        if(getenv("NL_NOMUT")==NULL)             /* Ⓐ MUTATION AT CONCEPTION — variation, the missing arm */
+                          for(int a=0;a<VOCAB_CAP;a++) if(g_field_row[a]>0.0f){
+                            float rs=0.0f;                       /* inheritance fades (×FIELD_FADE), then drifts on the child's dice; */
+                            for(int b=0;b<VOCAB_CAP;b++){        /* strong themes must be RE-EARNED from the child's own food or wash out */
+                                g_field_bi[a][b] = FIELD_FADE*g_field_bi[a][b] + FIELD_MUT*(frand()+1.0f)*0.5f;
+                                rs += g_field_bi[a][b];
+                            }
+                            g_field_row[a]=rs;                   /* keep row-sums consistent after the perturbation */
+                          }
+                        printf("%s  born of a parent — inherits (and mutates) its field, wounds, symbols.\n", tag); }
                 else {  /* corrupt/truncated genome: load may have half-clobbered the globals — reset to a clean cell (F2) */
                     free(m); m=model_new();
                     for(int i=0;i<VOCAB_CAP;i++) scar[i]=0.0f;
