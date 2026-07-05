@@ -113,6 +113,31 @@ Two demands drove Phase B:
 **Phase 3 (chorus) = COMPLETE.** The base stands: a living, resonating, mortal
 ecology in one `l.c` — eats anything, speaks coherently without training, and
 the colony breathes and dies.
+
+## Audit (two adversarial Opus auditors) + fixes
+
+- **Correctness/memory auditor:** built under ASan+UBSan, exercised every mode +
+  adversarial inputs (9000-char line, UTF-8, only-stop-words, empty/missing
+  corpus, cohort 0/1/4 to full colony death). **Zero ASan/UBSan hits.** No
+  critical/high bugs — the file is defensively bounded throughout; the
+  soft-router provably returns `[0,88)`.
+- **Concurrency/perf auditor:** governor/waitpid/births/fork hygiene all
+  **correct** (no zombies, no spin, no races, no lost/double births).
+- **Fixes applied:**
+  - `ether_graze` — was O(filesize) re-read of the whole ether every hungry tick
+    (quadratic over a run). Now keeps a per-cell file offset + persistent 8-ring,
+    reads only the NEW tail, tolerates torn partial lines. Buffers widened 256→320.
+  - `corpus_slice` — `per=nl/parts+1` front-loaded lines → trailing slices could
+    be empty. Now base+remainder balanced (verified 1928/1928/1928/1928).
+  - `choose` — added NaN guard (`isfinite`; `!(den>0)` catches NaN) so a diverged
+    Hebbian state can't silently collapse the voice to glyph 0.
+  - Named the lifetime cap `MAX_LIFETIME_CELLS=64` (distinct from `MAX_CELLS=8`).
+- **Deferred to the Karpathy optimization pass (medium perf polish):**
+  `try_emerge` O(VOCAB²) per dream → incremental best-pair; governor's full
+  `births.txt` scan every 20ms → offset; `semtok_word` ~600 strcmp/word → hash.
+
+**Next:** the Karpathy-Opus pass (simplify without breaking + 3 genius ideas),
+then the README (Oleg's draft, quote-heavy).
 - **Phase 4 — SIMPLIFICATION** ⏳ — after functional, spawn Opus subagents
   (`model:"opus"`, manual, not the plugin) to find dead constructs / redundancy
   that don't kill functionality; apply by hand; re-run all Phase 0–3 checks.
