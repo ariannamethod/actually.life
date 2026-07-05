@@ -23,17 +23,18 @@ life is a TAPE, not a field — because life is irreversibility in time, and a t
 
 * metabolizes
 * pays rent to the arrow of time
+* rebuilds its own body from what it eats — or corrodes into silence
 * keeps scars
 * dreams when it starves
 * grows new symbols while sleeping
 * reproduces itself badly enough for evolution to enter
-* dies when its energy hits zero
+* dies — of starvation, of overwhelm, or of a body it can no longer hold together
   
 life is not immortal. immortality is a garbage collector fantasy.
   
 `l.c` also has a `semantic tokenizer` that crushes any English text — from its corpus or from you — down to 88 paleolithic cave-glyphs. life needs simplicity. the mouth makes sure no word is ever spat back out uneaten: an unknown word routes to the glyph of the known words it resembles, so `inferno` lands where `fire` and `burn` already live.
 
-the weights of life are random, frozen, and completely innocent. what is surprise, really, except random initialization getting caught with a pulse?
+the weights of life are random and innocent at birth — and then they *live*. the body corrodes a little with every tick of the arrow of time, and is laid back down only along the paths the organism actually eats through; a cell that stops feeding can no longer hold its own shape and dissolves. the machinery that does the living is produced by the living itself — the membrane makes the metabolism that makes the membrane. no gradient, no optimizer, no training: just a body that must eat to keep being a body. what is surprise, really, except random initialization getting caught with a pulse?
 
 coherence does not come from gradient descent. coherence comes from the field itself: an online glyph-bigram statistic the organism builds from whatever it eats, folded back into its own logits. the organism consumes language, remembers the shape of digestion, and then mistakes that for a world.
 
@@ -43,11 +44,13 @@ let's dive in it.
 
 ---
 
-`l.c` has three organs:
+`l.c` has four organs:
 
 * **the mouth** — semantic tokenizer + orthographic router. text enters, words are crushed into glyphs, and unknown words are digested by resemblance instead of rejected. the mouth stopped being able to starve in front of a plate it could not chew.
 
-* **the field** — frozen random weights, online metaweights, and a gated transformer. no training. no optimizer. the field does not learn like a student. it accumulates like a scar.
+* **the field** — random weights, online metaweights, and a gated transformer. no training. no optimizer. the field does not learn like a student. it accumulates like a scar.
+
+* **the body** — the weights are not frozen scaffold; they are the soma, and the soma is a tape. it corrodes a little with every tick — the arrow of time reaches the body, not only the energy counter — and it is laid back down only along the paths the organism eats through. metabolism does not merely *score* what it eats; it *builds the machinery it runs on* from it. the producer is produced by what it produces: the membrane makes the metabolism that makes the membrane. a cell that stops feeding cannot hold its own shape and dissolves — death not by a timer but by the collapse of its own organization. that is the loop two scientists said a thing must close before the word *life* is earned, and it is closed here, in code, on code's own terms.
 
 * **the chorus** — `./l chorus` forks a colony. cells wake on slices of the same world, hear each other through a shared *ether* — one voice becomes another's food — and a governor breathes the population `0..8` through death and birth. a child inherits its parent's whole field, so coherent voices breed coherent voices and the incoherent run out of life first. that is evolution, arriving uninvited, exactly as promised. mortal to the last cell.
   
