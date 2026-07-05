@@ -230,12 +230,49 @@ cell 3  me anger not strength work · see other pain joy me
 - **chorus**: cells diverge (slices), resonate (ether, Step 2), population
   breathes (governor, Step 3).
 
+## Second audit + heredity hardening (done)
+
+A second Opus audit (of the trilogy + heredity, since ceed052) cleared the shipping
+binary (ASan/UBSan clean, mortal, heredity byte-exact) and found two connected holes
+on the corrupt-genome-load path, both fixed: **F1** — `try_emerge` guarded only
+`>=MAX_EMERGED`, so a negative inherited `n_emerged` wrote `g_emerged_a[<0]` OOB (added
+`<0`); **F2** (root) — `load_genome` overwrites globals in place, so a truncated file
+left a half-clobbered state and `live()` didn't rebuild (now resets to a fresh cell on
+load failure). Housekeeping: a child `remove()`s its genome after inheriting (caps disk).
+
+## README (done)
+
+Oleg wrote the нетленка (his voice: "immortality is a garbage collector fantasy",
+"an organism recognizing its own bad handwriting", "same disease. smaller file.").
+Claude added the **88-glyph list** (verified an exact set-match to `GLYPH_NAMES`) + a
+heredity line. Quote-heavy, zero defensive constructions.
+
+## Karpathy pass 2 (Opus-as-Karpathy, now factually at Anthropic pre-training)
+
+- **Part 1 (done):** one `ingest()` helper for the three eating paths (dream stays
+  separate on purpose), dropped a dead `&& food`, swept the stale "shout" comments +
+  a duplicate `speak` header. All behavior-preserving (solo output bit-identical).
+- **Part 2 — three new ideas.** Karpathy's insight: **heredity today is pure CLONING —
+  Darwin has selection + inheritance but no VARIATION; the field is the creature, give
+  it variation.**
+  - **Ⓐ Mutation at conception** — perturb the inherited field with the child's own
+    dice + fading conviction (0.9× + noise); lineages drift, strong themes must be
+    re-earned. The missing third arm of evolution. ~6 lines in `load_genome`.
+  - **Ⓑ Sexual recombination** — two queued parents → one child, per-glyph-row crossover
+    in the governor; a creole of two dialects, hybrid vigor.
+  - **Ⓒ Lineage tags + kin-biased grazing** (the crown) — a lineage that eats only itself
+    becomes predictable to its own field → surprise→0 → yield→0 → **starves (monoculture
+    death)**; eating strangers feeds. Fuses heredity + ether + info-as-food so *diversity
+    is caloric intake*. Makes Ⓐ/Ⓑ matter.
+
 ## Resume-here (for future-me after a summary)
 
-Working copy: `~/arianna/actually.life` (cloned; **nothing committed/pushed** —
-mouth+field+chorus live as local edits to `l.c`, path `lifeisshit→lifeis` done).
-Build: `cc -O2 -o l l.c -lm`. Run solo `./l 42`; chorus `./l chorus 4`.
-Next action: **Phase 3 Step 2 — the ether** (write utterances to
-`lifeis/ether.txt`, eat neighbours' recent lines when hungry). Then Step 3
-governor, then Phase 4 simplification (Opus subagents), then README. Do NOT push
-without Oleg's word.
+Working copy: `~/arianna/actually.life`. **Everything is committed AND pushed** to
+`github.com/ariannamethod/actually.life` (30+ commits, each with a life-epigraph; push
+via `git -c credential.helper='!gh auth git-credential' push origin main`, author env
+`Arianna Method <theariannamethod@gmail.com>`). Build `cc -O2 -o l l.c -lm`; run `./l 42`,
+`./l chorus 4`, `./l --mouth`. State: mouth+field+chorus+heredity done, 2 audits + 2
+Karpathy passes clean, README + llog current. **Next action: implement Karpathy pass-2
+idea Ⓐ (field mutation in `load_genome`), then Ⓒ, then Ⓑ — verify each (solo
+deterministic / chorus mortal / ASan clean + does the effect show).** Push is authorized
+per-feature; keep the epigraph-per-commit ritual.
