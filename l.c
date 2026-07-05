@@ -513,10 +513,11 @@ static void forward(Model* m, const int* toks, int n, float* out){
                               matvec(y->wv,xn[t],v[t],E,E);
                               apply_hebbian_lora(v[t],y->heb_A_v,y->heb_B_v,xn[t],E,RANK); }
         /* multi-head causal attention */
+        const float shd = sqrtf((float)HD);          /* HD is a compile-time constant — compute the scale once */
         for(int t=0;t<n;t++) for(int h=0;h<NH;h++){
             int off=h*HD; float sc[CTX], mx=-1e30f;
             for(int j=0;j<=t;j++){ float d=0; for(int e=0;e<HD;e++) d+=q[t][off+e]*k[j][off+e];
-                d/=sqrtf((float)HD); sc[j]=d; if(d>mx) mx=d; }
+                d/=shd; sc[j]=d; if(d>mx) mx=d; }     /* keep the DIVISION (not ×1/shd) — same rounding, frozen-safe */
             float den=0; for(int j=0;j<=t;j++){ sc[j]=expf(sc[j]-mx); den+=sc[j]; }
             for(int e=0;e<HD;e++){ float a=0; for(int j=0;j<=t;j++) a+=sc[j]*v[j][off+e];
                 att[t][off+e]=a/den; }
@@ -636,9 +637,9 @@ static void field_observe(const int* g, int n){
 /* how confident is the field about what follows `prev` (0=flat, 1=certain) */
 static float field_coherence(int prev){
     if(prev<0||prev>=VOCAB_CAP||g_field_row[prev]<=0.0f) return 0.0f;
-    float mx=0.0f, inv=1.0f/g_field_row[prev];
-    for(int b=0;b<VOCAB_CAP;b++){ float p=g_field_bi[prev][b]*inv; if(p>mx) mx=p; }
-    return mx;
+    float mxb=0.0f, inv=1.0f/g_field_row[prev];      /* argmax_b(bi·inv) == argmax_b(bi) since inv>0 — */
+    for(int b=0;b<VOCAB_CAP;b++) if(g_field_bi[prev][b]>mxb) mxb=g_field_bi[prev][b];
+    return mxb*inv;                                   /* one multiply at the end, not 122 in the loop (bit-identical) */
 }
 /* fold the field into the transformer's logits in place, Q-gated by earned voice */
 /* Co-occurrence IS attention (Karpathy idea 1). the field is not order-1: fold the
@@ -657,12 +658,16 @@ static void field_fold(float* logits, const int* recent, int recent_n){
     float mag=0.0f; for(int i=0;i<VOCAB_CAP;i++) mag+=fabsf(logits[i]); mag/=VOCAB_CAP;
     float gate=(mag-0.5f)/1.5f; if(gate<0.0f)gate=0.0f; if(gate>1.0f)gate=1.0f; /* Q: earned voice */
     static float meta[VOCAB_CAP]; for(int b=0;b<VOCAB_CAP;b++) meta[b]=0.0f;
-    float w=1.0f, wsum=0.0f; int used=0;
+    const float LOG1E6 = logf(1e-6f);               /* a zero bigram cell always folds to this exact constant — */
+    float w=1.0f, wsum=0.0f; int used=0;            /* skip the transcendental on the field's (large) sparse fraction */
     for(int k=0; k<FIELD_WIN && k<recent_n; k++){
         int a=recent[recent_n-1-k];
         if(a<0 || a>=VOCAB_CAP || g_field_row[a]<=0.0f){ w*=FIELD_DECAY; continue; }
         float rowinv=1.0f/g_field_row[a];
-        for(int b=0;b<VOCAB_CAP;b++) meta[b]+= w*logf(g_field_bi[a][b]*rowinv + 1e-6f);
+        for(int b=0;b<VOCAB_CAP;b++){
+            float v = (g_field_bi[a][b]==0.0f) ? LOG1E6 : logf(g_field_bi[a][b]*rowinv + 1e-6f);
+            meta[b] += w*v;                          /* bit-identical: 0·rowinv+1e-6f == 1e-6f exactly (rowinv finite) */
+        }
         wsum+=w; used++; w*=FIELD_DECAY;
     }
     if(used==0) return;                              /* no field context yet — leave the random logits */
