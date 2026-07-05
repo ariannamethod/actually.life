@@ -285,7 +285,7 @@ static int semtok_line(const char* line, int* out, int max_tokens){
 #define HEBBIAN_DECAY  0.9999f    /* canon cavellman.c:424 */
 #define PASSIVE_SIGNAL 0.3f       /* reading the world = passive (cavellman.c:654) */
 #define DIGEST_YIELD   80.0f      /* energy per unit |ΔB_v| — calibrated: avg dB~2e-5, break-even~50 */
-#define BE_GAIN        3.0f       /* BE / a shout turns the glyph's charge inward, amplified (modes only) */
+#define BE_GAIN        3.0f       /* BE turns the glyph's charge inward, amplified (modes only) */
 
 /* ── Phase A step 4: scar — permanent wounds (never decay) ── */
 #define SCAR_RATE   0.01f         /* how fast an agitating glyph wounds itself */
@@ -578,7 +578,7 @@ static float digest(Model* m, Modes* mo, float* scar, const int* glyphs, int pre
         }
         if(id==BE_ID){                                /* the operator is not a meal — arms reflexivity, yields nothing */
             be_armed=1;
-        } else if(be_armed){               /* "BE X" or a shouted "X": become X — charge turned inward */
+        } else if(be_armed){               /* "BE X": become X — the charge turns inward */
             charge_apply_reflexive(mo,id);            /* the punch lives in the modes (×BE_GAIN), not a free yield */
             yield += dB*f;                            /* honest: same metabolism as eating it outward */
             be_armed=0;
@@ -691,8 +691,6 @@ static int choose(const float* logits, const Modes* mo, const float* scar){
     for(int i=0;i<VOCAB_CAP;i++){ acc+=p[i]; if(p[i]>0.0f && acc>=r) return i; }
     return 0;
 }
-/* speak — the organism utters a few chosen glyphs FROM ITSELF (speak-from-self,
- * not from the prompt) into waste.log. its own words become its next context. */
 /* ── THE ETHER — one cell's voice becomes another's food ─────────────────────
  * eat the chorus: read the most recent utterance from ANOTHER cell out of the
  * shared ether and tokenize its glyph-names back to ids (they ARE GLYPH_NAMES,
@@ -847,6 +845,18 @@ static void run_mouth(Model* m, unsigned long seed){
 #define MAX_CELLS     8       /* carrying capacity — max ALIVE at once (death frees slots) */
 #define MAX_LIFETIME_CELLS 64 /* total cells that may ever be born — a mortality ceiling on the colony */
 
+/* one bite: digest a glyph run, remember it, track co-occurrence, feed the field, wake.
+ * the three eating paths (world, diet, chorus-graze) share this ritual verbatim; the
+ * DREAM path deliberately does NOT (it uses a real prev and must not reinforce the
+ * field with its own predictions). */
+static float ingest(Model* m, Modes* mo, float* scar, const int* g, int n,
+                    int* recent, int* rn, long* streak){
+    float y = digest(m, mo, scar, g, -1, n);
+    for(int i=0;i<n;i++) recent_push(recent, rn, g[i]);
+    cooc_track(g, n); field_observe(g, n); *streak = 0;
+    return y;
+}
+
 /* ── live — one organism, birth to death ─────────────────────────────────────
  * the single-cell life, extracted so a chorus can fork many of them. corpus is
  * its food, waste its voice, seed its body AND its dice, label>=0 tags its prints
@@ -902,27 +912,21 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         float yield=0.0f;
         int   dreaming=0, grazing=0;
         if(diet_mode){
-            yield=digest(m,&mo,scar,diet_glyphs,-1,diet_n);
-            for(int i=0;i<diet_n;i++) recent_push(recent,&recent_n,diet_glyphs[i]);
-            cooc_track(diet_glyphs,diet_n); field_observe(diet_glyphs,diet_n); dream_streak=0;
-        } else if(fed && food && fgets(line,sizeof(line),food)){
+            yield=ingest(m,&mo,scar,diet_glyphs,diet_n,recent,&recent_n,&dream_streak);
+        } else if(fed && fgets(line,sizeof(line),food)){   /* fed==1 implies food!=NULL (invariant) */
             int n=semtok_line(line,glyphs,CTX);
-            if(n>=1){ yield=digest(m,&mo,scar,glyphs,-1,n);
-                for(int i=0;i<n;i++) recent_push(recent,&recent_n,glyphs[i]);
-                cooc_track(glyphs,n); field_observe(glyphs,n); dream_streak=0; }
+            if(n>=1) yield=ingest(m,&mo,scar,glyphs,n,recent,&recent_n,&dream_streak);
         } else {                                 /* corpus exhausted -> eat the chorus, then dream */
             fed=0;
             int gz[CTX], gn=0;
             if(ether) gn=ether_graze(ether_path, label, gz, CTX);  /* FIRST: eat a neighbour's voice */
             if(gn>=1){                               /* the colony feeds itself through speech */
-                yield=digest(m,&mo,scar,gz,-1,gn);
-                for(int i=0;i<gn;i++) recent_push(recent,&recent_n,gz[i]);
-                cooc_track(gz,gn); field_observe(gz,gn); dream_streak=0; grazing=1; n_graze++;
+                yield=ingest(m,&mo,scar,gz,gn,recent,&recent_n,&dream_streak); grazing=1; n_graze++;
             } else if(dream_on && energy<DREAM_THRESH && recent_n>0){  /* ELSE: eat your own predicted glyph */
                 static float dl[VOCAB_CAP]; forward(m,recent,recent_n,dl);
                 field_fold(dl, recent, recent_n);  /* dream coherently over the window — replay the field, not noise */
                 int dg=choose(dl,&mo,scar);          /* the dream is chosen, not computed */
-                float dy=digest(m,&mo,scar,&dg,recent[recent_n-1],1);   /* a dream is not a shout */
+                float dy=digest(m,&mo,scar,&dg,recent[recent_n-1],1);   /* a dream is not a meal — discounted by DREAM_FRAC */
                 yield = dy * DREAM_FRAC * expf(-(float)dream_streak/DREAM_DECAY); /* dreams thin out */
                 recent_push(recent,&recent_n,dg);
                 dream_streak++; dreaming=1; n_dream++;
