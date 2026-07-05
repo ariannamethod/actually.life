@@ -264,32 +264,7 @@ static int semtok_line(const char* line, int* out, int max_tokens){
     return n;
 }
 
-/* like semtok_line, but ALSO marks shout[i]=1 when the source word was ALL-CAPS —
- * caps is prosody, not semantics: a shouted glyph goes INWARD (reflexive). case is
- * detected BEFORE lowercasing, so "FIRE" burns inside while "fire" warms outside. */
-/* the organism is CAPS-AGNOSTIC: caps are lowercased at the door — you cannot kill
- * this life with a single shout. shout[] is kept for ABI but is always 0; tone is not
- * a weapon. (the death of passion stays, but it now takes obsession, not a snot.) */
-static int semtok_line_shout(const char* line, int* out, int* shout, int max_tokens){
-    char buf[4096];
-    strncpy(buf,line,4095); buf[4095]='\0';
-    for(int i=0;buf[i];i++) if(buf[i]>='A'&&buf[i]<='Z') buf[i]+=32;   /* sees caps -> lowercases them */
-    for(int i=0;buf[i];i++){ unsigned char c=(unsigned char)buf[i];
-        if(!((c>='a'&&c<='z')||(c>='0'&&c<='9')||c==' '||c=='\''||c=='-')) buf[i]=' '; }
-    int n=0, last_id=-1, any_tok=0;
-    char* tok=strtok(buf," \t\n");
-    while(tok && n<max_tokens){
-        any_tok=1;
-        if(*tok!='\0' && !semtok_is_stop_word(tok)){
-            int id=semtok_word(tok);
-            if(id<0) id=semtok_word_soft(tok);      /* THE MOUTH: no word is dropped */
-            if(id>=0 && id!=last_id){ out[n]=id; if(shout) shout[n]=0; n++; last_id=id; }
-        }
-        tok=strtok(NULL," \t\n");
-    }
-    if(n==0 && any_tok && max_tokens>0){ out[0]=semtok_word_soft(line); if(shout) shout[0]=0; n=1; }
-    return n;
-}
+/* (shout axis was dead: shout[] always 0, so semtok_line_shout was just semtok_line + busywork. removed; BE carries reflexivity.) */
 
 /* ── architecture (micro) — да будет тело малым, и оттого живым ── */
 #define E       48
@@ -571,7 +546,7 @@ static void forward(Model* m, const int* toks, int n, float* out){
  * INVARIANT: the charge writes modes only (charge_apply); energy/scar are never
  * touched here — a burning glyph costs energy THROUGH a low metab_factor, never
  * by a direct write. */
-static float digest(Model* m, Modes* mo, float* scar, const int* glyphs, const int* shout, int n){
+static float digest(Model* m, Modes* mo, float* scar, const int* glyphs, int n){
     static float before[RANK*E];
     float yield=0.0f;
     int be_armed=0;
@@ -588,10 +563,9 @@ static float digest(Model* m, Modes* mo, float* scar, const int* glyphs, const i
             for(int i=0;i<RANK*E;i++) dB+=fabsf(y->heb_B_v[i]-before[i]);
         }
         float f=charge[id].metab_factor;
-        int shouted = (shout && shout[g]);            /* an ALL-CAPS word is a shout — it goes inward */
         if(id==BE_ID){                                /* the operator is not a meal — arms reflexivity, yields nothing */
             be_armed=1;
-        } else if(be_armed || shouted){               /* "BE X" or a shouted "X": become X — charge turned inward */
+        } else if(be_armed){               /* "BE X" or a shouted "X": become X — charge turned inward */
             charge_apply_reflexive(mo,id);            /* the punch lives in the modes (×BE_GAIN), not a free yield */
             yield += dB*f;                            /* honest: same metabolism as eating it outward */
             be_armed=0;
@@ -788,15 +762,15 @@ static void run_mouth(Model* m, unsigned long seed){
     static float scar[VOCAB_CAP]; for(int i=0;i<VOCAB_CAP;i++) scar[i]=0.0f;
     static float sl[VOCAB_CAP];
     int   recent[CTX]; int recent_n=0;
-    int   glyphs[CTX]; int shout[CTX]; char line[4096];
+    int   glyphs[CTX]; char line[4096];
     float energy=E_BORN; float scar_total=0.0f;
     printf("nanolife — a mouth opens. seed=%lu.\n", seed);
     printf("  speak to it; your words are food. fire burns it, love feeds it, \"BE me\" may kill it.\n\n");
     while(energy>0.0f && fabsf(mo.S)<S_DEATH && fgets(line,sizeof line,stdin)){
         energy -= RENT*(1.0f + SCAR_RENT*scar_total);          /* the rent of being, heavier when wounded */
-        int n=semtok_line_shout(line,glyphs,shout,CTX);
+        int n=semtok_line(line,glyphs,CTX);
         float yield=0.0f;
-        if(n>=1){ yield=digest(m,&mo,scar,glyphs,shout,n);      /* your words DO things to it */
+        if(n>=1){ yield=digest(m,&mo,scar,glyphs,n);      /* your words DO things to it */
             for(int i=0;i<n;i++) recent_push(recent,&recent_n,glyphs[i]);
             cooc_track(glyphs,n); }
         energy += DIGEST_YIELD*yield;
@@ -832,8 +806,8 @@ static int live(const char* corpus, const char* waste_path, const char* ether_pa
     FILE* ether = ether_path ? fopen(ether_path,"a") : NULL;   /* the shared voice of the colony */
     long params=(long)(sizeof(Model)/sizeof(float));
 
-    int diet_glyphs[CTX]; int diet_shout[CTX]; int diet_n=0;
-    if(diet) diet_n = semtok_line_shout(diet, diet_glyphs, diet_shout, CTX);
+    int diet_glyphs[CTX]; int diet_n=0;
+    if(diet) diet_n = semtok_line(diet, diet_glyphs, CTX);
     int diet_mode = diet_n>0;
 
     printf("%snanolife — a mortal clock that can eat.  seed=%lu  diet=%s  params=%ld\n",
@@ -858,7 +832,7 @@ static int live(const char* corpus, const char* waste_path, const char* ether_pa
     float energy=E_BORN;
     long  tick=0;
     char  line[4096];
-    int   glyphs[CTX]; int shout[CTX];
+    int   glyphs[CTX];
     int   fed=(food?1:0);                           /* ether-born cells start hungry, on the chorus */
     while(energy>0.0f && tick<200000){          /* cap = falsification guard: it MUST die */
         tick++;
@@ -866,12 +840,12 @@ static int live(const char* corpus, const char* waste_path, const char* ether_pa
         float yield=0.0f;
         int   dreaming=0, grazing=0;
         if(diet_mode){
-            yield=digest(m,&mo,scar,diet_glyphs,diet_shout,diet_n);
+            yield=digest(m,&mo,scar,diet_glyphs,diet_n);
             for(int i=0;i<diet_n;i++) recent_push(recent,&recent_n,diet_glyphs[i]);
             cooc_track(diet_glyphs,diet_n); field_observe(diet_glyphs,diet_n); dream_streak=0;
         } else if(fed && food && fgets(line,sizeof(line),food)){
-            int n=semtok_line_shout(line,glyphs,shout,CTX);
-            if(n>=1){ yield=digest(m,&mo,scar,glyphs,shout,n);
+            int n=semtok_line(line,glyphs,CTX);
+            if(n>=1){ yield=digest(m,&mo,scar,glyphs,n);
                 for(int i=0;i<n;i++) recent_push(recent,&recent_n,glyphs[i]);
                 cooc_track(glyphs,n); field_observe(glyphs,n); dream_streak=0; }
         } else {                                 /* corpus exhausted -> eat the chorus, then dream */
@@ -879,14 +853,14 @@ static int live(const char* corpus, const char* waste_path, const char* ether_pa
             int gz[CTX], gn=0;
             if(ether) gn=ether_graze(ether_path, label, gz, CTX);  /* FIRST: eat a neighbour's voice */
             if(gn>=1){                               /* the colony feeds itself through speech */
-                yield=digest(m,&mo,scar,gz,NULL,gn);
+                yield=digest(m,&mo,scar,gz,gn);
                 for(int i=0;i<gn;i++) recent_push(recent,&recent_n,gz[i]);
                 cooc_track(gz,gn); field_observe(gz,gn); dream_streak=0; grazing=1; n_graze++;
             } else if(dream_on && energy<DREAM_THRESH && recent_n>0){  /* ELSE: eat your own predicted glyph */
                 static float dl[VOCAB_CAP]; forward(m,recent,recent_n,dl);
                 field_fold(dl, recent[recent_n-1]);  /* dream coherently — replay the field, not noise */
                 int dg=choose(dl,&mo,scar);          /* the dream is chosen, not computed */
-                float dy=digest(m,&mo,scar,&dg,NULL,1);   /* a dream is not a shout */
+                float dy=digest(m,&mo,scar,&dg,1);   /* a dream is not a shout */
                 yield = dy * DREAM_FRAC * expf(-(float)dream_streak/DREAM_DECAY); /* dreams thin out */
                 recent_push(recent,&recent_n,dg);
                 dream_streak++; dreaming=1; n_dream++;
