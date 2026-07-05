@@ -699,15 +699,18 @@ static int choose(const float* logits, const Modes* mo, const float* scar){
  * appetite. line format: "<label>\t<glyph names>". own echoes are skipped. */
 static int ether_graze(const char* path, int own_label, int* out, int max){
     FILE* f=fopen(path,"r"); if(!f) return 0;
-    char buf[256], last[256]; last[0]='\0';
+    char buf[256], recent[8][256]; int nr=0, ring=0;   /* keep the last 8 not-own voices */
     while(fgets(buf,sizeof buf,f)){
         if(atoi(buf)==own_label) continue;             /* don't eat your own echo */
         char* tab=strchr(buf,'\t'); if(!tab) continue;
-        strncpy(last,tab+1,255); last[255]='\0';       /* remember the newest not-own voice */
+        strncpy(recent[ring],tab+1,255); recent[ring][255]='\0';
+        ring=(ring+1)&7; if(nr<8) nr++;
     }
     fclose(f);
-    if(!last[0]) return 0;
-    return semtok_line(last, out, max);
+    if(nr==0) return 0;
+    int pick=(int)(((frand()+1.0f)*0.5f)*(float)nr);   /* a RANDOM recent voice, not always the newest — */
+    if(pick>=nr) pick=nr-1;                             /* so a lone dying cell draws variety from the */
+    return semtok_line(recent[pick], out, max);        /* chorus's history instead of looping one phrase */
 }
 
 /* speak — the organism utters a few chosen glyphs FROM ITSELF into waste.log,
