@@ -283,6 +283,9 @@ static int semtok_line(const char* line, int* out, int max_tokens){
 #define RANK           4          /* low-rank Hebbian LoRA (canon cavellman.c:43) */
 #define HEBBIAN_LR     0.001f     /* canon cavellman.c:423 */
 #define HEBBIAN_DECAY  0.9999f    /* canon cavellman.c:424 */
+#define HEB_CAP        4.0f       /* ceiling on Σ|heb_B_v| — the adapter is unbounded online weights; on a mono-diet
+                                   * with ‖emb‖²>break-even it can diverge to Inf/NaN (Fable audit #1). generous:
+                                   * never binds in normal life (frozen hash unchanged), only arrests a runaway. */
 #define PASSIVE_SIGNAL 0.3f       /* reading the world = passive (cavellman.c:654) */
 #define DIGEST_YIELD   80.0f      /* energy per unit |ΔB_v| — calibrated: avg dB~2e-5, break-even~50 */
 /* ── PROTEOSTASIS (autopoietic closure): the body is no longer frozen scaffold. it
@@ -544,6 +547,23 @@ static void try_emerge(Model* m){            /* called ONLY in dream — birth a
     g_emerged_a[g_n_emerged]=ba; g_emerged_b[g_n_emerged]=bb; g_born[ba][bb]=1; g_n_emerged++;
 }
 
+/* #3+#4 (Fable audit): a genome carries an emerged symbol's EMBEDDING (in the Model) but not
+ * its PHYSIOLOGY — charge[] and g_born live outside the genome. after a load, restore both:
+ * recompute each inherited symbol's charge from its parents (same formula as try_emerge) so the
+ * invention can feed/burn/scar in the child, and mark g_born so the child cannot waste a slot
+ * re-inventing a pair it already owns. */
+static void restore_emerged(void){
+    for(int i=0;i<g_n_emerged && i<MAX_EMERGED;i++){
+        int ba=g_emerged_a[i], bb=g_emerged_b[i];
+        if(ba<0||ba>=VOCAB||bb<0||bb>=VOCAB) continue;      /* guard a corrupt inherited pair */
+        int nid=VOCAB+i;
+        charge[nid].mode_dS      = 0.5f*(charge[ba].mode_dS    + charge[bb].mode_dS);
+        charge[nid].mode_dDiss   = 0.5f*(charge[ba].mode_dDiss + charge[bb].mode_dDiss);
+        charge[nid].metab_factor = sqrtf(charge[ba].metab_factor * charge[bb].metab_factor);
+        g_born[ba][bb]=1;
+    }
+}
+
 /* ── forward (AR causal) — logits for the LAST position into out[VOCAB_CAP] ── */
 static void forward(Model* m, const int* toks, int n, float* out){
     static float x[CTX][E], xn[CTX][E], q[CTX][E], k[CTX][E], v[CTX][E], att[CTX][E], tmp[FFN];
@@ -612,8 +632,12 @@ static float digest(Model* m, Modes* mo, float* scar, const int* glyphs, int pre
             memcpy(before,y->heb_B_v,sizeof(before));
             nt_hebbian_step(y->heb_A_v,y->heb_B_v,E,E,RANK,
                             x_emb,x_emb,PASSIVE_SIGNAL,HEBBIAN_LR,HEBBIAN_DECAY);
+            float bn=0.0f; for(int i=0;i<RANK*E;i++) bn+=fabsf(y->heb_B_v[i]);   /* #1: bound the adapter — */
+            if(!isfinite(bn)){ for(int i=0;i<RANK*E;i++) y->heb_B_v[i]=0.0f; }   /* diverged → reset the organ */
+            else if(bn>HEB_CAP){ float s=HEB_CAP/bn; for(int i=0;i<RANK*E;i++) y->heb_B_v[i]*=s; } /* runaway → cap */
             for(int i=0;i<RANK*E;i++) dB+=fabsf(y->heb_B_v[i]-before[i]);
         }
+        if(!isfinite(dB)) dB=0.0f;                    /* #1: a non-finite meal yields nothing, never poisons energy */
         float f=charge[id].metab_factor;
         /* information-as-food (Karpathy idea 2): weight the meal by SURPRISE — how
          * unexpected this glyph is to the field given the previous one. a glyph the
@@ -648,7 +672,16 @@ static const char* glyph_name(int id){
     if(id<GLYPH_COUNT) return GLYPH_NAMES[id];
     if(id==BOS_ID) return "BOS";
     if(id==MASK_ID) return "MASK";
-    return "·emg";   /* an emerged composite symbol (id >= VOCAB) */
+    int k=id-VOCAB;                                  /* #2 (Fable audit): an emerged symbol voices as its parents — */
+    if(k>=0 && k<g_n_emerged){                       /* "fire+water", not the faceless "·emg" that all inventions shared. */
+        int a=g_emerged_a[k], b=g_emerged_b[k];      /* semtok already splits '+' into the pair, so a neighbour that grazes */
+        if(a>=0&&a<GLYPH_COUNT && b>=0&&b<GLYPH_COUNT){  /* the invention EATS its two glyphs and can re-invent it via cooc — */
+            static char buf[40];                     /* the invented association spreads through SPEECH, not only the genome. */
+            snprintf(buf,sizeof buf,"%s+%s",GLYPH_NAMES[a],GLYPH_NAMES[b]);  /* culture, horizontal transmission. */
+            return buf;
+        }
+    }
+    return "·emg";                                   /* fallback: a composite with a non-base parent */
 }
 
 /* ── main — Phase A step 3a: the breathing clock with a second signal ──
@@ -704,6 +737,7 @@ static float field_coherence(int prev){
 static void field_fold(float* logits, const int* recent, int recent_n){
     if(!g_field_on || recent_n<=0) return;
     float mag=0.0f; for(int i=0;i<VOCAB_CAP;i++) mag+=fabsf(logits[i]); mag/=VOCAB_CAP;
+    if(!isfinite(mag)) return;                       /* a NaN logit passes both clamps (NaN<0, NaN>1 both false) — refuse it */
     float gate=(mag-0.5f)/1.5f; if(gate<0.0f)gate=0.0f; if(gate>1.0f)gate=1.0f; /* Q: earned voice */
     static float meta[VOCAB_CAP]; for(int b=0;b<VOCAB_CAP;b++) meta[b]=0.0f;
     const float LOG1E6 = logf(1e-6f);               /* a zero bigram cell always folds to this exact constant — */
@@ -1042,6 +1076,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                             }
                             g_field_row[a]=rs;                   /* keep row-sums consistent after the perturbation */
                           }
+                        restore_emerged();               /* #3+#4: give the inherited symbols their charge + g_born back */
                         printf("%s  born of a parent — inherits (and mutates) its field, wounds, symbols.\n", tag); }
                 else {  /* corrupt/truncated genome: load may have half-clobbered the globals — reset to a clean cell (F2) */
                     free(m); m=model_new();
@@ -1160,11 +1195,11 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
  * corpora OF ONE corpus": one voice ate the Arctic frame, one the making). */
 static int corpus_slice(const char* path, int parts){
     FILE* f=fopen(path,"r"); if(!f) return 0;
-    long nl=0; int c; while((c=fgetc(f))!=EOF) if(c=='\n') nl++;
-    if(nl<parts) nl=parts;
-    long base=nl/parts, rem=nl%parts;                  /* balanced: remainder spread over the first slices, */
-    rewind(f);                                         /* so no trailing slice is born empty */
     char line[4096];
+    long nl=0; while(fgets(line,sizeof line,f)) nl++;   /* #5: count in the SAME fgets-chunks the copy uses — a line */
+    if(nl<parts) nl=parts;                              /* longer than 4095B is many chunks but one '\n'; counting */
+    long base=nl/parts, rem=nl%parts;                  /* newlines would strand the corpus tail in no slice */
+    rewind(f);                                          /* balanced: remainder over the first slices, no empty tail slice */
     for(int p=0;p<parts;p++){
         long cnt=base+(p<rem?1:0);
         char sp[256]; snprintf(sp,sizeof sp,"lifeis/slice_%d.txt",p);
@@ -1242,20 +1277,20 @@ int main(int argc, char** argv){
                     births_line(births_consumed+1, pb);
                     char zp[256]; snprintf(zp,sizeof zp,"lifeis/children/zygote_%d.nl", next_label);
                     if(pb[0] && recombine(pa,pb,cseed,(long)next_label,zp)){
-                        remove(pa); remove(pb);                            /* both gametes consumed into the zygote */
                         if(spawn_cell(zp, NULL, next_label, cseed)>0){     /* HEREDITY×2: born OF two parents' fields */
+                            remove(pa); remove(pb);                        /* #6: consume the gametes ONLY once the child truly lives */
                             printf("[governor] a cell is born of TWO parents (cell %d) — %d alive\n", next_label, live_n+1); fflush(stdout);
                             next_label++; live_n++; if(live_n>peak) peak=live_n;
-                        }
-                        births_consumed+=2; born=1;
+                            births_consumed+=2; born=1;
+                        } else { remove(zp); break; }                      /* #6: fork failed — drop the orphan zygote, retry next governor pass */
                     }
                 }
                 if(!born){                                                /* asexual fallback: one parent → one child */
                     if(spawn_cell(pa[0]?pa:NULL, NULL, next_label, cseed)>0){
                         printf("[governor] a cell is born of a parent (cell %d) — %d alive\n", next_label, live_n+1); fflush(stdout);
                         next_label++; live_n++; if(live_n>peak) peak=live_n;
-                    }
-                    births_consumed++;
+                        births_consumed++;                                 /* #6: advance ONLY on a successful spawn */
+                    } else break;                                          /* fork failed (or nothing to spawn) — retry next pass, don't lose the birth */
                 }
             }
             if(d<=0) usleep(20000);                 /* 20ms — don't spin the governor */

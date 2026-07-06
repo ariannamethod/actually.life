@@ -143,6 +143,15 @@ done
 [ "$rok" -eq 1 ] && ok "the self-model does not destabilize on high-dissonance diets (NLMS-stable)" \
                  || no "the self-model shortens life on a high-dissonance diet — LMS divergence regression"
 
+# ── 8d. audit hardening (Fable): unbounded online weights must not diverge ──────────
+echo; echo "audit hardening (bounded adapter, no divergence)"
+imm=0
+for d in fire water death love stone spirit money "BE fire" "fear pain"; do
+  echo "$("$L" 42 "$d" 2>&1)" | grep -q 'STILL ALIVE\|immortality' && imm=$((imm+1))
+done
+[ "$imm" -eq 0 ] && ok "mono-diets never reach the immortality cap (adapter ceiling holds, #1)" \
+                 || no "$imm mono-diet(s) diverged to the immortality cap — adapter unbounded"
+
 # ── 9. AddressSanitizer / UBSan (opt-in: the strongest correctness pass) ───────
 if [ "${1:-}" = "--asan" ]; then
   echo; echo "sanitizers (ASan + UBSan)"
