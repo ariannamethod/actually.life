@@ -345,6 +345,35 @@ longer harmful), default advantage preserved (11/1, +165), gate invariant intact
 `8382de51324787475a3289e6d2dea7e2`, suite 23/23 (+NLMS robustness regression test). Codex earned its keep.
 Medium#3 (deposit_body ~442k wv writes/CTX-meal) noted, not a bug — it's the metabolism's real cost.
 
+## Fable (Mitos) audit + SLEEP foundation
+
+**Fable audit (on Neo, fetched via `ssh neo`).** Full-read audit found 7 defects; its "verified clean"
+section independently confirmed proteostasis + NLMS self-model are sound. All 7 fixed (commit 4e43fe6),
+gate invariant held: #1 adapter norm ceiling HEB_CAP + isfinite/clamp (latent divergence, not live —
+I mis-flagged nothing; grep "nan" was catching "nanolife"), #2 emerged symbols voice as "fire+water"
+not "·emg" (culture through speech, semtok already splits '+'), #3 restore_emerged charge, #4 restore
+g_born, #5 corpus_slice count in fgets-chunks, #6 governor advance only on spawn>0, #7 field_fold
+isfinite(mag). Suite 24/24.
+
+**Finding beyond the 7: emergence was DORMANT.** Solo `dream0 emerged0` — because dreaming was gated
+behind corpus-EOF, and world.txt (7712 lines) never exhausts in a ~2454-tick life. The cell ate to
+death, never slept, never invented. The "dreams when it starves / grows symbols while sleeping" README
+claims were near-dead.
+
+**SLEEP as a RHYTHM (foundation for the crown, Oleg's design: state-pressure).** Sleep pressure accrues
+every awake tick, FASTER under torment (stress |S|+diss) and wounds (scars) — the tormented sleep sooner
+(`SLEEP_RATE/STRESS/SCAR/THRESH/DRAIN`, `NL_NOSLEEP`). Past threshold the cell enters a sleep cycle:
+dreams (via new shared `dream_once`), invents symbols, wakes refreshed. Result: solo `dream0→dream363`,
+`emerged0→emerged32` (hits the cap), and in the chorus **inventions now voice as "A+B" and cross the
+ether** (`see+death`, `water+stone`, `stress+water` — 20 composite voices, 13 cells emerging) — culture,
+horizontal transmission, presence-outward (I1) ALIVE. Gate invariant (all organs off == a490a453),
+new baseline `6e2a80720ce5251d41119602f588f423`, chorus mortal, ASan 0. This is the floor the crown stands on.
+
+**Crown still pending: I2 self-as-food** — feed a glyph of the current interior (joy/stress/pain by
+S/diss/scar) into digest as self-perception, under Desktop's law (modes only, energy via metabolism),
+so the organism models itself by eating itself and `felt` becomes the CONTENT of the voice. The sleep
+cycle is now its natural home.
+
 ## Resume-here (for future-me after a summary)
 
 Working copy: `~/arianna/actually.life`. **Everything is committed AND pushed** to

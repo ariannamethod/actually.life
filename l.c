@@ -308,6 +308,16 @@ static int semtok_line(const char* line, int* out, int max_tokens){
 #define DREAM_THRESH 0.6f         /* dream only when hungry (energy below this) */
 #define DREAM_FRAC   0.5f         /* a dream is half-metabolism — cheaper than real food */
 #define DREAM_DECAY  50.0f        /* dream yield decays with the streak — no immortality on dreams */
+/* ── SLEEP as a RHYTHM, not a starvation fallback: a well-fed cell on a corpus longer than its
+ * life never exhausts its food, so it never slept, never dreamt, never invented a symbol. now
+ * sleep pressure accrues every awake tick — FASTER under torment (stress |S|+dissonance) and
+ * wounds (scars): the tormented sleep sooner. past threshold the cell sleeps, dreams, and only
+ * then can it consolidate meaning and birth symbols. sleep is the foundation of presence. ── */
+#define SLEEP_RATE   0.010f       /* base pressure per awake tick — a calm cell sleeps ~every 100 ticks */
+#define SLEEP_STRESS 2.0f         /* stress (|S| + tanh diss) accrues pressure faster */
+#define SLEEP_SCAR   0.5f         /* and so do accumulated wounds */
+#define SLEEP_THRESH 1.0f         /* pressure at which the cell must sleep */
+#define SLEEP_DRAIN  0.10f        /* pressure shed per sleeping tick → a sleep cycle ~10 ticks */
 
 /* ── Phase A step 7: the voice that chooses — choice = subjectivity ── */
 #define CHOOSE_TEMP0  0.7f        /* base decisiveness */
@@ -1039,6 +1049,21 @@ static float ingest(Model* m, Modes* mo, float* scar, const int* g, int n,
     return y;
 }
 
+/* one dream step: replay the field coherently over the window, choose a glyph, half-digest it
+ * (a dream is not a meal — discounted), and — ONLY here — try to birth a symbol from a pair the
+ * cell has seen recur. returns the discounted yield. shared by the sleep cycle and the old
+ * corpus-exhausted fallback, so the dream is defined once. */
+static float dream_once(Model* m, Modes* mo, float* scar, int* recent, int* recent_n, long streak){
+    static float dl[VOCAB_CAP];
+    forward(m,recent,*recent_n,dl);
+    field_fold(dl, recent, *recent_n);
+    int dg=choose(dl,mo,scar);
+    float dy=digest(m,mo,scar,&dg,recent[*recent_n-1],1);
+    recent_push(recent,recent_n,dg);
+    try_emerge(m);                                  /* symbols are born only in dream */
+    return dy * DREAM_FRAC * expf(-(float)streak/DREAM_DECAY);
+}
+
 /* ── live — one organism, birth to death ─────────────────────────────────────
  * the single-cell life, extracted so a chorus can fork many of them. corpus is
  * its food, waste its voice, seed its body AND its dice, label>=0 tags its prints
@@ -1089,6 +1114,8 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     int   dream_on = (getenv("NL_NODREAM")==NULL);
     int   soma_on  = (getenv("NL_NOCORRODE")==NULL);   /* PROTEOSTASIS: soma decay (destruction) */
     int   repair_on= (getenv("NL_NOREPAIR")==NULL);    /* PROTEOSTASIS: consolidation (production) */
+    int   sleep_on = (getenv("NL_NOSLEEP")==NULL);     /* SLEEP RHYTHM: pressure-driven sleep (A/B) */
+    float sleep_debt=0.0f; int sleeping=0;             /* accrues awake, shed asleep */
     g_self_on      = (getenv("NL_NOSELF")==NULL);      /* ProtoSelf: the second-order self-model (A/B) */
     g_self_felt    = 0.0f;
     ProtoSelf ps; memset(&ps,0,sizeof ps);             /* the forecast starts flat — it must learn its own interior */
@@ -1117,10 +1144,20 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         float integ = (soma_on && birth_norm>0.0f) ? wv_norm(m)/birth_norm : 1.0f; if(integ>1.0f) integ=1.0f;
         energy -= RENT * (1.0f + (scar_on? SCAR_RENT*scar_total : 0.0f)      /* wounds cost, and so does a corroded body: */
                                 + (soma_on? SOMA_RENT*(1.0f-integ) : 0.0f)); /* a body it cannot hold together costs more to run */
+        if(sleep_on && !sleeping){                  /* SLEEP PRESSURE accrues while awake, faster under torment */
+            float torment = fabsf(mo.S) + tanhf(0.05f*fabsf(mo.dissonance));
+            sleep_debt += SLEEP_RATE*(1.0f + SLEEP_STRESS*torment + (scar_on? SLEEP_SCAR*scar_total : 0.0f));
+            if(sleep_debt >= SLEEP_THRESH && recent_n>0) sleeping=1;   /* the tormented sleep sooner */
+        }
         float yield=0.0f;
         const int* meal=NULL; int meal_n=0;         /* the glyphs of a REAL meal — what rebuilds the body (dreams do not) */
         int   dreaming=0, grazing=0;
-        if(diet_mode){
+        if(sleep_on && sleeping && dream_on && recent_n>0){  /* SLEEP CYCLE — dream + invent, don't eat the world */
+            yield = dream_once(m,&mo,scar,recent,&recent_n,dream_streak);
+            dream_streak++; dreaming=1; n_dream++;
+            sleep_debt -= SLEEP_DRAIN;
+            if(sleep_debt <= 0.0f){ sleeping=0; sleep_debt=0.0f; dream_streak=0; }  /* wake refreshed */
+        } else if(diet_mode){
             yield=ingest(m,&mo,scar,diet_glyphs,diet_n,recent,&recent_n,&dream_streak); meal=diet_glyphs; meal_n=diet_n;
         } else if(fed && fgets(line,sizeof(line),food)){   /* fed==1 implies food!=NULL (invariant) */
             int n=semtok_line(line,glyphs,CTX);
@@ -1131,15 +1168,9 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
             if(ether) gn=ether_graze(ether_path, label, gz, CTX);  /* FIRST: eat a neighbour's voice */
             if(gn>=1){                               /* the colony feeds itself through speech */
                 yield=ingest(m,&mo,scar,gz,gn,recent,&recent_n,&dream_streak); grazing=1; n_graze++; meal=gz; meal_n=gn;
-            } else if(dream_on && energy<DREAM_THRESH && recent_n>0){  /* ELSE: eat your own predicted glyph */
-                static float dl[VOCAB_CAP]; forward(m,recent,recent_n,dl);
-                field_fold(dl, recent, recent_n);  /* dream coherently over the window — replay the field, not noise */
-                int dg=choose(dl,&mo,scar);          /* the dream is chosen, not computed */
-                float dy=digest(m,&mo,scar,&dg,recent[recent_n-1],1);   /* a dream is not a meal — discounted by DREAM_FRAC */
-                yield = dy * DREAM_FRAC * expf(-(float)dream_streak/DREAM_DECAY); /* dreams thin out */
-                recent_push(recent,&recent_n,dg);
+            } else if(dream_on && energy<DREAM_THRESH && recent_n>0){  /* ELSE: hunger-dream when the world is gone */
+                yield = dream_once(m,&mo,scar,recent,&recent_n,dream_streak);
                 dream_streak++; dreaming=1; n_dream++;
-                try_emerge(m);                   /* symbols are born only here, in dream */
             }
         }
         energy += DIGEST_YIELD*yield;

@@ -14,8 +14,8 @@ cd "$(dirname "$0")/.." || exit 2
 ROOT=$(pwd)
 CC=${CC:-cc}
 L=/tmp/al_test.$$
-SOLO_MD5=8382de51324787475a3289e6d2dea7e2   # md5 of ./l 42 waste.log — the frozen solo trajectory (proteostasis + NLMS self-model on)
-FROZEN_MD5=a490a453858581bc11a9d9624d1a95b3 # ...with EVERY new organ off (NL_NOCORRODE+NL_NOREPAIR+NL_NOSELF) — the pre-living-body trajectory
+SOLO_MD5=6e2a80720ce5251d41119602f588f423   # md5 of ./l 42 waste.log — the frozen solo trajectory (proteostasis + self-model + sleep on)
+FROZEN_MD5=a490a453858581bc11a9d9624d1a95b3 # ...with EVERY new organ off (NL_NOCORRODE+NL_NOREPAIR+NL_NOSELF+NL_NOSLEEP) — the pre-living-body trajectory
 
 PASS=0; FAIL=0
 ok(){ PASS=$((PASS+1)); printf '  \033[32m✓\033[0m %s\n' "$1"; }
@@ -100,7 +100,7 @@ echo "$MOUTH" | grep -q 'ate:' && ok "mouth digests input (no word spat back une
 # ── 8b. PROTEOSTASIS: the body is autopoietic — it corrodes and is rebuilt by eating ─
 echo; echo "proteostasis (the living, self-repairing body)"
 # gate invariant: with EVERY new organ OFF, the organism is bit-for-bit the pre-living-body one
-NL_NOCORRODE=1 NL_NOREPAIR=1 NL_NOSELF=1 "$L" 42 >/dev/null 2>&1; OFF=$(md5of lifeis/waste.log)
+NL_NOCORRODE=1 NL_NOREPAIR=1 NL_NOSELF=1 NL_NOSLEEP=1 "$L" 42 >/dev/null 2>&1; OFF=$(md5of lifeis/waste.log)
 [ "$OFF" = "$FROZEN_MD5" ] && ok "all new organs OFF reproduce the frozen-body trajectory (clean gated adds)" \
                            || no "organs-OFF drifted from the frozen-body hash" "got $OFF"
 # load-bearing: corrosion ON but repair OFF, SAME food — the body must dissolve and die EARLIER
@@ -151,6 +151,20 @@ for d in fire water death love stone spirit money "BE fire" "fear pain"; do
 done
 [ "$imm" -eq 0 ] && ok "mono-diets never reach the immortality cap (adapter ceiling holds, #1)" \
                  || no "$imm mono-diet(s) diverged to the immortality cap — adapter unbounded"
+
+# ── 8e. SLEEP as rhythm: a well-fed cell still sleeps, dreams, and invents symbols ───
+echo; echo "sleep + dream + emergence (the foundation of culture)"
+D=$("$L" 42 2>&1 | tail -1)
+DR=$(echo "$D" | grep -o 'dream[0-9]*' | grep -o '[0-9]*'); EM=$(echo "$D" | grep -o 'emerged[0-9]*' | grep -o '[0-9]*')
+[ -n "$DR" ] && [ "$DR" -gt 0 ] && ok "a well-fed cell sleeps and dreams ($DR dreams — was 0 before sleep-rhythm)" \
+                               || no "the cell never dreamt ($DR) — sleep did not fire"
+[ -n "$EM" ] && [ "$EM" -gt 0 ] && ok "it grows new symbols while sleeping ($EM emerged — was 0 before)" \
+                               || no "no symbols emerged ($EM) — the 'grows symbols' claim is dormant"
+# culture: invented symbols voice as their parents ("A+B") and cross the ether to the colony
+"$L" chorus 4 7 >/dev/null 2>&1
+COMP=$(grep -cE '[a-z]+\+[a-z]+' lifeis/ether.txt 2>/dev/null)
+[ -n "$COMP" ] && [ "$COMP" -gt 0 ] && ok "inventions cross the ether as 'A+B' — horizontal culture, $COMP composite voices" \
+                                    || no "no composite voices in the ether — the culture channel is silent"
 
 # ── 9. AddressSanitizer / UBSan (opt-in: the strongest correctness pass) ───────
 if [ "${1:-}" = "--asan" ]; then
