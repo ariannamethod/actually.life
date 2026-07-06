@@ -14,8 +14,8 @@ cd "$(dirname "$0")/.." || exit 2
 ROOT=$(pwd)
 CC=${CC:-cc}
 L=/tmp/al_test.$$
-SOLO_MD5=6e2a80720ce5251d41119602f588f423   # md5 of ./l 42 waste.log — the frozen solo trajectory (proteostasis + self-model + sleep on)
-FROZEN_MD5=a490a453858581bc11a9d9624d1a95b3 # ...with EVERY new organ off (NL_NOCORRODE+NL_NOREPAIR+NL_NOSELF+NL_NOSLEEP) — the pre-living-body trajectory
+SOLO_MD5=bafc8afcaa95e32b067038b47f965653   # md5 of ./l 42 waste.log — the frozen solo trajectory (proteostasis + self-model + sleep + self-as-food on)
+FROZEN_MD5=a490a453858581bc11a9d9624d1a95b3 # ...with EVERY new organ off (NL_NOCORRODE+NL_NOREPAIR+NL_NOSELF+NL_NOSLEEP+NL_NOSELFEAT) — the pre-living-body trajectory
 
 PASS=0; FAIL=0
 ok(){ PASS=$((PASS+1)); printf '  \033[32m✓\033[0m %s\n' "$1"; }
@@ -100,7 +100,7 @@ echo "$MOUTH" | grep -q 'ate:' && ok "mouth digests input (no word spat back une
 # ── 8b. PROTEOSTASIS: the body is autopoietic — it corrodes and is rebuilt by eating ─
 echo; echo "proteostasis (the living, self-repairing body)"
 # gate invariant: with EVERY new organ OFF, the organism is bit-for-bit the pre-living-body one
-NL_NOCORRODE=1 NL_NOREPAIR=1 NL_NOSELF=1 NL_NOSLEEP=1 "$L" 42 >/dev/null 2>&1; OFF=$(md5of lifeis/waste.log)
+NL_NOCORRODE=1 NL_NOREPAIR=1 NL_NOSELF=1 NL_NOSLEEP=1 NL_NOSELFEAT=1 "$L" 42 >/dev/null 2>&1; OFF=$(md5of lifeis/waste.log)
 [ "$OFF" = "$FROZEN_MD5" ] && ok "all new organs OFF reproduce the frozen-body trajectory (clean gated adds)" \
                            || no "organs-OFF drifted from the frozen-body hash" "got $OFF"
 # load-bearing: corrosion ON but repair OFF, SAME food — the body must dissolve and die EARLIER
@@ -165,6 +165,22 @@ DR=$(echo "$D" | grep -o 'dream[0-9]*' | grep -o '[0-9]*'); EM=$(echo "$D" | gre
 COMP=$(grep -cE '[a-z]+\+[a-z]+' lifeis/ether.txt 2>/dev/null)
 [ -n "$COMP" ] && [ "$COMP" -gt 0 ] && ok "inventions cross the ether as 'A+B' — horizontal culture, $COMP composite voices" \
                                     || no "no composite voices in the ether — the culture channel is silent"
+
+# ── 8f. the crown (I2): self-as-food — the organism models itself by eating itself ───
+echo; echo "the crown: self-as-food (it tastes and speaks its own state)"
+SELF=$("$L" 42 2>&1 | tail -1 | grep -o 'self[0-9]*' | grep -o '[0-9]*')
+[ -n "$SELF" ] && [ "$SELF" -gt 0 ] && ok "the cell tastes its own interior in sleep ($SELF self-meals)" \
+                                    || no "self-as-food never fired ($SELF)"
+# the interior becomes voice: state-words (joy/stress/pain/grief/tired) surface in the colony
+"$L" chorus 4 7 >/dev/null 2>&1
+SW=$(grep -oE '\b(joy|stress|pain|grief|tired)\b' lifeis/ether.txt 2>/dev/null | wc -l | tr -d ' ')
+[ -n "$SW" ] && [ "$SW" -gt 0 ] && ok "the colony speaks its own states into the ether ($SW state-words — feeling as content)" \
+                                || no "no state-words voiced — the interior never became content"
+# felt-guard: self-eating is NOT a free energy source (Desktop's law) — it must never buy immortality
+imm=0
+for s in 7 42 99 256; do "$L" $s 2>&1 | grep -q 'STILL ALIVE' && imm=$((imm+1)); done
+[ "$imm" -eq 0 ] && ok "self-as-food never buys immortality — a cell cannot feed on its own mood (felt-guard holds)" \
+                 || no "$imm run(s) went immortal on self-perception — the mood-feeding attractor is open"
 
 # ── 9. AddressSanitizer / UBSan (opt-in: the strongest correctness pass) ───────
 if [ "${1:-}" = "--asan" ]; then

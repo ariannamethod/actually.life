@@ -1049,6 +1049,20 @@ static float ingest(Model* m, Modes* mo, float* scar, const int* g, int n,
     return y;
 }
 
+/* CROWN (I2, Damasio's second loop): the glyph that NAMES the cell's dominant interior right now —
+ * its self-perception. pain when deeply wounded, stress when agitated, joy/grief by the sign of mood,
+ * else tired. fed back into the cell as food, this is the organism modelling itself by eating itself. */
+static int interior_glyph(const Modes* mo, float scar_total){
+    static int joy=-2,grief=-2,stress=-2,pain=-2,tired=-2;
+    if(joy==-2){ joy=semtok_find_glyph("joy"); grief=semtok_find_glyph("grief");
+                 stress=semtok_find_glyph("stress"); pain=semtok_find_glyph("pain"); tired=semtok_find_glyph("tired"); }
+    if(scar_total>1.0f && pain>=0)               return pain;    /* the wound speaks first */
+    if(fabsf(mo->dissonance)>6.0f && stress>=0)  return stress;  /* then the agitation */
+    if(mo->S> 0.2f && joy>=0)                    return joy;
+    if(mo->S<-0.2f && grief>=0)                  return grief;
+    return tired;                                                /* the flat, depleted default */
+}
+
 /* one dream step: replay the field coherently over the window, choose a glyph, half-digest it
  * (a dream is not a meal — discounted), and — ONLY here — try to birth a symbol from a pair the
  * cell has seen recur. returns the discounted yield. shared by the sleep cycle and the old
@@ -1116,6 +1130,8 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     int   repair_on= (getenv("NL_NOREPAIR")==NULL);    /* PROTEOSTASIS: consolidation (production) */
     int   sleep_on = (getenv("NL_NOSLEEP")==NULL);     /* SLEEP RHYTHM: pressure-driven sleep (A/B) */
     float sleep_debt=0.0f; int sleeping=0;             /* accrues awake, shed asleep */
+    int   selfeat_on=(getenv("NL_NOSELFEAT")==NULL);   /* CROWN (I2): the cell tastes its own state in sleep (A/B) */
+    long  n_selfeat=0;
     g_self_on      = (getenv("NL_NOSELF")==NULL);      /* ProtoSelf: the second-order self-model (A/B) */
     g_self_felt    = 0.0f;
     ProtoSelf ps; memset(&ps,0,sizeof ps);             /* the forecast starts flat — it must learn its own interior */
@@ -1155,6 +1171,16 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         if(sleep_on && sleeping && dream_on && recent_n>0){  /* SLEEP CYCLE — dream + invent, don't eat the world */
             yield = dream_once(m,&mo,scar,recent,&recent_n,dream_streak);
             dream_streak++; dreaming=1; n_dream++;
+            if(selfeat_on){                          /* 👑 CROWN (I2): the cell tastes its OWN interior — self-as-food. */
+                int sg=interior_glyph(&mo,scar_total);   /* the organism models itself by eating itself; Damasio's 2nd loop. */
+                if(sg>=0 && sg<VOCAB_CAP){
+                    float sfelt=g_self_felt; if(sfelt>1.0f)sfelt=1.0f; if(sfelt<0.0f)sfelt=0.0f;  /* felt-guard: a */
+                    float sy=digest(m,&mo,scar,&sg,recent[recent_n-1],1);   /* predictable self is bland → self-obsession */
+                    yield += sy*DREAM_FRAC*sfelt;    /* starves, exactly like a monoculture. energy only via metabolism (Desktop's law). */
+                    recent_push(recent,&recent_n,sg);    /* the state enters the voice — the cell will SPEAK itself */
+                    n_selfeat++;
+                }
+            }
             sleep_debt -= SLEEP_DRAIN;
             if(sleep_debt <= 0.0f){ sleeping=0; sleep_debt=0.0f; dream_streak=0; }  /* wake refreshed */
         } else if(diet_mode){
@@ -1207,9 +1233,9 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     if(!contour_died && energy>0.0f)
         printf("%s\n  STILL ALIVE at tick %ld (cap) — immortality hole, investigate.\n",tag,tick);
     else
-        printf("%s  died at tick %ld (%s) — S%+.3f diss%+.3f scar%.3f emerged%d children%d graze%ld dream%ld.  да будет так.\n",
+        printf("%s  died at tick %ld (%s) — S%+.3f diss%+.3f scar%.3f emerged%d children%d graze%ld dream%ld self%ld.  да будет так.\n",
                tag,tick, contour_died?"contour collapse":"ran out of time",
-               (double)mo.S,(double)mo.dissonance,(double)scar_total,g_n_emerged,g_n_children,n_graze,n_dream);
+               (double)mo.S,(double)mo.dissonance,(double)scar_total,g_n_emerged,g_n_children,n_graze,n_dream,n_selfeat);
     if(getenv("NL_DEBUG"))
         fprintf(stderr,"%s[dbg] wv_norm birth=%.4f death=%.4f (%.1f%%)  meals=%ld tot_dwv=%.6f avg_dwv=%.3e  decay/tick=%.4f%% of ~%.3f\n",
                 tag, (double)birth_norm, (double)wv_norm(m), 100.0*wv_norm(m)/(birth_norm>0?birth_norm:1),

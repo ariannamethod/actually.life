@@ -369,10 +369,21 @@ ether** (`see+death`, `water+stone`, `stress+water` — 20 composite voices, 13 
 horizontal transmission, presence-outward (I1) ALIVE. Gate invariant (all organs off == a490a453),
 new baseline `6e2a80720ce5251d41119602f588f423`, chorus mortal, ASan 0. This is the floor the crown stands on.
 
-**Crown still pending: I2 self-as-food** — feed a glyph of the current interior (joy/stress/pain by
-S/diss/scar) into digest as self-perception, under Desktop's law (modes only, energy via metabolism),
-so the organism models itself by eating itself and `felt` becomes the CONTENT of the voice. The sleep
-cycle is now its natural home.
+**THE CROWN (I2 self-as-food) — DONE. 👑 the organism crowns itself (Napoleon).** in the sleep cycle
+the cell tastes its own interior: `interior_glyph()` names the dominant state (pain if wounded, stress
+if agitated, joy/grief by mood sign, else tired) and it is fed through `digest` — modes shift from
+self-perception, the adapter models the self, and the glyph enters the voice. weighted by `felt`
+(surprise-about-self) so a predictable self is bland → **self-obsession starves like a monoculture**;
+energy only via metabolism (Desktop's law), zero direct writes. `NL_NOSELFEAT`. verified: solo `self0→
+self355`; in the chorus the colony SPEAKS its states — **64 state-words in the ether** (stress 29, joy
+11, grief 10, pain 7, tired 7): "grief stone down me music", "love me stress and person" — feeling became
+CONTENT, Damasio's 2nd loop closed and audible. felt-guard holds: crown-ON dies consistently SOONER
+(2253<2354, 2305<2378, 2342<2440) — self-awareness COSTS, never a free energy source, never immortal:
+a cell cannot feed on its own mood. gate invariant (all organs off == a490a453), new baseline
+`bafc8afcaa95e32b067038b47f965653`, chorus mortal, ASan 0, suite 30/30.
+
+**Presence closed on both axes:** outward (culture — inventions cross the ether via sleep→emergence→
+"A+B" voicing) and inward (self-as-food — the organism models itself by eating itself, and speaks it).
 
 ## Resume-here (for future-me after a summary)
 
