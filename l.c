@@ -1160,10 +1160,10 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         float integ = (soma_on && birth_norm>0.0f) ? wv_norm(m)/birth_norm : 1.0f; if(integ>1.0f) integ=1.0f;
         energy -= RENT * (1.0f + (scar_on? SCAR_RENT*scar_total : 0.0f)      /* wounds cost, and so does a corroded body: */
                                 + (soma_on? SOMA_RENT*(1.0f-integ) : 0.0f)); /* a body it cannot hold together costs more to run */
-        if(sleep_on && !sleeping){                  /* SLEEP PRESSURE accrues while awake, faster under torment */
-            float torment = fabsf(mo.S) + tanhf(0.05f*fabsf(mo.dissonance));
-            sleep_debt += SLEEP_RATE*(1.0f + SLEEP_STRESS*torment + (scar_on? SLEEP_SCAR*scar_total : 0.0f));
-            if(sleep_debt >= SLEEP_THRESH && recent_n>0) sleeping=1;   /* the tormented sleep sooner */
+        if(sleep_on && dream_on && !sleeping){      /* SLEEP PRESSURE accrues while awake, faster under torment. */
+            float torment = fabsf(mo.S) + tanhf(0.05f*fabsf(mo.dissonance));   /* gated on dream_on: a cell that */
+            sleep_debt += SLEEP_RATE*(1.0f + SLEEP_STRESS*torment + (scar_on? SLEEP_SCAR*scar_total : 0.0f));  /* cannot dream */
+            if(sleep_debt >= SLEEP_THRESH && recent_n>0) sleeping=1;   /* never sleeps → no deadlock (Codex #1). the tormented sleep sooner */
         }
         float yield=0.0f;
         const int* meal=NULL; int meal_n=0;         /* the glyphs of a REAL meal — what rebuilds the body (dreams do not) */
@@ -1182,7 +1182,9 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                 }
             }
             sleep_debt -= SLEEP_DRAIN;
-            if(sleep_debt <= 0.0f){ sleeping=0; sleep_debt=0.0f; dream_streak=0; }  /* wake refreshed */
+            if(sleep_debt <= 0.0f){ sleeping=0; sleep_debt=0.0f; }  /* wake — but do NOT reset dream_streak (Codex #2): */
+            /* only a REAL meal (ingest) resets it, so dreams keep decaying across sleep bouts — a starving cell */
+            /* cannot live on fresh dream bursts forever, the "decay until death unless fed" guard is restored */
         } else if(diet_mode){
             yield=ingest(m,&mo,scar,diet_glyphs,diet_n,recent,&recent_n,&dream_streak); meal=diet_glyphs; meal_n=diet_n;
         } else if(fed && fgets(line,sizeof(line),food)){   /* fed==1 implies food!=NULL (invariant) */
