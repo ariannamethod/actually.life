@@ -627,6 +627,10 @@ static int   g_field_on  = 1;                    /* NL_NOFIELD=1 lifts the field
 static int   g_lineage   = -1;                   /* Ⓒ: the cell's root ancestor — kinship for the ether */
 static int   g_self_on   = 1;                    /* ProtoSelf: NL_NOSELF=1 lifts the self-model (A/B) */
 static float g_self_felt = 0.0f;                 /* ProtoSelf: |interior − its own forecast| — surprise ABOUT the self */
+static float g_dbg_maxgate = 0.0f;               /* DEBUG: max transformer gate ever reached in a life (Desktop audit) */
+static float g_dbg_pm_first = -1.0f;             /* the cell's random-birth sharpness — its EARNED-voice zero (per-process) */
+static float g_dbg_pm_max = 0.0f;                /* DEBUG: max peak−mean over life — does the organized body sharpen? */
+static int   g_gate_sharp = 0;                   /* NL_GATE_SHARP: gate the transformer on EARNED sharpness, not magnitude (A/B) */
 
 static float digest(Model* m, Modes* mo, float* scar, const int* glyphs, int prev0, int n){
     static float before[RANK*E];
@@ -744,11 +748,28 @@ static float field_coherence(int prev){
 #define FIELD_FADE  0.9f          /* heredity idea A: inherited convictions FADE each generation */
 #define FIELD_MUT   0.02f         /* ...and drift on the child's own dice — the missing arm, variation */
 #define KIN_BIAS    0.6f          /* Ⓒ: chance a hungry cell reaches for a KIN voice (echo-chamber temptation) */
+#define SHARP_SCALE 1.5f          /* NL_GATE_SHARP: earned-voice scale. the body sharpens its logits +27..48% over a
+                                   * life (measured); gate on that EARNED sharpness above the cell's own random birth,
+                                   * scaled so a fully-organized body earns at most ~half the voice — never silences the
+                                   * field. calibrated to the measured excess range, NOT tuned to force a result. */
 static void field_fold(float* logits, const int* recent, int recent_n){
     if(!g_field_on || recent_n<=0) return;
-    float mag=0.0f; for(int i=0;i<VOCAB_CAP;i++) mag+=fabsf(logits[i]); mag/=VOCAB_CAP;
+    float mag=0.0f, peak=-1e30f, rawsum=0.0f;
+    for(int i=0;i<VOCAB_CAP;i++){ mag+=fabsf(logits[i]); rawsum+=logits[i]; if(logits[i]>peak) peak=logits[i]; }
+    mag/=VOCAB_CAP;
     if(!isfinite(mag)) return;                       /* a NaN logit passes both clamps (NaN<0, NaN>1 both false) — refuse it */
-    float gate=(mag-0.5f)/1.5f; if(gate<0.0f)gate=0.0f; if(gate>1.0f)gate=1.0f; /* Q: earned voice */
+    float pm=peak-rawsum/VOCAB_CAP;                  /* DEBUG: sharpness (peak−mean) — does an organized body sharpen it? */
+    if(g_dbg_pm_first<0.0f) g_dbg_pm_first=pm;
+    if(pm>g_dbg_pm_max) g_dbg_pm_max=pm;
+    float gate;
+    if(g_gate_sharp){                            /* Desktop's path: EARNED voice = sharpness the body grew above its random birth. */
+        float base=(g_dbg_pm_first>0.0f)?g_dbg_pm_first:pm;   /* rmsnorm-invariant (peak−mean survives normalization), and the */
+        gate=(pm-base)/SHARP_SCALE;              /* body genuinely moves it (deposit_body sharpens the logits). the magnitude */
+    }else{                                       /* gate below CANNOT rise — rmsnorm pins mag ~0.1, so it clamps to ~0 for life. */
+        gate=(mag-0.5f)/1.5f;                    /* Q: earned voice — but earnable only under NL_GATE_SHARP; here it is inert-by-design. */
+    }
+    if(gate<0.0f)gate=0.0f; if(gate>1.0f)gate=1.0f;
+    if(gate>g_dbg_maxgate) g_dbg_maxgate=gate;   /* DEBUG: track whether the transformer ever earns any voice */
     static float meta[VOCAB_CAP]; for(int b=0;b<VOCAB_CAP;b++) meta[b]=0.0f;
     const float LOG1E6 = logf(1e-6f);               /* a zero bigram cell always folds to this exact constant — */
     float w=1.0f, wsum=0.0f; int used=0;            /* skip the transcendental on the field's (large) sparse fraction */
@@ -1239,9 +1260,12 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                tag,tick, contour_died?"contour collapse":"ran out of time",
                (double)mo.S,(double)mo.dissonance,(double)scar_total,g_n_emerged,g_n_children,n_graze,n_dream,n_selfeat);
     if(getenv("NL_DEBUG"))
-        fprintf(stderr,"%s[dbg] wv_norm birth=%.4f death=%.4f (%.1f%%)  meals=%ld tot_dwv=%.6f avg_dwv=%.3e  decay/tick=%.4f%% of ~%.3f\n",
+        fprintf(stderr,"%s[dbg] wv_norm birth=%.4f death=%.4f (%.1f%%)  meals=%ld tot_dwv=%.6f avg_dwv=%.3e  decay/tick=%.4f%% of ~%.3f  MAXGATE=%.5f\n",
                 tag, (double)birth_norm, (double)wv_norm(m), 100.0*wv_norm(m)/(birth_norm>0?birth_norm:1),
-                n_meals, tot_dwv, n_meals?tot_dwv/n_meals:0.0, 100.0*(1.0-SOMA_DECAY), (double)birth_norm);
+                n_meals, tot_dwv, n_meals?tot_dwv/n_meals:0.0, 100.0*(1.0-SOMA_DECAY), (double)birth_norm, (double)g_dbg_maxgate),
+        fprintf(stderr,"%s[dbg] sharpness peak-mean: first(random body)=%.4f  max(over life)=%.4f  grew=%.1f%%\n",
+                tag, (double)g_dbg_pm_first, (double)g_dbg_pm_max,
+                g_dbg_pm_first>0?100.0*(g_dbg_pm_max-g_dbg_pm_first)/g_dbg_pm_first:0.0);
     if(food) fclose(food);
     if(waste) fclose(waste);
     if(ether) fclose(ether);
@@ -1303,6 +1327,7 @@ int main(int argc, char** argv){
     mouth_build();          /* build the orthographic router before ANY fork or bite */
     charges_init();
     g_field_on=(getenv("NL_NOFIELD")==NULL);   /* A/B toggle: NL_NOFIELD=1 lifts the coherence field */
+    g_gate_sharp=(getenv("NL_GATE_SHARP")!=NULL);  /* opt-IN: gate the transformer on earned sharpness (default off = bit-identical) */
 
     /* CHORUS: ./l chorus [cohort] [seed] — a colony of forked cells, each a distinct
      * body on a slice of the world. fork gives every cell its own field / scars /

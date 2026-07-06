@@ -182,6 +182,20 @@ for s in 7 42 99 256; do "$L" $s 2>&1 | grep -q 'STILL ALIVE' && imm=$((imm+1));
 [ "$imm" -eq 0 ] && ok "self-as-food never buys immortality — a cell cannot feed on its own mood (felt-guard holds)" \
                  || no "$imm run(s) went immortal on self-perception — the mood-feeding attractor is open"
 
+# ── 8g. earned voice (Desktop audit): the transformer can EARN the voice by sharpening ─
+echo; echo "the earned voice (NL_GATE_SHARP — the dead limb, given a path)"
+# off (default): the magnitude gate is inert-by-design — the transformer stays a near-dead limb
+OFFG=$(NL_DEBUG=1 "$L" 42 2>&1 >/dev/null | grep -o 'MAXGATE=[0-9.]*' | grep -o '[0-9.]*')
+awk -v g="$OFFG" 'BEGIN{exit !(g<0.1)}' && ok "default: the magnitude gate is inert (max ${OFFG}, field speaks — the transformer is a placeholder)" \
+                                        || no "default gate unexpectedly high ($OFFG)"
+# on: a living body sharpens its logits and EARNS a partial voice (gate un-sticks well past the floor)
+ONG=$(NL_DEBUG=1 NL_GATE_SHARP=1 "$L" 42 2>&1 >/dev/null | grep -o 'MAXGATE=[0-9.]*' | grep -o '[0-9.]*')
+awk -v g="$ONG" 'BEGIN{exit !(g>0.1)}' && ok "NL_GATE_SHARP: the body earns a partial voice by sharpening (max ${ONG} — a real, earned path)" \
+                                       || no "NL_GATE_SHARP did not lift the gate ($ONG) — the path is empty"
+# and it must never fully silence the field, nor make the organism immortal
+NL_GATE_SHARP=1 "$L" 42 2>&1 | grep -q 'STILL ALIVE' && no "earned voice bought immortality" \
+                                                     || ok "earned voice stays mortal (gate touches the voice, not the metabolism)"
+
 # ── 9. AddressSanitizer / UBSan (opt-in: the strongest correctness pass) ───────
 if [ "${1:-}" = "--asan" ]; then
   echo; echo "sanitizers (ASan + UBSan)"

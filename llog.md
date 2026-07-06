@@ -385,6 +385,28 @@ a cell cannot feed on its own mood. gate invariant (all organs off == a490a453),
 **Presence closed on both axes:** outward (culture — inventions cross the ether via sleep→emergence→
 "A+B" voicing) and inward (self-as-food — the organism models itself by eating itself, and speaks it).
 
+## Claude Desktop audit — the dead transformer + earned voice (NL_GATE_SHARP)
+
+A fourth auditor (Claude Desktop, peer node) found the transformer is a near-dead limb: `gate=(mag-0.5)/1.5`,
+`mag=avg|logit|`, but `rmsnorm` before the head pins mag ~0.1 → gate clamps to ~0 for life, so the body
+(deposit_body) can NEVER earn the voice through magnitude. Verified (`g_dbg_maxgate`): MAXGATE 0.00–0.05
+across seeds — transformer ≤5%, field speaks ~95–100%. Desktop first mis-addressed the debt to the README;
+on being shown the grep, it self-corrected (CODE OF CONFLICT §5, cross-node): the README never promises
+earned-voice-rises — the overclaim is the CODE COMMENT "Q: earned voice" (§6 comment-debt). README untouched.
+
+**Criterion before code (Desktop's own discipline):** measured whether an organized body sharpens its logits
+vs its random birth — YES, peak−mean grows **+27..48%** over a life. So the path is real. Desktop's fix
+(gate on sharpness `peak−mean`, rmsnorm-invariant because head projects to 90-dim) + my refinement: gate on
+sharpness EARNED above the cell's OWN random-birth baseline (`g_dbg_pm_first`, per-process) — else a random
+newborn already gets a voice. `SHARP_SCALE=1.5` calibrated to the measured excess (never fits-to-force).
+`NL_GATE_SHARP` opt-in, default off. Verified by Desktop's three criteria: off → bit-identical (`bafc8afc`);
+on → gate un-sticks 0.02→**0.26–0.45** (body earns up to ~40% of its voice by living, never silences the
+field); still mortal (gate touches voice, not metabolism). Comment now honest (magnitude gate inert-by-design,
+earnable only under NL_GATE_SHARP). New on-baseline `894ba413…`; suite 33/33; ASan 0.
+
+OPEN (vision, Oleg's call): keep earned-voice opt-in, or promote NL_GATE_SHARP to default (the organism's
+real voice = field + a slice it earns) → new frozen baseline + retune tests.
+
 ## Resume-here (for future-me after a summary)
 
 Working copy: `~/arianna/actually.life`. **Everything is committed AND pushed** to
