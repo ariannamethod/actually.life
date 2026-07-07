@@ -14,8 +14,9 @@ cd "$(dirname "$0")/.." || exit 2
 ROOT=$(pwd)
 CC=${CC:-cc}
 L=/tmp/al_test.$$
-SOLO_MD5=bafc8afcaa95e32b067038b47f965653   # md5 of ./l 42 waste.log — the frozen solo trajectory (proteostasis + self-model + sleep + self-as-food on)
-FROZEN_MD5=a490a453858581bc11a9d9624d1a95b3 # ...with EVERY new organ off (NL_NOCORRODE+NL_NOREPAIR+NL_NOSELF+NL_NOSLEEP+NL_NOSELFEAT) — the pre-living-body trajectory
+SOLO_MD5=894ba413fb7365adc47e5db9cffbe754   # md5 of ./l 42 waste.log — the frozen solo trajectory (proteostasis + self-model + sleep + self-as-food + EARNED VOICE, all on)
+FIELD_MD5=bafc8afcaa95e32b067038b47f965653  # ...with NL_NOEARNED (field-only voice, the pre-earned-voice trajectory)
+FROZEN_MD5=a490a453858581bc11a9d9624d1a95b3 # ...with EVERY new organ off (NL_NOCORRODE+NL_NOREPAIR+NL_NOSELF+NL_NOSLEEP+NL_NOSELFEAT+NL_NOEARNED) — the pre-living-body trajectory
 
 PASS=0; FAIL=0
 ok(){ PASS=$((PASS+1)); printf '  \033[32m✓\033[0m %s\n' "$1"; }
@@ -100,7 +101,7 @@ echo "$MOUTH" | grep -q 'ate:' && ok "mouth digests input (no word spat back une
 # ── 8b. PROTEOSTASIS: the body is autopoietic — it corrodes and is rebuilt by eating ─
 echo; echo "proteostasis (the living, self-repairing body)"
 # gate invariant: with EVERY new organ OFF, the organism is bit-for-bit the pre-living-body one
-NL_NOCORRODE=1 NL_NOREPAIR=1 NL_NOSELF=1 NL_NOSLEEP=1 NL_NOSELFEAT=1 "$L" 42 >/dev/null 2>&1; OFF=$(md5of lifeis/waste.log)
+NL_NOCORRODE=1 NL_NOREPAIR=1 NL_NOSELF=1 NL_NOSLEEP=1 NL_NOSELFEAT=1 NL_NOEARNED=1 "$L" 42 >/dev/null 2>&1; OFF=$(md5of lifeis/waste.log)
 [ "$OFF" = "$FROZEN_MD5" ] && ok "all new organs OFF reproduce the frozen-body trajectory (clean gated adds)" \
                            || no "organs-OFF drifted from the frozen-body hash" "got $OFF"
 # load-bearing: corrosion ON but repair OFF, SAME food — the body must dissolve and die EARLIER
@@ -182,19 +183,24 @@ for s in 7 42 99 256; do "$L" $s 2>&1 | grep -q 'STILL ALIVE' && imm=$((imm+1));
 [ "$imm" -eq 0 ] && ok "self-as-food never buys immortality — a cell cannot feed on its own mood (felt-guard holds)" \
                  || no "$imm run(s) went immortal on self-perception — the mood-feeding attractor is open"
 
-# ── 8g. earned voice (Desktop audit): the transformer can EARN the voice by sharpening ─
-echo; echo "the earned voice (NL_GATE_SHARP — the dead limb, given a path)"
-# off (default): the magnitude gate is inert-by-design — the transformer stays a near-dead limb
-OFFG=$(NL_DEBUG=1 "$L" 42 2>&1 >/dev/null | grep -o 'MAXGATE=[0-9.]*' | grep -o '[0-9.]*')
-awk -v g="$OFFG" 'BEGIN{exit !(g<0.1)}' && ok "default: the magnitude gate is inert (max ${OFFG}, field speaks — the transformer is a placeholder)" \
-                                        || no "default gate unexpectedly high ($OFFG)"
-# on: a living body sharpens its logits and EARNS a partial voice (gate un-sticks well past the floor)
-ONG=$(NL_DEBUG=1 NL_GATE_SHARP=1 "$L" 42 2>&1 >/dev/null | grep -o 'MAXGATE=[0-9.]*' | grep -o '[0-9.]*')
-awk -v g="$ONG" 'BEGIN{exit !(g>0.1)}' && ok "NL_GATE_SHARP: the body earns a partial voice by sharpening (max ${ONG} — a real, earned path)" \
-                                       || no "NL_GATE_SHARP did not lift the gate ($ONG) — the path is empty"
-# and it must never fully silence the field, nor make the organism immortal
-NL_GATE_SHARP=1 "$L" 42 2>&1 | grep -q 'STILL ALIVE' && no "earned voice bought immortality" \
-                                                     || ok "earned voice stays mortal (gate touches the voice, not the metabolism)"
+# ── 8g. earned voice (now DEFAULT): the transformer earns a voice by living, not learning ─
+echo; echo "the earned voice (default on — the body earns a voice by sharpening)"
+# default: a living body sharpens its logits and EARNS a partial voice (gate un-sticks well past the floor)
+ONG=$(NL_DEBUG=1 "$L" 42 2>&1 >/dev/null | grep -o 'MAXGATE=[0-9.]*' | grep -o '[0-9.]*')
+awk -v g="$ONG" 'BEGIN{exit !(g>0.1)}' && ok "default: the body earns a partial voice by sharpening (max ${ONG} — earned by living, not training)" \
+                                       || no "the earned gate did not lift ($ONG) — the path is empty"
+# NL_NOEARNED reverts to the inert magnitude gate (field-only voice) — the A/B control still works
+OFFG=$(NL_DEBUG=1 NL_NOEARNED=1 "$L" 42 2>&1 >/dev/null | grep -o 'MAXGATE=[0-9.]*' | grep -o '[0-9.]*')
+awk -v g="$OFFG" 'BEGIN{exit !(g<0.1)}' && ok "NL_NOEARNED reverts to the inert magnitude gate (max ${OFFG}, pure field — the A/B control holds)" \
+                                        || no "NL_NOEARNED did not revert the gate ($OFFG)"
+# the earned voice must never fully silence the field, nor make the organism immortal
+"$L" 42 2>&1 | grep -q 'STILL ALIVE' && no "earned voice bought immortality" \
+                                     || ok "earned voice stays mortal (gate touches the voice, not the metabolism)"
+# and it must not degrade the field's coherence — the spoken glyph stays in the field's high-prob region
+QE=$(NL_DEBUG=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*' | grep -o '[0-9.]*')
+QF=$(NL_DEBUG=1 NL_NOEARNED=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*' | grep -o '[0-9.]*')
+awk -v e="$QE" -v f="$QF" 'BEGIN{exit !(e>=f*0.8)}' && ok "earned voice keeps Q-coherence (spoken p_field ${QE} vs field-only ${QF} — agrees, not fights)" \
+                                                     || no "earned voice degraded Q-coherence ($QE vs $QF)"
 
 # ── 9. AddressSanitizer / UBSan (opt-in: the strongest correctness pass) ───────
 if [ "${1:-}" = "--asan" ]; then

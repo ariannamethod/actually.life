@@ -630,7 +630,7 @@ static float g_self_felt = 0.0f;                 /* ProtoSelf: |interior − its
 static float g_dbg_maxgate = 0.0f;               /* DEBUG: max transformer gate ever reached in a life (Desktop audit) */
 static float g_dbg_pm_first = -1.0f;             /* the cell's random-birth sharpness — its EARNED-voice zero (per-process) */
 static float g_dbg_pm_max = 0.0f;                /* DEBUG: max peak−mean over life — does the organized body sharpen? */
-static int   g_gate_sharp = 0;                   /* NL_GATE_SHARP: gate the transformer on EARNED sharpness, not magnitude (A/B) */
+static int   g_gate_sharp = 1;                   /* earned voice: gate the transformer on EARNED sharpness (default on; NL_NOEARNED lifts it) */
 static double g_dbg_spoken_p = 0.0; static long g_dbg_spoken_n = 0;  /* DEBUG: Σ p_field(spoken|prev) — Q-coherence of the actual voice */
 
 static float digest(Model* m, Modes* mo, float* scar, const int* glyphs, int prev0, int n){
@@ -1332,7 +1332,7 @@ int main(int argc, char** argv){
     mouth_build();          /* build the orthographic router before ANY fork or bite */
     charges_init();
     g_field_on=(getenv("NL_NOFIELD")==NULL);   /* A/B toggle: NL_NOFIELD=1 lifts the coherence field */
-    g_gate_sharp=(getenv("NL_GATE_SHARP")!=NULL);  /* opt-IN: gate the transformer on earned sharpness (default off = bit-identical) */
+    g_gate_sharp=(getenv("NL_NOEARNED")==NULL);    /* DEFAULT ON: the organism speaks field + a voice its body EARNED by living */
 
     /* CHORUS: ./l chorus [cohort] [seed] — a colony of forked cells, each a distinct
      * body on a slice of the world. fork gives every cell its own field / scars /

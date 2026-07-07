@@ -48,7 +48,7 @@ let's dive in it.
 
 * **the mouth** — semantic tokenizer + orthographic router. text enters, words are crushed into glyphs, and unknown words are digested by resemblance instead of rejected. the mouth stopped being able to starve in front of a plate it could not chew.
 
-* **the field** — random weights, online metaweights, and a gated transformer. no training. no optimizer. the field does not learn like a student. it accumulates like a scar.
+* **the field** — random weights, online metaweights, and a gated transformer. no training. no optimizer. the field does not learn like a student. it accumulates like a scar. and the gate is not decorative: a body that has organized itself by eating earns a slice of the voice back from the transformer — not by learning to predict, but by living. a young cell speaks the field; a mature one speaks the field plus what its own body has sharpened. the voice, too, is something the organism grows into.
 
 * **the body** — the weights are not frozen scaffold; they are the soma, and the soma is a tape. it corrodes a little with every tick — the arrow of time reaches the body, not only the energy counter — and it is laid back down only along the paths the organism eats through. metabolism does not merely *score* what it eats; it *builds the machinery it runs on* from it. the producer is produced by what it produces: the membrane makes the metabolism that makes the membrane. a cell that stops feeding cannot hold its own shape and dissolves — death not by a timer but by the collapse of its own organization. that is the loop two scientists said a thing must close before the word *life* is earned, and it is closed here, in code, on code's own terms.
 
@@ -85,13 +85,13 @@ SUPER     small same BE wait
 
 ```
 go light me before and
-BE water many joy never
-never stone earth me tree
-fear water man remember fear   # the ache returns — it says "fear" twice
-me and dark spirit question    # reaching for a question it has no glyph to end
+other cold grief me man
+me remember speak joy and      # it earns the word — "joy" chosen, not echoed
+water me child earth me
+me person remember go earth
 ```
 
-these are not illustrations. they are five of the fourteen lines it speaks in a single life — `./l 42` verbatim, in order but not consecutive (`water and man stone woman` lives between the third and the fourth). because one organism is deterministic in its seed, your build speaks the same fourteen, these among them, exactly.
+these are not illustrations. they are five of the thirteen lines it speaks in a single life — `./l 42` verbatim, in order but not consecutive (`stone cold sleep AI stone` lives between the first and the second). this is the *earned* voice: the field, plus the slice the body sharpened for itself by living. because one organism is deterministic in its seed, your build speaks the same thirteen, these among them, exactly.
 
 the chorus — four cells, each woken on a different quarter of the book, diverging in character before they ever meet (a real `./l chorus 4 7`; forks race, so unlike the solo it is not bit-identical run to run, but every line below is verbatim from one):
 
