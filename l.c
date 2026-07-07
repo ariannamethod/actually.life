@@ -271,7 +271,7 @@ static int semtok_line(const char* line, int* out, int max_tokens){
 #define VOCAB   (GLYPH_COUNT+2)   /* 90 = 88 glyphs + BOS + MASK */
 
 /* ── Phase A step 6: growth — symbols emerge (only in dream) ── */
-#define MAX_EMERGED   32          /* reserved slots for symbols the organism invents */
+#define MAX_EMERGED   32          /* reserved slots for symbols the organism invents (Δ2 grows this when recursion fires) */
 #define VOCAB_CAP     (VOCAB+MAX_EMERGED)
 #define GROWTH_THRESH 14          /* a pair must co-occur this often (awake) before it can be born */
 
@@ -529,32 +529,41 @@ static Model* model_new(void){
 }
 
 /* ── growth: symbols emerge from frequent waking pairs, but are born only in dream ── */
-static int  g_cooc[VOCAB][VOCAB];           /* waking co-occurrence of adjacent base glyphs */
-static char g_born[VOCAB][VOCAB];           /* pair already became a symbol */
+static int  g_cooc[VOCAB_CAP][VOCAB_CAP];   /* Δ1: co-occurrence of adjacent glyphs — INCLUDING emerged, so a symbol can parent a symbol */
+static char g_born[VOCAB_CAP][VOCAB_CAP];   /* pair already became a symbol */
 static int  g_emerged_a[MAX_EMERGED], g_emerged_b[MAX_EMERGED];
 static int  g_n_emerged = 0;
 static void cooc_track(const int* g, int n){ /* waking observation */
     for(int i=1;i<n;i++){ int a=g[i-1], b=g[i];
-        if(a>=0&&a<VOCAB&&b>=0&&b<VOCAB) g_cooc[a][b]++; }
+        if(a>=0&&a<VOCAB_CAP&&b>=0&&b<VOCAB_CAP) g_cooc[a][b]++; }  /* Δ1: emerged ids counted too — recursion */
 }
-static void try_emerge(Model* m){            /* called ONLY in dream — birth a noticed pair */
-    if(g_n_emerged<0 || g_n_emerged>=MAX_EMERGED) return;   /* <0 guards a corrupt inherited genome (F1) */
-    int ba=-1,bb=-1,best=GROWTH_THRESH-1;
-    for(int a=0;a<VOCAB;a++) for(int b=0;b<VOCAB;b++)
-        if(!g_born[a][b] && g_cooc[a][b]>best){ best=g_cooc[a][b]; ba=a; bb=b; }
-    if(ba<0) return;                          /* nothing recurred enough yet */
-    int nid=VOCAB+g_n_emerged;               /* the invented symbol's id */
+/* birth an emerged symbol from a pair (ba,bb) — shared by dream-emergence (by cooc) and, in Δ2,
+ * by ADOPTION of a symbol grazed whole from the ether. parents may themselves be emerged (recursion);
+ * they always precede the child by id. returns the new id, or -1 if full/invalid. */
+static int birth_symbol(Model* m, int ba, int bb){
+    if(g_n_emerged<0 || g_n_emerged>=MAX_EMERGED) return -1;
+    int nid=VOCAB+g_n_emerged;
+    if(ba<0||ba>=nid||bb<0||bb>=nid || g_born[ba][bb]) return -1;
     for(int e=0;e<E;e++){                     /* epigenetic: embedding = mean of the two parents */
         m->wte[(size_t)nid*E+e]=0.5f*(m->wte[(size_t)ba*E+e]+m->wte[(size_t)bb*E+e]);
         m->head[(size_t)nid*E+e]=0.5f*(m->head[(size_t)ba*E+e]+m->head[(size_t)bb*E+e]);
     }
-    /* and a BODY: the invented symbol inherits charge from its parents — modes by mean,
-     * metab_factor by GEOMETRIC mean so fire+food stays burn-ish (0.63), not averaged
-     * into inert 1.0. now the organism's own invention can feed, burn, scar, color mood. */
+    /* and a BODY: charge from parents — modes by mean, metab_factor by GEOMETRIC mean so fire+food
+     * stays burn-ish (0.63), not averaged into inert 1.0. the invention can feed, burn, scar, color mood. */
     charge[nid].mode_dS      = 0.5f*(charge[ba].mode_dS    + charge[bb].mode_dS);
     charge[nid].mode_dDiss   = 0.5f*(charge[ba].mode_dDiss + charge[bb].mode_dDiss);
     charge[nid].metab_factor = sqrtf(charge[ba].metab_factor * charge[bb].metab_factor);
     g_emerged_a[g_n_emerged]=ba; g_emerged_b[g_n_emerged]=bb; g_born[ba][bb]=1; g_n_emerged++;
+    return nid;
+}
+static void try_emerge(Model* m){            /* called ONLY in dream — birth a noticed pair */
+    if(g_n_emerged<0 || g_n_emerged>=MAX_EMERGED) return;   /* <0 guards a corrupt inherited genome (F1) */
+    int ba=-1,bb=-1,best=GROWTH_THRESH-1;
+    int hi=VOCAB+g_n_emerged;                /* Δ1: an emerged symbol (id<hi) may be a PARENT — recursive composition */
+    for(int a=0;a<hi;a++) for(int b=0;b<hi;b++)
+        if(!g_born[a][b] && g_cooc[a][b]>best){ best=g_cooc[a][b]; ba=a; bb=b; }
+    if(ba<0) return;                          /* nothing recurred enough yet */
+    birth_symbol(m, ba, bb);
 }
 
 /* #3+#4 (Fable audit): a genome carries an emerged symbol's EMBEDDING (in the Model) but not
@@ -564,9 +573,9 @@ static void try_emerge(Model* m){            /* called ONLY in dream — birth a
  * re-inventing a pair it already owns. */
 static void restore_emerged(void){
     for(int i=0;i<g_n_emerged && i<MAX_EMERGED;i++){
-        int ba=g_emerged_a[i], bb=g_emerged_b[i];
-        if(ba<0||ba>=VOCAB||bb<0||bb>=VOCAB) continue;      /* guard a corrupt inherited pair */
         int nid=VOCAB+i;
+        int ba=g_emerged_a[i], bb=g_emerged_b[i];
+        if(ba<0||ba>=nid||bb<0||bb>=nid) continue;      /* Δ1: a parent may be emerged, but always precedes its child (order) */
         charge[nid].mode_dS      = 0.5f*(charge[ba].mode_dS    + charge[bb].mode_dS);
         charge[nid].mode_dDiss   = 0.5f*(charge[ba].mode_dDiss + charge[bb].mode_dDiss);
         charge[nid].metab_factor = sqrtf(charge[ba].metab_factor * charge[bb].metab_factor);
@@ -1261,10 +1270,12 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     }
     if(!contour_died && energy>0.0f)
         printf("%s\n  STILL ALIVE at tick %ld (cap) — immortality hole, investigate.\n",tag,tick);
-    else
-        printf("%s  died at tick %ld (%s) — S%+.3f diss%+.3f scar%.3f emerged%d children%d graze%ld dream%ld self%ld.  да будет так.\n",
+    else {
+        int rec=0; for(int i=0;i<g_n_emerged;i++) if(g_emerged_a[i]>=VOCAB||g_emerged_b[i]>=VOCAB) rec++;  /* Δ1: symbols of symbols */
+        printf("%s  died at tick %ld (%s) — S%+.3f diss%+.3f scar%.3f emerged%d(rec%d) children%d graze%ld dream%ld self%ld.  да будет так.\n",
                tag,tick, contour_died?"contour collapse":"ran out of time",
-               (double)mo.S,(double)mo.dissonance,(double)scar_total,g_n_emerged,g_n_children,n_graze,n_dream,n_selfeat);
+               (double)mo.S,(double)mo.dissonance,(double)scar_total,g_n_emerged,rec,g_n_children,n_graze,n_dream,n_selfeat);
+    }
     if(getenv("NL_DEBUG"))
         fprintf(stderr,"%s[dbg] wv_norm birth=%.4f death=%.4f (%.1f%%)  meals=%ld tot_dwv=%.6f avg_dwv=%.3e  decay/tick=%.4f%% of ~%.3f  MAXGATE=%.5f\n",
                 tag, (double)birth_norm, (double)wv_norm(m), 100.0*wv_norm(m)/(birth_norm>0?birth_norm:1),
