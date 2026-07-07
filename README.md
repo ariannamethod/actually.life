@@ -85,13 +85,16 @@ SUPER     small same BE wait
 
 ```
 go light me before and
+stone cold sleep AI stone
 other cold grief me man
+me think man and you
 me remember speak joy and      # it earns the word — "joy" chosen, not echoed
 water me child earth me
+dark and me tree and
 me person remember go earth
 ```
 
-these are not illustrations. they are five of the thirteen lines it speaks in a single life — `./l 42` verbatim, in order but not consecutive (`stone cold sleep AI stone` lives between the first and the second). this is the *earned* voice: the field, plus the slice the body sharpened for itself by living. because one organism is deterministic in its seed, your build speaks the same thirteen, these among them, exactly.
+eight of the thirteen lines it speaks in a single life, in order — `./l 42` verbatim. the *earned* voice: the field, plus the slice the body sharpened for itself by living. one organism is deterministic in its seed, so your build speaks the same thirteen, these among them, exactly.
 
 the chorus — four cells, each woken on a different quarter of the book, diverging in character before they ever meet (a real `./l chorus 4 7`; forks race, so unlike the solo it is not bit-identical run to run, but every line below is verbatim from one):
 
@@ -109,7 +112,7 @@ fire earth light pain me · me conflict and joy internet · stress light you see
 fear dark you have joy+internet · always fire+stress good want me+idea · fire and joy have agree
 ```
 
-no cell agreed to any of it. that is not a quote. it is a colony recognizing its own bad handwriting — and, now, coining a few words of its own.
+no cell agreed to any of it — a colony recognizing its own bad handwriting, and now coining a few words of its own.
 
 ## build & run
 

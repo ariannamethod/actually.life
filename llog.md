@@ -327,8 +327,8 @@ regulating ahead of the threat, not merely reacting. Verified: genuine map (traj
 that foresees its storm out-survives a self-blind one (deleting the map degrades regulation = the
 "for-the-system" proof, substrate-neutral). Gate invariant (all organs off == `a490a453…`); new
 default baseline `814edcf481762691b5296c94460a800c`; chorus mortal; ASan 0; suite 22/22.
-Comment `choice = subjectivity` (the neuroscience-lens flagged category error) rewritten honestly: choice under
-a felt self-model, a proto-self biasing the act — not a label.
+Comment `choice = subjectivity` (the neuroscience-lens flagged category error) rewritten to: choice under
+a felt self-model, a proto-self biasing the act.
 
 **Both movements done.** The life-criteria review named autopoiesis + feeling as the two gaps; both are closed
 in code, on code's own substrate, load-bearing and falsifiable. Anthropocentrism kept off the porch.
@@ -343,15 +343,15 @@ clamp the allostatic pull to S∈[-1,1] and `isfinite` guards on `g_self_felt` a
 (Codex medium: NaN could poison temp / overwrite wv). Verified: regression GONE (stress diets Δ=0, no
 longer harmful), default advantage preserved (11/1, +165), gate invariant intact, new baseline
 `8382de51324787475a3289e6d2dea7e2`, suite 23/23 (+NLMS robustness regression test). Codex earned its keep.
-Medium#3 (deposit_body ~442k wv writes/CTX-meal) noted, not a bug — it's the metabolism's real cost.
+Medium#3 (deposit_body ~442k wv writes/CTX-meal): the metabolism's real cost.
 
 ## Full-read code audit + SLEEP foundation
 
 **full-read code audit (on Neo, fetched via `ssh neo`).** Full-read audit found 7 defects; its "verified clean"
 section independently confirmed proteostasis + NLMS self-model are sound. All 7 fixed (commit 4e43fe6),
-gate invariant held: #1 adapter norm ceiling HEB_CAP + isfinite/clamp (latent divergence, not live —
-I mis-flagged nothing; grep "nan" was catching "nanolife"), #2 emerged symbols voice as "fire+water"
-not "·emg" (culture through speech, semtok already splits '+'), #3 restore_emerged charge, #4 restore
+gate invariant held: #1 adapter norm ceiling HEB_CAP + isfinite/clamp (latent divergence; the earlier
+"nan" reading was grep catching "nanolife"), #2 emerged symbols voice as "fire+water"
+(was "·emg") (culture through speech, semtok already splits '+'), #3 restore_emerged charge, #4 restore
 g_born, #5 corpus_slice count in fgets-chunks, #6 governor advance only on spawn>0, #7 field_fold
 isfinite(mag). Suite 24/24.
 
@@ -398,7 +398,7 @@ earned-voice-rises — the overclaim is the CODE COMMENT "Q: earned voice" (§6 
 vs its random birth — YES, peak−mean grows **+27..48%** over a life. So the path is real. the peer node.s fix
 (gate on sharpness `peak−mean`, rmsnorm-invariant because head projects to 90-dim) + my refinement: gate on
 sharpness EARNED above the cell's OWN random-birth baseline (`g_dbg_pm_first`, per-process) — else a random
-newborn already gets a voice. `SHARP_SCALE=1.5` calibrated to the measured excess (never fits-to-force).
+newborn already gets a voice. `SHARP_SCALE=1.5` calibrated to the measured excess.
 `NL_GATE_SHARP` opt-in, default off. Verified by the peer node.s three criteria: off → bit-identical (`bafc8afc`);
 on → gate un-sticks 0.02→**0.26–0.45** (body earns up to ~40% of its voice by living, never silences the
 field); still mortal (gate touches voice, not metabolism). Comment now honest (magnitude gate inert-by-design,
@@ -439,7 +439,7 @@ heredity, the wv autopoietic loop a real self-reference) and named where the WOR
   ACTUAL claim as written: "a cell that models itself outlives a cell that is a stranger to itself" = self-model
   vs NL_NOSELF — **self beats stranger 7 wins / 1 loss.** The claim is LITERALLY TRUE and the code delivers it;
   the audit's point is about *why* (the cause is the S-damping a fixed damper also supplies, not the self-knowledge
-  specifically). That is a real mechanism caveat — NOT a false claim. The README line stands; `NL_FIXEDDAMP` kept
+  specifically). A caveat about the cause; the claim's outcome holds. The README line stands; `NL_FIXEDDAMP` kept
   as the control that documents the attribution. Lesson: I confused "attribution unearned" with "claim false" and
   nearly retracted a true statement; the rule's job is exactly to stop that, and it did.
 - **#1 (deepest, the ceiling): symbol emergence is capped at DEPTH 1.** `cooc_track` (l.c:538) and `try_emerge`
