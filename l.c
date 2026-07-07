@@ -631,6 +631,7 @@ static float g_dbg_maxgate = 0.0f;               /* DEBUG: max transformer gate 
 static float g_dbg_pm_first = -1.0f;             /* the cell's random-birth sharpness — its EARNED-voice zero (per-process) */
 static float g_dbg_pm_max = 0.0f;                /* DEBUG: max peak−mean over life — does the organized body sharpen? */
 static int   g_gate_sharp = 0;                   /* NL_GATE_SHARP: gate the transformer on EARNED sharpness, not magnitude (A/B) */
+static double g_dbg_spoken_p = 0.0; static long g_dbg_spoken_n = 0;  /* DEBUG: Σ p_field(spoken|prev) — Q-coherence of the actual voice */
 
 static float digest(Model* m, Modes* mo, float* scar, const int* glyphs, int prev0, int n){
     static float before[RANK*E];
@@ -901,6 +902,8 @@ static float speak(FILE* w, FILE* ether, int label, Model* m, const Modes* mo, c
         forward(m, recent, *recent_n, sl);
         field_fold(sl, recent, *recent_n);       /* coherence over the whole window, not just prev */
         int g = choose(sl, mo, scar);
+        if(prv>=0 && prv<VOCAB_CAP && g>=0 && g<VOCAB_CAP && g_field_row[prv]>0.0f){  /* DEBUG: field-prob of the SPOKEN */
+            g_dbg_spoken_p += (double)(g_field_bi[prv][g]/g_field_row[prv]); g_dbg_spoken_n++; }  /* glyph — Q-coherence of the output */
         const char* gn = glyph_name(g);
         if(w) fprintf(w, " %s", gn);
         if(up < (int)sizeof(utt)-16) up += snprintf(utt+up, sizeof(utt)-up, "%s%s", up?" ":"", gn);
@@ -1265,7 +1268,9 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                 n_meals, tot_dwv, n_meals?tot_dwv/n_meals:0.0, 100.0*(1.0-SOMA_DECAY), (double)birth_norm, (double)g_dbg_maxgate),
         fprintf(stderr,"%s[dbg] sharpness peak-mean: first(random body)=%.4f  max(over life)=%.4f  grew=%.1f%%\n",
                 tag, (double)g_dbg_pm_first, (double)g_dbg_pm_max,
-                g_dbg_pm_first>0?100.0*(g_dbg_pm_max-g_dbg_pm_first)/g_dbg_pm_first:0.0);
+                g_dbg_pm_first>0?100.0*(g_dbg_pm_max-g_dbg_pm_first)/g_dbg_pm_first:0.0),
+        fprintf(stderr,"%s[dbg] Q-coherence of the spoken voice: mean p_field(spoken|prev)=%.4f over %ld glyphs\n",
+                tag, g_dbg_spoken_n?g_dbg_spoken_p/g_dbg_spoken_n:0.0, g_dbg_spoken_n);
     if(food) fclose(food);
     if(waste) fclose(waste);
     if(ether) fclose(ether);

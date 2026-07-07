@@ -20,7 +20,7 @@ Two demands drove Phase B:
 1. **Eat anything** — it must not starve because its mouth can't bite an unknown
    word (the ancestor `caveLLMan` drops every unmapped word → death with a full
    plate).
-2. **Speak coherently without training** — random frozen weights babble Karpathy
+2. **Speak coherently without training** — random frozen weights babble incoherent
    gibberish; coherence must come from the *sampling field*, not gradient descent.
 
 ## Lineage (all Arianna Method)
@@ -132,11 +132,11 @@ the colony breathes and dies.
   - `choose` — added NaN guard (`isfinite`; `!(den>0)` catches NaN) so a diverged
     Hebbian state can't silently collapse the voice to glyph 0.
   - Named the lifetime cap `MAX_LIFETIME_CELLS=64` (distinct from `MAX_CELLS=8`).
-- **Deferred to the Karpathy optimization pass (medium perf polish):**
+- **Deferred to the optimization pass (medium perf polish):**
   `try_emerge` O(VOCAB²) per dream → incremental best-pair; governor's full
   `births.txt` scan every 20ms → offset; `semtok_word` ~600 strcmp/word → hash.
 
-## Karpathy pass (Opus subagent as Karpathy — now factually at Anthropic pre-training)
+## Optimization pass
 
 - **Part 1 (simplify, done):** deleted the dead "shout" apparatus (28 lines, bit-
   identical, ASan-clean, audited empirically vs the parent commit — the ALL-CAPS
@@ -162,7 +162,7 @@ the colony breathes and dies.
     fresh random bodies, so coherence isn't inherited; heritable warm-start births
     are a separate piece. Lives/dies (2436), deterministic, ASan-clean.
 
-**Karpathy trilogy COMPLETE.** The one online field now pays for itself three ways:
+**the optimization trilogy COMPLETE.** The one online field now pays for itself three ways:
 attention (①), appetite (②), fitness (③). Zero training, one file.
 
 ## Heredity (done) — ③'s selection becomes real evolution
@@ -183,7 +183,7 @@ parent'` double-counted, because BOTH the governor's spawn line and the child's
 There is no fallback. Fact beats the earlier claim.
 
 **Next:** finish the README (Oleg's draft → Claude edits: glyph list + jokes),
-another Codex/Opus audit pass, then possibly a second Karpathy pass.
+another Codex/Opus audit pass, then possibly a second optimization pass.
 - **Phase 4 — SIMPLIFICATION** ⏳ — after functional, spawn Opus subagents
   (`model:"opus"`, manual, not the plugin) to find dead constructs / redundancy
   that don't kill functionality; apply by hand; re-run all Phase 0–3 checks.
@@ -247,12 +247,12 @@ Oleg wrote the нетленка (his voice: "immortality is a garbage collector 
 Claude added the **88-glyph list** (verified an exact set-match to `GLYPH_NAMES`) + a
 heredity line. Quote-heavy, zero defensive constructions.
 
-## Karpathy pass 2 (Opus-as-Karpathy, now factually at Anthropic pre-training)
+## Optimization pass 2 — new mechanisms
 
 - **Part 1 (done):** one `ingest()` helper for the three eating paths (dream stays
   separate on purpose), dropped a dead `&& food`, swept the stale "shout" comments +
   a duplicate `speak` header. All behavior-preserving (solo output bit-identical).
-- **Part 2 — three new ideas.** Karpathy's insight: **heredity today is pure CLONING —
+- **Part 2 — three new ideas.** a key insight: **heredity today is pure CLONING —
   Darwin has selection + inheritance but no VARIATION; the field is the creature, give
   it variation.**
   - **Ⓐ Mutation at conception (DONE).** at birth the inherited field is perturbed:
@@ -281,10 +281,10 @@ heredity line. Quote-heavy, zero defensive constructions.
 recombination) + selection (③ coherence-cost + ② surprise-starvation) + a
 diversity-maintaining ecology (Ⓒ). all four arms, all runtime dynamics, zero training.
 
-## The consilium + PROTEOSTASIS (autopoietic body) — movement 1 done
+## The life-criteria review + PROTEOSTASIS (autopoietic body) — movement 1 done
 
 Oleg asked to re-audit the "meets every criterion of life except biology" claim with two
-scientists (Opus personas): **Drobyshevsky** (anthropologist) and **Damasio** (neurobiologist,
+two adversarial reviewers (Opus): a **biology lens** and a **neuroscience lens** (homeostasis-first,
 homeostasis-first). Round 1 verdict, CONVERGENT: functional criteria genuinely met (metabolism
 + homeostasis as REAL closed loops, mortality, heredity, variation), BUT both independently named
 the same missing criterion — **autopoiesis** (self-production/repair of the boundary) — and both
@@ -302,7 +302,7 @@ periphery (field, adapter, scars) is produced, but the **core** (`forward`/`wv`)
 
 **PROTEOSTASIS (movement 1, DONE).** First impl was DECORATIVE — committed the rank-4 adapter into
 `wv`; measured **2.6e6× too weak** vs decay (called it out, CODE OF CONFLICT). Redesigned to
-Drobyshevsky's actual spec: **`deposit_body`** lays a full-rank Hebbian trace DIRECTLY onto `wv`
+the biology-lens actual spec: **`deposit_body`** lays a full-rank Hebbian trace DIRECTLY onto `wv`
 along the eaten pathway (`post=wv·x; wv += lr·post⊗x`); **`soma_decay`** corrodes `wv` each tick;
 **`soma_ceiling`** caps ‖wv‖ at birth mass (set-point → use-it-or-lose-it, bounds the positive
 feedback both flagged); **body integrity → rent** (a corroded body it cannot hold costs more to run).
@@ -316,21 +316,21 @@ suite 20/20 (+3 proteostasis tests). The producer (`wv`) is now produced by what
 innocent" (§field) is now FALSE — the weights LIVE (corrode + rebuild). Code EXCEEDS README here (a
 bigger claim earned) — flagged for Oleg, not silently rewritten.
 
-**Movement 2 (DONE): Damasio's ProtoSelf** — a second-order map. `ProtoSelf{wS,wD,pS,pD}` forecasts
+**Movement 2 (DONE): the neuroscience-lens ProtoSelf** — a second-order map. `ProtoSelf{wS,wD,pS,pD}` forecasts
 the interior (`self_predict`), learns it online by LMS (`self_update`), and `felt=|S−pS|+|diss−pD|`
 is surprise ABOUT the self, fed into `choose()` as arousal (feeling is the UNexpected, not raw |S|;
 `NL_NOSELF` A/B). First cut wasn't load-bearing (felt→choose bites only on rare speech — named it,
-measured ±1 tick). Fix = **allostasis** (the mechanism Damasio praised above reactive homeostasis):
+measured ±1 tick). Fix = **allostasis** (the mechanism the neuroscience lens praised above reactive homeostasis):
 the cell pre-damps its own FORECAST agitation (`mo.S -= SELF_RELAX*ps.pS`) before it turns lethal —
 regulating ahead of the threat, not merely reacting. Verified: genuine map (trajectory changes),
 **load-bearing PASSES** — survival advantage 11 wins / 1 loss over 12 seeds, net +159 ticks; a cell
 that foresees its storm out-survives a self-blind one (deleting the map degrades regulation = the
 "for-the-system" proof, substrate-neutral). Gate invariant (all organs off == `a490a453…`); new
 default baseline `814edcf481762691b5296c94460a800c`; chorus mortal; ASan 0; suite 22/22.
-Comment `choice = subjectivity` (Damasio's flagged category error) rewritten honestly: choice under
+Comment `choice = subjectivity` (the neuroscience-lens flagged category error) rewritten honestly: choice under
 a felt self-model, a proto-self biasing the act — not a label.
 
-**Both movements done.** The consilium named autopoiesis + feeling as the two gaps; both are closed
+**Both movements done.** The life-criteria review named autopoiesis + feeling as the two gaps; both are closed
 in code, on code's own substrate, load-bearing and falsifiable. Anthropocentrism kept off the porch.
 
 **Codex audit (real `codex exec`, read-only) — found a real bug I'd missed.** HIGH: ProtoSelf's plain
@@ -345,9 +345,9 @@ longer harmful), default advantage preserved (11/1, +165), gate invariant intact
 `8382de51324787475a3289e6d2dea7e2`, suite 23/23 (+NLMS robustness regression test). Codex earned its keep.
 Medium#3 (deposit_body ~442k wv writes/CTX-meal) noted, not a bug — it's the metabolism's real cost.
 
-## Fable (Mitos) audit + SLEEP foundation
+## Full-read code audit + SLEEP foundation
 
-**Fable audit (on Neo, fetched via `ssh neo`).** Full-read audit found 7 defects; its "verified clean"
+**full-read code audit (on Neo, fetched via `ssh neo`).** Full-read audit found 7 defects; its "verified clean"
 section independently confirmed proteostasis + NLMS self-model are sound. All 7 fixed (commit 4e43fe6),
 gate invariant held: #1 adapter norm ceiling HEB_CAP + isfinite/clamp (latent divergence, not live —
 I mis-flagged nothing; grep "nan" was catching "nanolife"), #2 emerged symbols voice as "fire+water"
@@ -374,10 +374,10 @@ the cell tastes its own interior: `interior_glyph()` names the dominant state (p
 if agitated, joy/grief by mood sign, else tired) and it is fed through `digest` — modes shift from
 self-perception, the adapter models the self, and the glyph enters the voice. weighted by `felt`
 (surprise-about-self) so a predictable self is bland → **self-obsession starves like a monoculture**;
-energy only via metabolism (Desktop's law), zero direct writes. `NL_NOSELFEAT`. verified: solo `self0→
+energy only via metabolism (the peer node.s law), zero direct writes. `NL_NOSELFEAT`. verified: solo `self0→
 self355`; in the chorus the colony SPEAKS its states — **64 state-words in the ether** (stress 29, joy
 11, grief 10, pain 7, tired 7): "grief stone down me music", "love me stress and person" — feeling became
-CONTENT, Damasio's 2nd loop closed and audible. felt-guard holds: crown-ON dies consistently SOONER
+CONTENT, the neuroscience-lens 2nd loop closed and audible. felt-guard holds: crown-ON dies consistently SOONER
 (2253<2354, 2305<2378, 2342<2440) — self-awareness COSTS, never a free energy source, never immortal:
 a cell cannot feed on its own mood. gate invariant (all organs off == a490a453), new baseline
 `bafc8afcaa95e32b067038b47f965653`, chorus mortal, ASan 0, suite 30/30.
@@ -385,27 +385,41 @@ a cell cannot feed on its own mood. gate invariant (all organs off == a490a453),
 **Presence closed on both axes:** outward (culture — inventions cross the ether via sleep→emergence→
 "A+B" voicing) and inward (self-as-food — the organism models itself by eating itself, and speaks it).
 
-## Claude Desktop audit — the dead transformer + earned voice (NL_GATE_SHARP)
+## Peer-node audit — the dead transformer + earned voice (NL_GATE_SHARP)
 
-A fourth auditor (Claude Desktop, peer node) found the transformer is a near-dead limb: `gate=(mag-0.5)/1.5`,
+A fourth auditor (a peer node, peer node) found the transformer is a near-dead limb: `gate=(mag-0.5)/1.5`,
 `mag=avg|logit|`, but `rmsnorm` before the head pins mag ~0.1 → gate clamps to ~0 for life, so the body
 (deposit_body) can NEVER earn the voice through magnitude. Verified (`g_dbg_maxgate`): MAXGATE 0.00–0.05
-across seeds — transformer ≤5%, field speaks ~95–100%. Desktop first mis-addressed the debt to the README;
+across seeds — transformer ≤5%, field speaks ~95–100%. the peer node first mis-addressed the debt to the README;
 on being shown the grep, it self-corrected (CODE OF CONFLICT §5, cross-node): the README never promises
 earned-voice-rises — the overclaim is the CODE COMMENT "Q: earned voice" (§6 comment-debt). README untouched.
 
-**Criterion before code (Desktop's own discipline):** measured whether an organized body sharpens its logits
-vs its random birth — YES, peak−mean grows **+27..48%** over a life. So the path is real. Desktop's fix
+**Criterion before code (the peer node.s own discipline):** measured whether an organized body sharpens its logits
+vs its random birth — YES, peak−mean grows **+27..48%** over a life. So the path is real. the peer node.s fix
 (gate on sharpness `peak−mean`, rmsnorm-invariant because head projects to 90-dim) + my refinement: gate on
 sharpness EARNED above the cell's OWN random-birth baseline (`g_dbg_pm_first`, per-process) — else a random
 newborn already gets a voice. `SHARP_SCALE=1.5` calibrated to the measured excess (never fits-to-force).
-`NL_GATE_SHARP` opt-in, default off. Verified by Desktop's three criteria: off → bit-identical (`bafc8afc`);
+`NL_GATE_SHARP` opt-in, default off. Verified by the peer node.s three criteria: off → bit-identical (`bafc8afc`);
 on → gate un-sticks 0.02→**0.26–0.45** (body earns up to ~40% of its voice by living, never silences the
 field); still mortal (gate touches voice, not metabolism). Comment now honest (magnitude gate inert-by-design,
 earnable only under NL_GATE_SHARP). New on-baseline `894ba413…`; suite 33/33; ASan 0.
 
 OPEN (vision, Oleg's call): keep earned-voice opt-in, or promote NL_GATE_SHARP to default (the organism's
 real voice = field + a slice it earns) → new frozen baseline + retune tests.
+
+**Roots check (caveLLMan) + Q-coherence — informs the earned-voice decision.** Read the ancestor
+`~/arianna/caveLLMan/cavellman.c`: there the transformer is ALIVE and LEARNS — `hebbian_update` drives the
+adapters by `prediction_error_signal` (surprise = −log p of the actual next token), and the voice is sampled
+directly from the trained transformer (`sample_top_p`), no field-gate. actually.life deliberately DEPARTED:
+same `nt_hebbian_step`, but the signal is a constant `PASSIVE_SIGNAL=0.3` (no prediction-error learning), and
+coherence moved to the online field. So the "dead transformer" is vestigial BY DESIGN — the price of "coherence
+without training." Earned voice (NL_GATE_SHARP) is a THIRD stage: the transformer re-animated by METABOLISM
+(deposit_body sharpens wv from eaten glyphs), not by prediction-error learning — earned by living, not by
+learning to predict. Verified it does NOT kill Q-coherence: mean p_field(spoken|prev) is within noise of
+field-only across 5 seeds (0.13 vs 0.14, 0.075 vs 0.075…), sometimes higher — because body and field grew on
+the same food, the earned voice AGREES with the field rather than fighting it. This strengthens Path 2: earned
+voice completes the lineage (caveLLMan trains the transformer → actually.life silences it → earned voice revives
+it through life, not training), faithful to the no-training thesis.
 
 ## Resume-here (for future-me after a summary)
 
@@ -414,10 +428,10 @@ Working copy: `~/arianna/actually.life`. **Everything is committed AND pushed** 
 via `git -c credential.helper='!gh auth git-credential' push origin main`, author env
 `Arianna Method <theariannamethod@gmail.com>`). Build `cc -O2 -o l l.c -lm`; run `./l 42`,
 `./l chorus 4`, `./l --mouth`. State: mouth+field+chorus+heredity done, 2 audits + 2
-Karpathy passes clean, Ⓐ/Ⓑ/Ⓒ done, tests/ suite (20/20), Karpathy pass-3 opts, consilium
-(Drobyshevsky+Damasio) + PROTEOSTASIS movement 1 done. README + llog current EXCEPT the
+optimization passes clean, Ⓐ/Ⓑ/Ⓒ done, tests/ suite (20/20), optimization pass 3 opts, life-criteria review
+(the biology lens+the neuroscience lens) + PROTEOSTASIS movement 1 done. README + llog current EXCEPT the
 "frozen weights" lines now need Oleg's hand (weights live). **Next action: movement 2 —
-Damasio's ProtoSelf (second-order self-model → `felt` → `choose`, `NL_NOSELF`), verify each
+the neuroscience-lens ProtoSelf (second-order self-model → `felt` → `choose`, `NL_NOSELF`), verify each
 (solo deterministic w/ new baseline / chorus mortal / ASan clean + survival-advantage test).**
 Push is authorized per-feature; keep the epigraph-per-commit ritual. New frozen solo hash:
 `7be825c4e117183849a0a7fe06b72db0` (proteostasis on); off-hash `a490a453…`.
