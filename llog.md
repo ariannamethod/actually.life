@@ -484,9 +484,19 @@ parent a symbol, so culture was 32 depth-1 compounds forever. Life's sign system
   This also RAISED the README's "a neighbour ate them whole" line from an overclaim (pre-Δ2 it was split) to
   delivered. New frozen hashes (VOCAB_CAP 122→154): default `b5d50234…`, NL_NOEARNED `a734e3a2…`, all-off `9a9d6848…`.
 
-Depth ceiling for this step: a depth-2 symbol voices as "·emg" (glyph_name doesn't yet recursively name emerged
-parents), so it forms but doesn't re-transmit → depth-3 across cells needs recursive naming (a follow-up). But the
-crown-next landed: a symbol can now parent a symbol, culture composes without a hard ceiling.
+**Ceiling REMOVED (the eighth audit's one finding, raised not softened).** The eighth audit (highest tier) found
+recursion memory-safe/cycle-free/mortal/deterministic, with ONE honesty finding: transmission was capped at
+depth-1 — a depth-2 symbol voiced as "·emg" (glyph_name only formatted "A+B" for base parents) → the receiver
+dropped it → deeper composition formed locally but couldn't cross the ether. That gap made the README's
+"composes without a ceiling" an overclaim. Per the rule (raise code, don't soften README — Oleg drilled it
+twice), RAISED the code: `sym_name` names recursively with parens "(fire+water)+earth", `resolve_sym` parses
+nested composites at the top-level '+'. Now depth-N crosses the ether whole (`(idea+and)+internet`,
+`(me+old)+woman` observed; chorus rec up to 14). Solo has no depth-2 (no ether) and depth-1 names identically,
+so all three frozen hashes UNCHANGED (`b5d50234`/`a734e3a2`/`9a9d6848`); mortal; ASan 0; suite. The one real
+ceiling was unfinished code, now finished — no principled cap on cultural open-endedness (finite alphabet +
+recursion = unbounded, like DNA). Low pre-existing note (audit finding 2): `recombine` crosses the field from
+both parents but takes the emerged table from parent A, so a B-row's emerged columns are semantically off in
+the child — memory-safe, field fades anyway; fix only if it matters.
 
 ## Resume-here (for future-me after a summary)
 

@@ -693,20 +693,28 @@ static float digest(Model* m, Modes* mo, float* scar, const int* glyphs, int pre
     return yield;
 }
 
+/* RECURSIVE naming: a symbol voices as its parents, to ANY depth — "(fire+water)+earth". a composite
+ * parent is wrapped in parens so the receiver can parse the nesting unambiguously. this is what lets a
+ * symbol-of-symbols cross the ether WHOLE (no depth-1 ceiling on transmission). */
+static void sym_name(int id, char* buf, int cap){
+    if(cap<=1){ if(cap>0) buf[0]='\0'; return; }
+    if(id>=0 && id<GLYPH_COUNT){ snprintf(buf,cap,"%s",GLYPH_NAMES[id]); return; }
+    if(id==BOS_ID){ snprintf(buf,cap,"BOS"); return; }
+    if(id==MASK_ID){ snprintf(buf,cap,"MASK"); return; }
+    int k=id-VOCAB;
+    if(k>=0 && k<g_n_emerged){
+        char a[160], b[160]; sym_name(g_emerged_a[k],a,sizeof a); sym_name(g_emerged_b[k],b,sizeof b);
+        int pa=(strchr(a,'+')!=NULL), pb=(strchr(b,'+')!=NULL);   /* paren-wrap a composite parent */
+        snprintf(buf,cap,"%s%s%s+%s%s%s", pa?"(":"",a,pa?")":"", pb?"(":"",b,pb?")":"");
+        return;
+    }
+    snprintf(buf,cap,"·emg");
+}
 static const char* glyph_name(int id){
     if(id<GLYPH_COUNT) return GLYPH_NAMES[id];
     if(id==BOS_ID) return "BOS";
     if(id==MASK_ID) return "MASK";
-    int k=id-VOCAB;                                  /* #2 (Fable audit): an emerged symbol voices as its parents — */
-    if(k>=0 && k<g_n_emerged){                       /* "fire+water", not the faceless "·emg" that all inventions shared. */
-        int a=g_emerged_a[k], b=g_emerged_b[k];      /* semtok already splits '+' into the pair, so a neighbour that grazes */
-        if(a>=0&&a<GLYPH_COUNT && b>=0&&b<GLYPH_COUNT){  /* the invention EATS its two glyphs and can re-invent it via cooc — */
-            static char buf[40];                     /* the invented association spreads through SPEECH, not only the genome. */
-            snprintf(buf,sizeof buf,"%s+%s",GLYPH_NAMES[a],GLYPH_NAMES[b]);  /* culture, horizontal transmission. */
-            return buf;
-        }
-    }
-    return "·emg";                                   /* fallback: a composite with a non-base parent */
+    static char buf[320]; sym_name(id, buf, sizeof buf); return buf;  /* emerged: recursive "(A+B)+C" */
 }
 
 /* ── main — Phase A step 3a: the breathing clock with a second signal ──
@@ -860,29 +868,37 @@ static int emerged_by_pair(int a, int b){
     for(int k=0;k<g_n_emerged;k++) if(g_emerged_a[k]==a && g_emerged_b[k]==b) return VOCAB+k;
     return -1;
 }
-/* Δ2: resolve a grazed composite token "A+B" (A,B base glyph names) to ONE id in the receiver —
- * reuse its own symbol with those parents, or ADOPT it (birth it here). depth-1 (single '+'); a
- * deeper "·emg" or nested token has no clean split and falls through to the base tokenizer. */
-static int resolve_composite(Model* m, const char* s){
-    const char* plus=strchr(s,'+');
-    if(!plus) return semtok_word(s);
-    char left[96]; int ll=(int)(plus-s); if(ll>95)ll=95; memcpy(left,s,ll); left[ll]='\0';
-    if(strchr(plus+1,'+')) return -1;             /* nested composite — not resolvable at depth-1 yet */
-    int a=semtok_word(left), b=semtok_word(plus+1);
-    if(a<0||b<0||a>=VOCAB||b>=VOCAB) return -1;    /* need both base glyphs the receiver shares */
+/* Δ2 (recursive): resolve a grazed composite name "(A+B)+C" to ONE id in the receiver, to ANY depth —
+ * split at the TOP-LEVEL '+' (outside parens), resolve each side recursively (adopting sub-symbols as
+ * needed), then reuse the receiver's own symbol with those parents or ADOPT it. so a symbol-of-symbols
+ * crosses the ether WHOLE, rebuilt from its leaves (all base glyphs the colony shares). */
+static int resolve_sym(Model* m, const char* s){
+    int depth=0; const char* plus=NULL;
+    for(const char* p=s; *p; p++){                 /* find the top-level '+' */
+        if(*p=='(') depth++; else if(*p==')'){ if(depth>0) depth--; }
+        else if(*p=='+' && depth==0){ plus=p; break; }
+    }
+    if(!plus){                                     /* no top-level '+': a base name, or a parenthesised "(X)" */
+        int L=(int)strlen(s);
+        if(L>=2 && s[0]=='(' && s[L-1]==')'){ char in[288]; int n=L-2; if(n>287)n=287; memcpy(in,s+1,n); in[n]='\0'; return resolve_sym(m,in); }
+        return semtok_word(s);
+    }
+    char left[288]; int ll=(int)(plus-s); if(ll>287)ll=287; memcpy(left,s,ll); left[ll]='\0';
+    int a=resolve_sym(m,left), b=resolve_sym(m,plus+1);
+    if(a<0||b<0) return -1;                         /* a leaf the receiver doesn't share, or no room to adopt */
     int ex=emerged_by_pair(a,b); if(ex>=0) return ex;   /* the receiver recognizes the invention */
-    return birth_symbol(m,a,b);                    /* ...or ADOPTS it — the sign crosses whole */
+    return birth_symbol(m,a,b);                     /* ...or ADOPTS it — the sign crosses whole, at any depth */
 }
 /* Δ2: tokenize a grazed line, resolving composites to whole symbols instead of splitting on '+'. */
 static int semtok_ether(Model* m, const char* line, int* out, int max){
-    int n=0; char tok[96]; const char* p=line;
+    int n=0; char tok[288]; const char* p=line;
     while(*p && n<max){
         while(*p==' '||*p=='\t') p++;
         if(!*p) break;
-        int L=0; while(*p && *p!=' ' && *p!='\t' && L<95) tok[L++]=*p++;
+        int L=0; while(*p && *p!=' ' && *p!='\t' && L<287) tok[L++]=*p++;
         tok[L]='\0';
-        if(strchr(tok,'+')){                       /* composite — resolve/adopt as ONE sign */
-            int id=resolve_composite(m,tok);
+        if(strchr(tok,'+')){                       /* composite — resolve/adopt as ONE sign, at any depth */
+            int id=resolve_sym(m,tok);
             if(id>=0){ out[n++]=id; continue; }    /* resolved/adopted whole */
         }
         int g=semtok_word(tok);                    /* plain glyph, or composite fallback */
