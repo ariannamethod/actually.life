@@ -124,15 +124,19 @@ SELF_ON=$("$L" 42 >/dev/null 2>&1; md5of lifeis/waste.log)
 NL_NOSELF=1 "$L" 42 >/dev/null 2>&1; SELF_OFF=$(md5of lifeis/waste.log)
 [ "$SELF_ON" != "$SELF_OFF" ] && ok "the self-model changes the organism's dynamics (a map, not a label)" \
                               || no "NL_NOSELF changed nothing — the self-model is inert"
-# load-bearing (Damasio's test 5): a cell that forecasts+damps its own storm out-survives a self-blind one
-sw=0; sl=0
-for s in 1 42 99 256 777 2024; do
-  a=$("$L" $s 2>&1 | grep -o 'died at tick [0-9]*' | grep -o '[0-9]*' | head -1)
-  b=$(NL_NOSELF=1 "$L" $s 2>&1 | grep -o 'died at tick [0-9]*' | grep -o '[0-9]*' | head -1)
-  [ -n "$a" ] && [ -n "$b" ] && { [ "$a" -gt "$b" ] && sw=$((sw+1)); [ "$a" -lt "$b" ] && sl=$((sl+1)); }
+# HONEST CONTROL (deep audit finding): the self-model's survival edge is NOT distinguishable from a
+# dumb fixed-gain S-damper — so we do NOT claim a survival advantage. we only assert what the control
+# leaves standing: a blunt fixed damper of matched strength keeps the cell alive at least as long (the
+# survival win rides on the damping, not on the self-forecast). the self-model's worth is being a real
+# map (asserted above), not a longer life.
+fw=0; ft=0
+for s in 1 7 99 256 777; do
+  self=$("$L" $s 2>&1 | grep -o 'died at tick [0-9]*' | grep -o '[0-9]*' | head -1)
+  fixd=$(NL_FIXEDDAMP=0.2 "$L" $s 2>&1 | grep -o 'died at tick [0-9]*' | grep -o '[0-9]*' | head -1)
+  [ -n "$self" ] && [ -n "$fixd" ] && { ft=$((ft+1)); [ "$fixd" -ge "$((self - self/20))" ] && fw=$((fw+1)); }
 done
-[ "$sw" -gt "$sl" ] && ok "the self-model confers a survival advantage (wins $sw / loses $sl across seeds — allostasis earns its keep)" \
-                    || no "the self-model gave no survival advantage (wins $sw loses $sl)"
+[ "$fw" -ge "$((ft/2))" ] && ok "a dumb fixed damper matches the self-model's survival ($fw/$ft within 5%) — the survival claim is honestly RETIRED, the map stands on its own" \
+                          || no "unexpectedly, the fixed damper did NOT match — re-open the survival question ($fw/$ft)"
 # robustness (Codex-found regression): on HIGH-dissonance diets the NLMS self-model must NOT
 # destabilize — it once diverged and cut life from t759 to t197. it may not shorten life here.
 rok=1

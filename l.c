@@ -632,6 +632,7 @@ static float g_pm_birth = 0.0f; static int g_pm_birth_set = 0;  /* the cell's sh
 static float g_dbg_pm_max = 0.0f;                /* DEBUG: max peak−mean over life — does the organized body sharpen? */
 static int   g_gate_sharp = 1;                   /* earned voice: gate the transformer on EARNED sharpness (default on; NL_NOEARNED lifts it) */
 static double g_dbg_spoken_p = 0.0; static long g_dbg_spoken_n = 0;  /* DEBUG: Σ p_field(spoken|prev) — Q-coherence of the actual voice */
+static float g_fixeddamp = 0.0f;                 /* CONTROL (Fable #3): NL_FIXEDDAMP=K → dumb fixed-gain S-damper instead of the self-model */
 
 static float digest(Model* m, Modes* mo, float* scar, const int* glyphs, int prev0, int n){
     static float before[RANK*E];
@@ -1156,6 +1157,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     int   selfeat_on=(getenv("NL_NOSELFEAT")==NULL);   /* CROWN (I2): the cell tastes its own state in sleep (A/B) */
     long  n_selfeat=0;
     g_self_on      = (getenv("NL_NOSELF")==NULL);      /* ProtoSelf: the second-order self-model (A/B) */
+    { const char* fd=getenv("NL_FIXEDDAMP"); g_fixeddamp = fd? (float)atof(fd) : 0.0f; }  /* Fable #3 control */
     g_self_felt    = 0.0f;
     ProtoSelf ps; memset(&ps,0,sizeof ps);             /* the forecast starts flat — it must learn its own interior */
     float scar_total=0.0f;
@@ -1175,7 +1177,9 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     while(energy>0.0f && tick<200000){          /* cap = falsification guard: it MUST die */
         tick++;
         float S0=mo.S, D0=mo.dissonance;            /* the interior at tick's start — what the self-model forecasts FROM */
-        if(g_self_on){ self_predict(&ps,S0,D0);      /* ProtoSelf: forecast this tick's interior before it happens */
+        if(g_fixeddamp>0.0f){                        /* CONTROL (Fable #3): a DUMB fixed-gain S-damper of matched strength — if this */
+            mo.S -= g_fixeddamp*mo.S;                /* matches the self-model's survival, the "self" is decoration, not a felt forecast */
+        } else if(g_self_on){ self_predict(&ps,S0,D0);  /* ProtoSelf: forecast this tick's interior before it happens */
             float pd=ps.pS; if(pd>1.0f)pd=1.0f; else if(pd<-1.0f)pd=-1.0f;  /* S lives in ~[-1,1]; bound the anticipatory pull */
             if(isfinite(pd)) mo.S -= SELF_RELAX*pd;  /* ALLOSTASIS: pre-damp the FORECAST agitation — regulate ahead of the */
         }                                            /* threat, not merely react to it; a cell that foresees its own storm survives it */

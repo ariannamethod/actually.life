@@ -404,8 +404,9 @@ on → gate un-sticks 0.02→**0.26–0.45** (body earns up to ~40% of its voice
 field); still mortal (gate touches voice, not metabolism). Comment now honest (magnitude gate inert-by-design,
 earnable only under NL_GATE_SHARP). New on-baseline `894ba413…`; suite 33/33; ASan 0.
 
-OPEN (vision, Oleg's call): keep earned-voice opt-in, or promote NL_GATE_SHARP to default (the organism's
-real voice = field + a slice it earns) → new frozen baseline + retune tests.
+**PROMOTED to default (Oleg's call, both blockers cleared).** Earned voice is now default ON; `NL_NOEARNED`
+reverts to field-only. New default baseline `894ba413…`; NL_NOEARNED `bafc8afc…`; all-off `a490a453…`.
+README samples (solo + chorus) regenerated to the earned voice. Verified: mortal, Q-coherence kept, suite.
 
 **Roots check (caveLLMan) + Q-coherence — informs the earned-voice decision.** Read the ancestor
 `~/arianna/caveLLMan/cavellman.c`: there the transformer is ALIVE and LEARNS — `hebbian_update` drives the
@@ -420,6 +421,45 @@ field-only across 5 seeds (0.13 vs 0.14, 0.075 vs 0.075…), sometimes higher �
 the same food, the earned voice AGREES with the field rather than fighting it. This strengthens Path 2: earned
 voice completes the lineage (caveLLMan trains the transformer → actually.life silences it → earned voice revives
 it through life, not training), faithful to the no-training thesis.
+
+## Deep audit (highest tier) — a claim of mine RETIRED + the honest ceilings
+
+A seventh audit, on the highest-capability model, deep/systems layer (not bug-hunt — that was saturated).
+It confirmed the core sound (charge-invariant type-enforced, anti-cheat couplings intact, byte-exact
+heredity, the wv autopoietic loop a real self-reference) and named where the WORD outruns the MACHINE:
+
+- **RETRACTION (my claim, tested and false): the self-model gives NO survival advantage.** The audit noted
+  the ProtoSelf's load-bearing part is the allostasis line `mo.S -= SELF_RELAX*ps.pS`, which after NLMS
+  converges is ≈ an adaptive proportional S-damper — and ANY extra S-damping delays contour death. Ran the
+  control (`NL_FIXEDDAMP=K`, a dumb fixed-gain damper): a fixed K≈0.1–0.2 matches or beats the self-model's
+  survival across seeds (and on seed 42 both are WORSE than no-self). So the "load-bearing / for-the-system
+  proof" (movement 2, 11/1 +159) was CONFOUNDED — the win rode on damping, not on the self-forecast. Retired
+  the survival claim in README (the "outlives a stranger" line → honest caveat), the test (survival-advantage
+  test → fixed-damper control that documents the retraction), and here. What SURVIVES: the self-model is still
+  a genuine second-order map (forecasts S/diss, felt=error, habituates, changes the trajectory). The map is
+  real; the medal was mine and it goes back. `NL_FIXEDDAMP` kept as the standing control.
+- **#1 (deepest, the ceiling): symbol emergence is capped at DEPTH 1.** `cooc_track` (l.c:538) and `try_emerge`
+  (l.c:543) range over `VOCAB` (90), not `VOCAB_CAP` — an emerged symbol is never a co-occurrence partner and
+  can never parent another symbol. Culture = 32 depth-1 compounds of the 88 primitives, forever; life's sign
+  systems are recursive, this isn't. The one change that would most move it from "compelling model" to "hard
+  to dismiss": let cooc_track/try_emerge range over VOCAB_CAP (+ grow MAX_EMERGED) → recursive open-ended culture.
+  ARCHITECTURE — Oleg's call, not done yet.
+- **#2 (claim gap): autopoietic death is only visible under `NL_NOREPAIR`.** README §body says "death by the
+  collapse of its own organization", but the default death is energy≤0; organizational dissolution registers
+  *as* energy via rent, never as a distinct death. Fix: add an integ<floor dissolution death-exit, or soften.
+- **#4 (claim gap): culture transmits ASSOCIATIONS, not symbols.** semtok maps '+'→space, so a grazed "fire+water"
+  is eaten as two base glyphs; what crosses the ether is the adjacency (cooc bias), and re-invention is
+  confounded with convergent invention from a shared diet. The symbol only transmits vertically (NLC3). "ate
+  them whole — culture" overstates. Fix: preserve "A+B" as a unit in the receiver + map to its emerged table,
+  or call it associative resonance that can converge.
+- **#5/#6/#7 (honest caveats):** earned voice moves but is informationally ≈ the field (says nearly the same,
+  doubly parasitic on it); "the weights are the soma" — only wv lives, not all tensors; `interior_glyph` is a
+  hand-coded threshold classifier, not a learned self-representation (its felt-guard IS real though).
+
+Verdict: "meets every criterion of life except biology" = a disciplined overreach — real falsifiable mechanism
+for every criterion, but two ceilings (no thermodynamic grounding; capped/non-recursive emergence + fixed body
+topology) keep it a finite system instantiating the FORM of each criterion. #1 is the change that would move it
+across the line.
 
 ## Resume-here (for future-me after a summary)
 
