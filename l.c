@@ -628,7 +628,7 @@ static int   g_lineage   = -1;                   /* Ⓒ: the cell's root ancesto
 static int   g_self_on   = 1;                    /* ProtoSelf: NL_NOSELF=1 lifts the self-model (A/B) */
 static float g_self_felt = 0.0f;                 /* ProtoSelf: |interior − its own forecast| — surprise ABOUT the self */
 static float g_dbg_maxgate = 0.0f;               /* DEBUG: max transformer gate ever reached in a life (Desktop audit) */
-static float g_dbg_pm_first = -1.0f;             /* the cell's random-birth sharpness — its EARNED-voice zero (per-process) */
+static float g_pm_birth = 0.0f; static int g_pm_birth_set = 0;  /* the cell's sharpness at its FIRST utterance (per-process) — the earned-voice zero it sharpens above */
 static float g_dbg_pm_max = 0.0f;                /* DEBUG: max peak−mean over life — does the organized body sharpen? */
 static int   g_gate_sharp = 1;                   /* earned voice: gate the transformer on EARNED sharpness (default on; NL_NOEARNED lifts it) */
 static double g_dbg_spoken_p = 0.0; static long g_dbg_spoken_n = 0;  /* DEBUG: Σ p_field(spoken|prev) — Q-coherence of the actual voice */
@@ -759,15 +759,14 @@ static void field_fold(float* logits, const int* recent, int recent_n){
     for(int i=0;i<VOCAB_CAP;i++){ mag+=fabsf(logits[i]); rawsum+=logits[i]; if(logits[i]>peak) peak=logits[i]; }
     mag/=VOCAB_CAP;
     if(!isfinite(mag)) return;                       /* a NaN logit passes both clamps (NaN<0, NaN>1 both false) — refuse it */
-    float pm=peak-rawsum/VOCAB_CAP;                  /* DEBUG: sharpness (peak−mean) — does an organized body sharpen it? */
-    if(g_dbg_pm_first<0.0f) g_dbg_pm_first=pm;
-    if(pm>g_dbg_pm_max) g_dbg_pm_max=pm;
-    float gate;
-    if(g_gate_sharp){                            /* Desktop's path: EARNED voice = sharpness the body grew above its random birth. */
-        float base=(g_dbg_pm_first>0.0f)?g_dbg_pm_first:pm;   /* rmsnorm-invariant (peak−mean survives normalization), and the */
-        gate=(pm-base)/SHARP_SCALE;              /* body genuinely moves it (deposit_body sharpens the logits). the magnitude */
-    }else{                                       /* gate below CANNOT rise — rmsnorm pins mag ~0.1, so it clamps to ~0 for life. */
-        gate=(mag-0.5f)/1.5f;                    /* Q: earned voice — but earnable only under NL_GATE_SHARP; here it is inert-by-design. */
+    float pm=peak-rawsum/VOCAB_CAP;                  /* sharpness (peak−mean): rmsnorm-invariant, and the body genuinely grows it */
+    if(pm>g_dbg_pm_max) g_dbg_pm_max=pm;             /* DEBUG only */
+    if(!g_pm_birth_set){ g_pm_birth=pm; g_pm_birth_set=1; }  /* audit N2: a proper set-flag, not a sentinel — the earned-voice zero is */
+    float gate;                                  /* the cell's sharpness at its FIRST utterance (context-comparable to the runtime pm; */
+    if(g_gate_sharp){                            /* audit N1: NOT "random birth" — it has eaten a little by first speech, and that's honest). */
+        gate=(pm-g_pm_birth)/SHARP_SCALE;        /* the mature body then sharpens ABOVE this zero by living → it earns a voice. */
+    }else{                                       /* the magnitude gate below CANNOT rise — rmsnorm pins mag ~0.1, clamps to ~0 for life. */
+        gate=(mag-0.5f)/1.5f;                    /* inert-by-design; earnable only under the sharpness gate. */
     }
     if(gate<0.0f)gate=0.0f; if(gate>1.0f)gate=1.0f;
     if(gate>g_dbg_maxgate) g_dbg_maxgate=gate;   /* DEBUG: track whether the transformer ever earns any voice */
@@ -1266,9 +1265,9 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         fprintf(stderr,"%s[dbg] wv_norm birth=%.4f death=%.4f (%.1f%%)  meals=%ld tot_dwv=%.6f avg_dwv=%.3e  decay/tick=%.4f%% of ~%.3f  MAXGATE=%.5f\n",
                 tag, (double)birth_norm, (double)wv_norm(m), 100.0*wv_norm(m)/(birth_norm>0?birth_norm:1),
                 n_meals, tot_dwv, n_meals?tot_dwv/n_meals:0.0, 100.0*(1.0-SOMA_DECAY), (double)birth_norm, (double)g_dbg_maxgate),
-        fprintf(stderr,"%s[dbg] sharpness peak-mean: first(random body)=%.4f  max(over life)=%.4f  grew=%.1f%%\n",
-                tag, (double)g_dbg_pm_first, (double)g_dbg_pm_max,
-                g_dbg_pm_first>0?100.0*(g_dbg_pm_max-g_dbg_pm_first)/g_dbg_pm_first:0.0),
+        fprintf(stderr,"%s[dbg] sharpness peak-mean: first-utterance=%.4f  max(over life)=%.4f  grew=%.1f%%\n",
+                tag, (double)g_pm_birth, (double)g_dbg_pm_max,
+                g_pm_birth>0?100.0*(g_dbg_pm_max-g_pm_birth)/g_pm_birth:0.0),
         fprintf(stderr,"%s[dbg] Q-coherence of the spoken voice: mean p_field(spoken|prev)=%.4f over %ld glyphs\n",
                 tag, g_dbg_spoken_n?g_dbg_spoken_p/g_dbg_spoken_n:0.0, g_dbg_spoken_n);
     if(food) fclose(food);
