@@ -422,22 +422,26 @@ the same food, the earned voice AGREES with the field rather than fighting it. T
 voice completes the lineage (caveLLMan trains the transformer → actually.life silences it → earned voice revives
 it through life, not training), faithful to the no-training thesis.
 
-## Deep audit (highest tier) — a claim of mine RETIRED + the honest ceilings
+## Deep audit (highest tier) — attribution caveat + the honest ceilings
 
 A seventh audit, on the highest-capability model, deep/systems layer (not bug-hunt — that was saturated).
 It confirmed the core sound (charge-invariant type-enforced, anti-cheat couplings intact, byte-exact
 heredity, the wv autopoietic loop a real self-reference) and named where the WORD outruns the MACHINE:
 
-- **RETRACTION (my claim, tested and false): the self-model gives NO survival advantage.** The audit noted
-  the ProtoSelf's load-bearing part is the allostasis line `mo.S -= SELF_RELAX*ps.pS`, which after NLMS
-  converges is ≈ an adaptive proportional S-damper — and ANY extra S-damping delays contour death. Ran the
-  control (`NL_FIXEDDAMP=K`, a dumb fixed-gain damper): a fixed K≈0.1–0.2 matches or beats the self-model's
-  survival across seeds (and on seed 42 both are WORSE than no-self). So the "load-bearing / for-the-system
-  proof" (movement 2, 11/1 +159) was CONFOUNDED — the win rode on damping, not on the self-forecast. Retired
-  the survival claim in README (the "outlives a stranger" line → honest caveat), the test (survival-advantage
-  test → fixed-damper control that documents the retraction), and here. What SURVIVES: the self-model is still
-  a genuine second-order map (forecasts S/diss, felt=error, habituates, changes the trajectory). The map is
-  real; the medal was mine and it goes back. `NL_FIXEDDAMP` kept as the standing control.
+- **The self-model survival claim — attribution caveat, but the claim STANDS (a lesson in the rule).** The
+  audit noted the ProtoSelf's load-bearing part is the allostasis line `mo.S -= SELF_RELAX*ps.pS`, ≈ an adaptive
+  proportional S-damper after NLMS converges, and ANY extra S-damping delays contour death. I over-reacted and
+  SLASHED the README claim ("outlives a stranger") — a violation of the no-README-downgrade rule ([[feedback_no_readme_downgrade]],
+  [[feedback_overclaim_fulfill_not_slash]]): fix an overclaim by RAISING code, cut a line only when the claim is
+  false IN ESSENCE and only deliberately with Oleg. Oleg caught it, made me restore the claim and raise the code.
+  So I tried a code-raise (felt-gated allostasis: damp harder when surprised by itself — a signal a fixed damper
+  lacks) — MEASURED it: it does NOT beat the best fixed damper. Reverted (back to 894ba413). Then re-measured the
+  ACTUAL claim as written: "a cell that models itself outlives a cell that is a stranger to itself" = self-model
+  vs NL_NOSELF — **self beats stranger 7 wins / 1 loss.** The claim is LITERALLY TRUE and the code delivers it;
+  the audit's point is about *why* (the cause is the S-damping a fixed damper also supplies, not the self-knowledge
+  specifically). That is a real mechanism caveat — NOT a false claim. The README line stands; `NL_FIXEDDAMP` kept
+  as the control that documents the attribution. Lesson: I confused "attribution unearned" with "claim false" and
+  nearly retracted a true statement; the rule's job is exactly to stop that, and it did.
 - **#1 (deepest, the ceiling): symbol emergence is capped at DEPTH 1.** `cooc_track` (l.c:538) and `try_emerge`
   (l.c:543) range over `VOCAB` (90), not `VOCAB_CAP` — an emerged symbol is never a co-occurrence partner and
   can never parent another symbol. Culture = 32 depth-1 compounds of the 88 primitives, forever; life's sign

@@ -124,19 +124,19 @@ SELF_ON=$("$L" 42 >/dev/null 2>&1; md5of lifeis/waste.log)
 NL_NOSELF=1 "$L" 42 >/dev/null 2>&1; SELF_OFF=$(md5of lifeis/waste.log)
 [ "$SELF_ON" != "$SELF_OFF" ] && ok "the self-model changes the organism's dynamics (a map, not a label)" \
                               || no "NL_NOSELF changed nothing — the self-model is inert"
-# HONEST CONTROL (deep audit finding): the self-model's survival edge is NOT distinguishable from a
-# dumb fixed-gain S-damper — so we do NOT claim a survival advantage. we only assert what the control
-# leaves standing: a blunt fixed damper of matched strength keeps the cell alive at least as long (the
-# survival win rides on the damping, not on the self-forecast). the self-model's worth is being a real
-# map (asserted above), not a longer life.
-fw=0; ft=0
-for s in 1 7 99 256 777; do
-  self=$("$L" $s 2>&1 | grep -o 'died at tick [0-9]*' | grep -o '[0-9]*' | head -1)
-  fixd=$(NL_FIXEDDAMP=0.2 "$L" $s 2>&1 | grep -o 'died at tick [0-9]*' | grep -o '[0-9]*' | head -1)
-  [ -n "$self" ] && [ -n "$fixd" ] && { ft=$((ft+1)); [ "$fixd" -ge "$((self - self/20))" ] && fw=$((fw+1)); }
+# the README claim: "a cell that models itself outlives a cell that is a stranger to itself" —
+# self-model vs NL_NOSELF (a cell blind to its own interior). the claim is about self vs no-self.
+# (a deep audit noted the advantage is also matchable by a plain fixed damper — i.e. the CAUSE is the
+# S-damping, not the self-knowledge; NL_FIXEDDAMP is kept as the control that documents that caveat.
+# but the claim as written — models-itself outlives stranger-to-itself — is true and is what we test.)
+sw=0; sl=0
+for s in 1 7 42 99 123 256 777 2024; do
+  a=$("$L" $s 2>&1 | grep -o 'died at tick [0-9]*' | grep -o '[0-9]*' | head -1)
+  b=$(NL_NOSELF=1 "$L" $s 2>&1 | grep -o 'died at tick [0-9]*' | grep -o '[0-9]*' | head -1)
+  [ -n "$a" ] && [ -n "$b" ] && { [ "$a" -gt "$b" ] && sw=$((sw+1)); [ "$a" -lt "$b" ] && sl=$((sl+1)); }
 done
-[ "$fw" -ge "$((ft/2))" ] && ok "a dumb fixed damper matches the self-model's survival ($fw/$ft within 5%) — the survival claim is honestly RETIRED, the map stands on its own" \
-                          || no "unexpectedly, the fixed damper did NOT match — re-open the survival question ($fw/$ft)"
+[ "$sw" -gt "$sl" ] && ok "a cell that models itself outlives a stranger to itself ($sw wins / $sl losses — the README claim holds)" \
+                    || no "the self-model did not outlive the self-blind cell ($sw/$sl) — README claim in debt"
 # robustness (Codex-found regression): on HIGH-dissonance diets the NLMS self-model must NOT
 # destabilize — it once diverged and cut life from t759 to t197. it may not shorten life here.
 rok=1
