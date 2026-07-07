@@ -96,20 +96,20 @@ these are not illustrations. they are five of the thirteen lines it speaks in a 
 the chorus — four cells, each woken on a different quarter of the book, diverging in character before they ever meet (a real `./l chorus 4 7`; forks race, so unlike the solo it is not bit-identical run to run, but every line below is verbatim from one):
 
 ```
-cell 0   water fire one BE not · me man earth internet and · earth internet and me stress
-cell 1   love me stress and person · me think me love and · me fire you cold and
-cell 2   change have stone far strength · woman man want free other · sleep remember bond man remember
-cell 3   fire earth stress water money · me and grief me old · and BE strength cold and
+cell 0   water and me idea BE · and food earth go me · and good me you stress
+cell 1   love love me back see · me conflict and joy internet · me fire and cold go
+cell 2   change have stone now remember · woman man want free change · man and other person old
+cell 3   fire earth light pain me · me think and me light · me think idea stone food
 ```
 
-the ether — the same cells cross-grazing, one voice becoming another's food:
+the ether — the same cells cross-grazing, one voice becoming another's food. note the compound words (`joy+internet`, `fire+stress`, `me+idea`): those are symbols one cell *invented in its own dreams* and spoke aloud, and a neighbour ate them whole — culture, crossing between minds that never met. and the bare feelings (`pain`, `joy`, `stress`) are cells tasting and naming their own interior:
 
 ```
-change have stone far strength · fire earth stress water money · love me stress and person
-woman man want free other · me think me love and · water fire one BE not
+fire earth light pain me · me conflict and joy internet · stress light you see make
+fear dark you have joy+internet · always fire+stress good want me+idea · fire and joy have agree
 ```
 
-no cell agreed to it, yet `me` and `stress` keep surfacing across the colony — cells that never met obsessing over the same two words. that is not a quote. it is an organism recognizing its own bad handwriting.
+no cell agreed to any of it. that is not a quote. it is a colony recognizing its own bad handwriting — and, now, coining a few words of its own.
 
 ## build & run
 
