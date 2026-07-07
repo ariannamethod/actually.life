@@ -465,6 +465,29 @@ for every criterion, but two ceilings (no thermodynamic grounding; capped/non-re
 topology) keep it a finite system instantiating the FORM of each criterion. #1 is the change that would move it
 across the line.
 
+## Recursive culture (Δ1 + Δ2) — the crown-next both high-tier reads named
+
+Two independent high-tier readers (a systems audit + GPT) converged on the SAME next step: symbol emergence
+was capped at DEPTH 1 (`cooc_track`/`try_emerge` ranged over VOCAB, not VOCAB_CAP) — a symbol could never
+parent a symbol, so culture was 32 depth-1 compounds forever. Life's sign systems are recursive; this wasn't.
+
+- **Δ1 (structure, committed dormant):** widened g_cooc/g_born to VOCAB_CAP, cooc_track counts emerged ids,
+  try_emerge ranges over VOCAB+g_n_emerged (an emerged symbol may be a PARENT), restore_emerged allows emerged
+  parents; factored `birth_symbol(m,ba,bb)`. Kept MAX_EMERGED=32 → all hashes unchanged. Measured: **rec=0** —
+  it does NOT fire alone. Found the coupling: an emerged symbol only re-enters the co-occurrence stream through
+  the ether, where `semtok` split "A+B" into base glyphs, so it never co-occurred as a unit. Δ2 is the enabling half.
+- **Δ2 (the enabling half):** `semtok_ether` + `resolve_composite` + `emerged_by_pair` — a grazed "A+B" resolves
+  to ONE id in the receiver (reuse its own symbol with those parents, or ADOPT it via birth_symbol). so an
+  invention crosses the ether WHOLE, is kept, co-occurs, and can PARENT the next symbol. grew MAX_EMERGED→64.
+  Verified: **recursion FIRES in the chorus** — rec2/rec6/rec7 per run (symbols with an emerged parent); solo
+  stays rec=0 (no ether → no transmission → no recursion: culture is social, correct). colony mortal; ASan 0.
+  This also RAISED the README's "a neighbour ate them whole" line from an overclaim (pre-Δ2 it was split) to
+  delivered. New frozen hashes (VOCAB_CAP 122→154): default `b5d50234…`, NL_NOEARNED `a734e3a2…`, all-off `9a9d6848…`.
+
+Depth ceiling for this step: a depth-2 symbol voices as "·emg" (glyph_name doesn't yet recursively name emerged
+parents), so it forms but doesn't re-transmit → depth-3 across cells needs recursive naming (a follow-up). But the
+crown-next landed: a symbol can now parent a symbol, culture composes without a hard ceiling.
+
 ## Resume-here (for future-me after a summary)
 
 Working copy: `~/arianna/actually.life`. **Everything is committed AND pushed** to

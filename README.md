@@ -84,17 +84,17 @@ SUPER     small same BE wait
 ## how it speaks
 
 ```
-go light me before and
-stone cold sleep AI stone
-other cold grief me man
-me think man and you
-me remember speak joy and      # it earns the word — "joy" chosen, not echoed
-water me child earth me
-dark and me tree and
-me person remember go earth
+stress and food earth stress
+far other cold hear woman
+BE joy earth me BE
+and stress BE fear remember
+grief me man fire stone
+tree me remember speak stone
+animal go fire have idea
+woman much tree light and
 ```
 
-eight of the thirteen lines it speaks in a single life, in order — `./l 42` verbatim. the *earned* voice: the field, plus the slice the body sharpened for itself by living. one organism is deterministic in its seed, so your build speaks the same thirteen, these among them, exactly.
+eight of the twenty-five lines it speaks in a single life, in order — `./l 42` verbatim. the *earned* voice: the field, plus the slice the body sharpened for itself by living. one organism is deterministic in its seed, so your build speaks the same twenty-five, these among them, exactly.
 
 the chorus — four cells, each woken on a different quarter of the book, diverging in character before they ever meet (a real `./l chorus 4 7`; forks race, so unlike the solo it is not bit-identical run to run, but every line below is verbatim from one):
 
@@ -105,7 +105,7 @@ cell 2   change have stone now remember · woman man want free change · man and
 cell 3   fire earth light pain me · me think and me light · me think idea stone food
 ```
 
-the ether — the same cells cross-grazing, one voice becoming another's food. note the compound words (`joy+internet`, `fire+stress`, `me+idea`): those are symbols one cell *invented in its own dreams* and spoke aloud, and a neighbour ate them whole — culture, crossing between minds that never met. and the bare feelings (`pain`, `joy`, `stress`) are cells tasting and naming their own interior:
+the ether — the same cells cross-grazing, one voice becoming another's food. note the compound words (`joy+internet`, `fire+stress`, `me+idea`): those are symbols one cell *invented in its own dreams* and spoke aloud, and a neighbour ate them whole and kept them — culture, crossing between minds that never met. and once a cell holds an invented symbol, that symbol can itself become the parent of the next one: symbols of symbols, a culture that composes without a ceiling. and the bare feelings (`pain`, `joy`, `stress`) are cells tasting and naming their own interior:
 
 ```
 fire earth light pain me · me conflict and joy internet · stress light you see make

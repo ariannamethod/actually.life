@@ -14,9 +14,9 @@ cd "$(dirname "$0")/.." || exit 2
 ROOT=$(pwd)
 CC=${CC:-cc}
 L=/tmp/al_test.$$
-SOLO_MD5=894ba413fb7365adc47e5db9cffbe754   # md5 of ./l 42 waste.log — the frozen solo trajectory (proteostasis + self-model + sleep + self-as-food + EARNED VOICE, all on)
-FIELD_MD5=bafc8afcaa95e32b067038b47f965653  # ...with NL_NOEARNED (field-only voice, the pre-earned-voice trajectory)
-FROZEN_MD5=a490a453858581bc11a9d9624d1a95b3 # ...with EVERY new organ off (NL_NOCORRODE+NL_NOREPAIR+NL_NOSELF+NL_NOSLEEP+NL_NOSELFEAT+NL_NOEARNED) — the pre-living-body trajectory
+SOLO_MD5=b5d50234ae8258b136c9ad9a86e8f8bb   # md5 of ./l 42 waste.log — the frozen solo trajectory (all organs on, recursive culture)
+FIELD_MD5=a734e3a2271d1259c21497ad7755a355  # ...with NL_NOEARNED (field-only voice)
+FROZEN_MD5=9a9d68481ff8551fd9e2644c0e54e860 # ...with EVERY new organ off — the pre-living-body trajectory (VOCAB_CAP=154)
 
 PASS=0; FAIL=0
 ok(){ PASS=$((PASS+1)); printf '  \033[32m✓\033[0m %s\n' "$1"; }
@@ -170,6 +170,11 @@ DR=$(echo "$D" | grep -o 'dream[0-9]*' | grep -o '[0-9]*'); EM=$(echo "$D" | gre
 COMP=$(grep -cE '[a-z]+\+[a-z]+' lifeis/ether.txt 2>/dev/null)
 [ -n "$COMP" ] && [ "$COMP" -gt 0 ] && ok "inventions cross the ether as 'A+B' — horizontal culture, $COMP composite voices" \
                                     || no "no composite voices in the ether — the culture channel is silent"
+# RECURSIVE culture (Δ1+Δ2): a symbol crosses the ether WHOLE, is adopted, co-occurs, and PARENTS a new
+# symbol — symbols of symbols. this is a chorus phenomenon (no ether, no transmission, no recursion in solo).
+REC=$(for s in 3 7 9 42; do "$L" chorus 6 $s 2>&1 | grep -oE 'rec[1-9][0-9]*'; done | wc -l | tr -d ' ')
+[ -n "$REC" ] && [ "$REC" -gt 0 ] && ok "recursion fires: symbols become parents of symbols ($REC recursive-symbol cells across seeds — open-ended culture)" \
+                                  || no "no recursive symbols — culture is still capped at depth 1"
 
 # ── 8f. the crown (I2): self-as-food — the organism models itself by eating itself ───
 echo; echo "the crown: self-as-food (it tastes and speaks its own state)"

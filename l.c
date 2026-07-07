@@ -271,7 +271,7 @@ static int semtok_line(const char* line, int* out, int max_tokens){
 #define VOCAB   (GLYPH_COUNT+2)   /* 90 = 88 glyphs + BOS + MASK */
 
 /* ── Phase A step 6: growth — symbols emerge (only in dream) ── */
-#define MAX_EMERGED   32          /* reserved slots for symbols the organism invents (Δ2 grows this when recursion fires) */
+#define MAX_EMERGED   64          /* reserved slots — Δ2: room for RECURSIVE symbols (symbols of symbols) */
 #define VOCAB_CAP     (VOCAB+MAX_EMERGED)
 #define GROWTH_THRESH 14          /* a pair must co-occur this often (awake) before it can be born */
 
@@ -855,12 +855,47 @@ static float self_update(ProtoSelf* ps, float S0, float D0, float S1, float D1){
     for(int k=0;k<SELF_K;k++){ ps->wS[k]+=g*eS*f[k]; ps->wD[k]+=g*eD*f[k]; }
     return fabsf(eS)+fabsf(eD);
 }
+/* Δ2: does the receiver already own an emerged symbol with these parents? */
+static int emerged_by_pair(int a, int b){
+    for(int k=0;k<g_n_emerged;k++) if(g_emerged_a[k]==a && g_emerged_b[k]==b) return VOCAB+k;
+    return -1;
+}
+/* Δ2: resolve a grazed composite token "A+B" (A,B base glyph names) to ONE id in the receiver —
+ * reuse its own symbol with those parents, or ADOPT it (birth it here). depth-1 (single '+'); a
+ * deeper "·emg" or nested token has no clean split and falls through to the base tokenizer. */
+static int resolve_composite(Model* m, const char* s){
+    const char* plus=strchr(s,'+');
+    if(!plus) return semtok_word(s);
+    char left[96]; int ll=(int)(plus-s); if(ll>95)ll=95; memcpy(left,s,ll); left[ll]='\0';
+    if(strchr(plus+1,'+')) return -1;             /* nested composite — not resolvable at depth-1 yet */
+    int a=semtok_word(left), b=semtok_word(plus+1);
+    if(a<0||b<0||a>=VOCAB||b>=VOCAB) return -1;    /* need both base glyphs the receiver shares */
+    int ex=emerged_by_pair(a,b); if(ex>=0) return ex;   /* the receiver recognizes the invention */
+    return birth_symbol(m,a,b);                    /* ...or ADOPTS it — the sign crosses whole */
+}
+/* Δ2: tokenize a grazed line, resolving composites to whole symbols instead of splitting on '+'. */
+static int semtok_ether(Model* m, const char* line, int* out, int max){
+    int n=0; char tok[96]; const char* p=line;
+    while(*p && n<max){
+        while(*p==' '||*p=='\t') p++;
+        if(!*p) break;
+        int L=0; while(*p && *p!=' ' && *p!='\t' && L<95) tok[L++]=*p++;
+        tok[L]='\0';
+        if(strchr(tok,'+')){                       /* composite — resolve/adopt as ONE sign */
+            int id=resolve_composite(m,tok);
+            if(id>=0){ out[n++]=id; continue; }    /* resolved/adopted whole */
+        }
+        int g=semtok_word(tok);                    /* plain glyph, or composite fallback */
+        if(g>=0 && n<max) out[n++]=g;
+    }
+    return n;
+}
 /* ── THE ETHER — one cell's voice becomes another's food ─────────────────────
  * eat the chorus: read the most recent utterance from ANOTHER cell out of the
  * shared ether and tokenize its glyph-names back to ids (they ARE GLYPH_NAMES,
  * so semtok maps them directly). this is the cross-graze — resonance made of
  * appetite. line format: "<label>\t<glyph names>". own echoes are skipped. */
-static int ether_graze(const char* path, int own_label, int* out, int max){
+static int ether_graze(Model* m, const char* path, int own_label, int* out, int max){
     /* per-cell state (each cell is its own process — statics are private): read only
      * the ether's NEW tail since last time (the file only grows), keeping the last 8
      * not-own voices across calls. O(new bytes), not O(filesize) — kills the quadratic
@@ -895,7 +930,7 @@ static int ether_graze(const char* path, int own_label, int* out, int max){
         if(nk>0){ int k=(int)(((frand()+1.0f)*0.5f)*(float)nk); if(k>=nk)k=nk-1; pick=kin[k]; }
     }
     if(pick<0){ pick=(int)(((frand()+1.0f)*0.5f)*(float)nr); if(pick>=nr)pick=nr-1; }  /* else a random recent voice */
-    return semtok_line(ring[pick], out, max);
+    return semtok_ether(m, ring[pick], out, max);   /* Δ2: composites cross whole, not split */
 }
 
 /* speak — the organism utters a few chosen glyphs FROM ITSELF into waste.log,
@@ -1229,7 +1264,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         } else {                                 /* corpus exhausted -> eat the chorus, then dream */
             fed=0;
             int gn=0;
-            if(ether) gn=ether_graze(ether_path, label, gz, CTX);  /* FIRST: eat a neighbour's voice */
+            if(ether) gn=ether_graze(m, ether_path, label, gz, CTX);  /* FIRST: eat a neighbour's voice (composites whole, Δ2) */
             if(gn>=1){                               /* the colony feeds itself through speech */
                 yield=ingest(m,&mo,scar,gz,gn,recent,&recent_n,&dream_streak); grazing=1; n_graze++; meal=gz; meal_n=gn;
             } else if(dream_on && energy<DREAM_THRESH && recent_n>0){  /* ELSE: hunger-dream when the world is gone */
