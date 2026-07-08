@@ -363,10 +363,12 @@ static int semtok_line(const char* line, int* out, int max_tokens){
 
 /* ── ASYNC (NL_ASYNC, opt-in, default off) — the six Kuramoto-coupled chambers as a DETERMINISTIC organ
  * scheduler. the metabolism runs every tick; the regulatory organs WILL, SLEEP and SPEAK fire on their
- * chamber's phase-cross (FEAR/VOID/LOVE), so they run on incommensurate clocks and the metric combination
- * feeding the hazard surface becomes aperiodic — the temporal face of the same field. the self-model
- * stays every-tick — gating it starves the voice's coherence (measured). RAGE/FLOW/COMPLEX drift but are
- * not yet gate-mapped. plain seeded floats, no pthreads → per-seed bit-identical. chambers per AML/dario. ── */
+ * chamber's phase-cross (FEAR/VOID/LOVE), so they run on coprime-period clocks (3,4,5,7,9,11 — they realign
+ * only over a long LCM≈13860, so the metric combination feeding the hazard surface is long-period rather
+ * than lockstep — the temporal face of the same field). the self-model stays every-tick — gating it starves
+ * the voice's coherence (measured). RAGE/FLOW/COMPLEX drift but are not yet gate-mapped. the RESONANCE_CEILING
+ * anti-lock is conceptual (an un-freezing), NOT a mortality guard — the death draw is every-tick regardless of
+ * async. plain seeded floats, no pthreads → per-seed bit-identical. chambers per AML/dario. ── */
 #define KUR_N       6
 #define KUR_K       0.08f     /* weak coupling — chambers drift in partial coherence, never phase-lock */
 #define KUR_RCEIL   0.90f     /* RESONANCE_CEILING on the order parameter — nudge apart above it (no frozen lock) */
@@ -910,9 +912,10 @@ static float cont_hazard(float energy, const Modes* mo, float debt, long tick){
     h[0] = expf(-energy/CONT_ESCALE);                                  /* energy-door — the metabolic terminal */
     h[1] = 1.0f/(1.0f+expf(-sx));                                      /* arousal-door — the old |S| cliff, now a channel */
     h[2] = 1.0f/(1.0f+expf(-(debt-CONT_DEBT_HI)*CONT_DEBT_GAIN));      /* debt-door — a RUNAWAY self-model destabilizes */
-    /* scar / integ / dissonance are NOT separate channels: they already flow into `energy` through
-     * rent + metabolism (l.c:1248-1249), so a second count would double-kill. the surface is over
-     * energy × arousal × debt — different metrics, each shaped ~0 in normal operation. */
+    /* scar and integ are NOT separate channels: they already flow into `energy` through rent, so a
+     * second count would double-kill. dissonance reaches the surface through the DEBT channel (via the
+     * self-forecast error eD), not rent. the surface is over energy × arousal × debt — different
+     * metrics, each shaped ~0 in normal operation. */
     float surv = 1.0f;
     for(int k=0;k<3;k++){ float hk=h[k]; if(!isfinite(hk)||hk<0.0f)hk=0.0f; if(hk>0.999f)hk=0.999f; surv *= (1.0f-hk); }
     float hz = 1.0f - surv;                                            /* product-of-survivals — never a summed axis */
@@ -954,7 +957,7 @@ static float cont_will(Model* m, float* scar, float* scar_total, float energy, f
  * dφ_k = ω_k + (K/N)·Σ_j sin(φ_j−φ_k); an anti-lock nudge when the order parameter is too high keeps
  * the chambers from freezing into one phase (RESONANCE_CEILING). deterministic; seeded phases only. */
 static unsigned chambers_step(void){
-    static const float omega[KUR_N] = {2.094f,1.571f,1.257f,0.898f,0.698f,0.571f};  /* periods ~3,4,5,7,9,11 ticks — incommensurate */
+    static const float omega[KUR_N] = {2.094f,1.571f,1.257f,0.898f,0.698f,0.571f};  /* periods ~3,4,5,7,9,11 ticks — coprime, long realign */
     float ms=0.0f, mc=0.0f;
     for(int k=0;k<KUR_N;k++){ ms+=sinf(g_phase[k]); mc+=cosf(g_phase[k]); }
     ms/=(float)KUR_N; mc/=(float)KUR_N;

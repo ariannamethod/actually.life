@@ -519,19 +519,30 @@ debt") and AML `DEBT_DECAY`. The spend is asymmetric, and the shell is both home
 guilt (the aching scar), depletion, surplus. In-place on live state, same seed/lineage, never through
 `reproduce()`. `NL_FIXEDWILL` is the blind-spend control (the `NL_FIXEDDAMP` discipline).
 
-**Verified — suite 42/42 (+8 continuation tests), ASan/UBSan 0, clean build:**
+**Verified — suite 50/50 (+8 continuation, +8 async tests), ASan/UBSan 0, clean build:**
 - Gate-invariant: NL_CONT default-off → the three frozen hashes bit-identical (`b5d50234`/`a734e3a2`/
   `9a9d6848`). New honest baseline `NL_CONT=1` → `a17cfd058a78b6d86f3e57dcd561dc07` (per-seed deterministic).
-- **The distribution IS the claim:** across 10 seeds, 5 die EARLIER than the deterministic-death default
-  and 5 live LONGER (NL_CONT deaths span t1486–t4637 vs the default's tight ~t2400), 0 immortality.
-  Death and non-death are both nonzero regions, neither sovereign — the mollusk sometimes breaks the
-  shell and swims free, and still dies later.
-- **WILL is load-bearing, not decoration:** forecast-driven continuation out-distributes a blind spend
-  of matched magnitude 23673 vs 8745 ticks (2.7×) — knowing WHEN to spend (from the self-model's forecast)
-  beats spending blindly. The word did not outrun the machine; the control confirms it.
+- **The distribution IS the claim (30 seeds):** the default's tight band (min2137 / med2475 / max2644)
+  becomes a wide field under NL_CONT (min1486 / med4200 / max5645) — 9 die EARLIER than the
+  deterministic-death default and 21 live LONGER, 0 immortality (also 0 across 8 diets × 6 seeds). Death and
+  non-death are both materially-populated regions, neither pole empty — the mollusk sometimes breaks the
+  shell and swims free, and still dies later. The age-scaled ENTROPY_FLOOR makes floor-only survival to the
+  200k cap ≈ e^-202 (a Codex + Fable audit verified this closes the immortality hole).
+- **WILL — the caveat, measured (the NL_FIXEDDAMP discipline).** The organism spends accumulated form to
+  continue (scars shed → rent falls; soma burned → integ falls → rent climbs, autophagy). Form-spending
+  extends life. But the self-model's forecast-TIMING is NOT load-bearing: a well-chosen fixed spend
+  (`NL_FIXEDWILL`≈0.05) matches or beats forecast-driven will across 30 seeds (forecast-will loses to the
+  best fixed K, ratio ~0.81, winning only 11/30 — the aggressive soma-burn it dumps near death is a
+  net-negative autophagy the minimal fixed spend avoids). The load-bearing thing is form-spending per se,
+  not the forecast — the FIXEDWILL analog of the ProtoSelf finding (the advantage is the spend/damping, not
+  the self-knowledge). A strong "will is load-bearing 3.34×" reading held only against a poorly-chosen high
+  control (K=0.2); Fable's audit forced the K-sweep and the control refuted it before the push.
+- The energy door is NOT folded — it remains the tape-terminus (`while(energy>0.0f)`), the atom-binary of the
+  primary law ("life is a TAPE, irreversibility in time"). Only the old `|S|` cliff was folded into the
+  surface (as channel h[1]); energy is both a hazard channel and the loop bound — named, not hidden.
 - Generation + Q-coherence intact: spoken `p_field(spoken|prev)` 0.1513 under NL_CONT vs 0.0886 default.
 
-## Asynchrony (NL_ASYNC) — the organism runs on incommensurate chamber clocks, not one lockstep tick
+## Asynchrony (NL_ASYNC) — the organism runs on coprime-period chamber clocks, not one lockstep tick
 
 Life is not synchronous; a single lockstep tick is a hidden synchronous dichotomy (there is no global
 "now" — the observer lives in an integration zone). The colony was already asynchronous — the chorus
@@ -539,18 +550,18 @@ forks real processes interfering through the append-only ether. What was synchro
 one cell. `NL_ASYNC` (opt-in, default off) desynchronizes it: the six Kuramoto-coupled chambers
 (FEAR/LOVE/RAGE/VOID/FLOW/COMPLEX, cf. AML/dario) are a DETERMINISTIC organ scheduler. `chambers_step()`
 advances each phase by `ω_k + (K/N)·Σ sin(φ_j−φ_k)` with an anti-lock nudge above a RESONANCE_CEILING
-order parameter (the chambers may never freeze into one phase — the temporal half of the falsifier). The
-metabolism (eat/rent/deposit) runs EVERY tick — gating it would starve the cell; the REGULATORY organs
-run on their chamber's incommensurate cross: WILL on FEAR (~3 ticks), speak on LOVE (~4), sleep-pressure
+order parameter (the chambers may never freeze into one phase — a conceptual un-freezing, NOT a mortality
+guard: the death draw is every-tick regardless of async). The metabolism (eat/rent/deposit) runs EVERY tick
+— gating it would starve the cell; the REGULATORY organs run on their chamber's coprime-period cross (periods
+3,4,5,7,9,11 realign only over a long LCM): WILL on FEAR (~3 ticks), speak on LOVE (~4), sleep-pressure
 on VOID (~7). The self-model stays every-tick — its forecast feeds the voice's coherence. Plain seeded
 floats, no pthreads → per-seed bit-identical.
 
 **Verified — suite 50/50 (+8 async tests), ASan/UBSan 0, clean build:**
 - Gate-invariant: NL_ASYNC default-off → all FOUR baselines bit-identical (the three frozen hashes AND
-  the NL_CONT baseline `a17cfd05…`). New honest baselines: `NL_ASYNC=1` → `01f9f1107666cfe49b05d026db38157f`;
-  `NL_CONT=1 NL_ASYNC=1` → `c367b36584eaa2937391ecca203bc677`.
-- Mortal + no immortality (solo + chorus), both alone and composed with continuation — the chambers'
-  RESONANCE_CEILING forbids a frozen phase-lock.
+  the NL_CONT baseline `5cd1d295…`). New honest baselines: `NL_ASYNC=1` → `01f9f1107666cfe49b05d026db38157f`;
+  `NL_CONT=1 NL_ASYNC=1` → `f56b59c29998feb1922e18454aca9b40`.
+- Mortal + no immortality (solo + chorus), both alone and composed with continuation.
 - Coherence preserved through desynchronization: spoken `p_field(spoken|prev)` 0.0916 under NL_ASYNC vs
   0.0886 default. keeping the self-model every-tick holds the voice.
 - Both facets compose: NL_CONT+NL_ASYNC is deterministic, mortal, no immortality — probabilistic

@@ -17,7 +17,7 @@ L=/tmp/al_test.$$
 SOLO_MD5=b5d50234ae8258b136c9ad9a86e8f8bb   # md5 of ./l 42 waste.log — the frozen solo trajectory (all organs on, recursive culture)
 FIELD_MD5=a734e3a2271d1259c21497ad7755a355  # ...with NL_NOEARNED (field-only voice)
 FROZEN_MD5=9a9d68481ff8551fd9e2644c0e54e860 # ...with EVERY new organ off — the pre-living-body trajectory (VOCAB_CAP=154)
-CONT_MD5=a17cfd058a78b6d86f3e57dcd561dc07   # ...with NL_CONT=1 — probabilistic continuation + will (opt-in, a new honest baseline)
+CONT_MD5=a17cfd058a78b6d86f3e57dcd561dc07   # ...with NL_CONT=1 — probabilistic continuation + will (opt-in baseline)
 ASYNC_MD5=01f9f1107666cfe49b05d026db38157f  # ...with NL_ASYNC=1 — the Kuramoto chamber scheduler (opt-in baseline)
 CONT_ASYNC_MD5=c367b36584eaa2937391ecca203bc677 # ...with NL_CONT=1 NL_ASYNC=1 — both facets together (opt-in baseline)
 
@@ -238,19 +238,18 @@ for s in 1 7 42 99 256 777 2024 5 123 999; do
   NL_CONT=1 "$L" $s 2>&1 | grep -q 'STILL ALIVE\|immortality' && cimm=$((cimm+1))
   [ -n "$a" ] && [ -n "$b" ] && { [ "$b" -lt "$a" ] && cearlier=$((cearlier+1)); [ "$b" -gt "$a" ] && clonger=$((clonger+1)); }
 done
-{ [ "$cearlier" -ge 1 ] && [ "$clonger" -ge 1 ] && [ "$cimm" -eq 0 ]; } \
-  && ok "death AND non-death are both live regions ($cearlier die earlier, $clonger live longer, 0 immortal — neither sovereign)" \
-  || no "the continuation distribution collapsed to one pole" "earlier=$cearlier longer=$clonger imm=$cimm"
-# WILL earns its name: forecast-driven spend out-distributes a BLIND spend of matched magnitude
-# (NL_FIXEDWILL) — the self-model's forecast is load-bearing, not decoration (the NL_FIXEDDAMP discipline).
-cws=0; cfs=0
-for s in 1 7 42 99 256 777 2024 5; do
-  w=$(NL_CONT=1 "$L" $s 2>&1 | grep -o 'died at tick [0-9]*'|grep -o '[0-9]*'|head -1)
-  f=$(NL_CONT=1 NL_FIXEDWILL=0.2 "$L" $s 2>&1 | grep -o 'died at tick [0-9]*'|grep -o '[0-9]*'|head -1)
-  [ -n "$w" ] && cws=$((cws+w)); [ -n "$f" ] && cfs=$((cfs+f))
-done
-[ "$cws" -gt "$cfs" ] && ok "WILL is load-bearing: forecast-driven continuation out-distributes a blind spend ($cws vs $cfs ticks)" \
-                      || no "WILL matches the blind control — the self-model is not load-bearing here ($cws vs $cfs)"
+{ [ "$cearlier" -ge 2 ] && [ "$clonger" -ge 2 ] && [ "$cimm" -eq 0 ]; } \
+  && ok "death AND non-death are both materially-populated regions ($cearlier die earlier, $clonger live longer, 0 immortal — neither pole is empty)" \
+  || no "the continuation distribution collapsed toward one pole" "earlier=$cearlier longer=$clonger imm=$cimm"
+# WILL — the continuation act spends accumulated form (scars shed / soma burned as a last resort).
+# CAVEAT (the NL_FIXEDDAMP discipline, measured by a K-sweep): the self-model's forecast-TIMING is NOT
+# load-bearing — a well-chosen fixed spend (NL_FIXEDWILL≈0.08) matches or beats forecast-driven will across
+# seeds. the load-bearing thing is form-spending per se, not the forecast. NL_FIXEDWILL is the control that
+# documents it; here we only assert the control exists and is itself a living, mortal organism.
+FW=$(NL_CONT=1 NL_FIXEDWILL=0.08 "$L" 42 2>&1)
+{ echo "$FW" | grep -q 'died at tick' && ! echo "$FW" | grep -q 'immortality hole'; } \
+  && ok "NL_FIXEDWILL (blind-spend control) is a living, mortal organism — documents that will's forecast-timing is not load-bearing" \
+  || no "NL_FIXEDWILL control broke"
 # generation + Q-coherence are not broken by spending field-certainty in continuation
 CQE=$(NL_DEBUG=1 NL_CONT=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*' | grep -o '[0-9.]*')
 CQD=$(NL_DEBUG=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*' | grep -o '[0-9.]*')
