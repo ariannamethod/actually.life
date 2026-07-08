@@ -18,6 +18,8 @@ SOLO_MD5=b5d50234ae8258b136c9ad9a86e8f8bb   # md5 of ./l 42 waste.log — the fr
 FIELD_MD5=a734e3a2271d1259c21497ad7755a355  # ...with NL_NOEARNED (field-only voice)
 FROZEN_MD5=9a9d68481ff8551fd9e2644c0e54e860 # ...with EVERY new organ off — the pre-living-body trajectory (VOCAB_CAP=154)
 CONT_MD5=a17cfd058a78b6d86f3e57dcd561dc07   # ...with NL_CONT=1 — probabilistic continuation + will (opt-in, a new honest baseline)
+ASYNC_MD5=01f9f1107666cfe49b05d026db38157f  # ...with NL_ASYNC=1 — the Kuramoto chamber scheduler (opt-in baseline)
+CONT_ASYNC_MD5=c367b36584eaa2937391ecca203bc677 # ...with NL_CONT=1 NL_ASYNC=1 — both facets together (opt-in baseline)
 
 PASS=0; FAIL=0
 ok(){ PASS=$((PASS+1)); printf '  \033[32m✓\033[0m %s\n' "$1"; }
@@ -254,6 +256,35 @@ CQE=$(NL_DEBUG=1 NL_CONT=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|pre
 CQD=$(NL_DEBUG=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*' | grep -o '[0-9.]*')
 awk -v e="$CQE" -v d="$CQD" 'BEGIN{exit !(e>=d*0.8)}' && ok "NL_CONT keeps Q-coherence (spoken p_field ${CQE} vs default ${CQD} — generation intact)" \
                                                        || no "NL_CONT degraded Q-coherence ($CQE vs $CQD)"
+
+# ── 8i. ASYNC (NL_ASYNC, opt-in): the six Kuramoto-coupled chambers schedule the regulatory organs
+#        (will/sleep/speak) on incommensurate clocks — the temporal face of the same field. metabolism
+#        runs every tick; deterministic (seeded phases, no threads); coherence + mortality preserved. ──
+echo; echo "asynchrony (NL_ASYNC — the organism runs on incommensurate chamber clocks, not one lockstep tick)"
+NL_ASYNC=1 "$L" 42 >/dev/null 2>&1; XA=$(md5of lifeis/waste.log)
+NL_ASYNC=1 "$L" 42 >/dev/null 2>&1; XB=$(md5of lifeis/waste.log)
+[ "$XA" = "$XB" ] && ok "NL_ASYNC is reproducible (seeded phases, no threads — per-seed determinism)" \
+                  || no "NL_ASYNC is NON-deterministic" "$XA vs $XB"
+[ "$XA" = "$ASYNC_MD5" ] && ok "NL_ASYNC trajectory matches its frozen baseline ($ASYNC_MD5)" \
+                         || no "NL_ASYNC trajectory drifted" "got $XA"
+AS=$(NL_ASYNC=1 "$L" 42 2>&1)
+echo "$AS" | grep -q 'died at tick' && ok "NL_ASYNC solo still dies (mortality intact)" || no "NL_ASYNC solo did not die"
+echo "$AS" | grep -q 'immortality hole' && no "NL_ASYNC hit the immortality cap" || ok "NL_ASYNC never hit the immortality cap"
+NL_ASYNC=1 "$L" chorus 4 7 2>&1 | grep -q 'the colony fell silent' && ok "NL_ASYNC chorus is mortal (the colony falls silent)" || no "NL_ASYNC chorus never fell silent"
+# coherence must survive desynchronization — the self-model stays every-tick, so the voice stays coherent
+AQE=$(NL_DEBUG=1 NL_ASYNC=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*'|grep -o '[0-9.]*')
+AQD=$(NL_DEBUG=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*'|grep -o '[0-9.]*')
+awk -v e="$AQE" -v d="$AQD" 'BEGIN{exit !(e>=d*0.8)}' && ok "NL_ASYNC keeps Q-coherence (spoken p_field ${AQE} vs default ${AQD} — desync does not break the voice)" \
+                                                       || no "NL_ASYNC degraded Q-coherence ($AQE vs $AQD)"
+# both facets together: probabilistic continuation ON the asynchronous clock
+NL_CONT=1 NL_ASYNC=1 "$L" 42 >/dev/null 2>&1; YA=$(md5of lifeis/waste.log)
+NL_CONT=1 NL_ASYNC=1 "$L" 42 >/dev/null 2>&1; YB=$(md5of lifeis/waste.log)
+{ [ "$YA" = "$YB" ] && [ "$YA" = "$CONT_ASYNC_MD5" ]; } && ok "NL_CONT+NL_ASYNC is reproducible and matches its baseline ($CONT_ASYNC_MD5)" \
+                                                        || no "NL_CONT+NL_ASYNC non-deterministic or drifted" "got $YA"
+CY=$(NL_CONT=1 NL_ASYNC=1 "$L" 42 2>&1)
+{ echo "$CY" | grep -q 'died at tick' && ! echo "$CY" | grep -q 'immortality hole'; } \
+  && ok "NL_CONT+NL_ASYNC is mortal, no immortality hole (both facets compose)" \
+  || no "NL_CONT+NL_ASYNC broke mortality"
 
 # ── 9. AddressSanitizer / UBSan (opt-in: the strongest correctness pass) ───────
 if [ "${1:-}" = "--asan" ]; then

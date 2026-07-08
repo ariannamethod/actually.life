@@ -531,8 +531,30 @@ guilt (the aching scar), depletion, surplus. In-place on live state, same seed/l
   beats spending blindly. The word did not outrun the machine; the control confirms it.
 - Generation + Q-coherence intact: spoken `p_field(spoken|prev)` 0.1513 under NL_CONT vs 0.0886 default.
 
-Next movement: `NL_ASYNC` — the six Kuramoto-coupled chambers as a deterministic organ scheduler
-(the temporal face of the same surface), all-off hash held, its own honest baseline.
+## Asynchrony (NL_ASYNC) — the organism runs on incommensurate chamber clocks, not one lockstep tick
+
+Life is not synchronous; a single lockstep tick is a hidden synchronous dichotomy (there is no global
+"now" — the observer lives in an integration zone). The colony was already asynchronous — the chorus
+forks real processes interfering through the append-only ether. What was synchronous was the inside of
+one cell. `NL_ASYNC` (opt-in, default off) desynchronizes it: the six Kuramoto-coupled chambers
+(FEAR/LOVE/RAGE/VOID/FLOW/COMPLEX, cf. AML/dario) are a DETERMINISTIC organ scheduler. `chambers_step()`
+advances each phase by `ω_k + (K/N)·Σ sin(φ_j−φ_k)` with an anti-lock nudge above a RESONANCE_CEILING
+order parameter (the chambers may never freeze into one phase — the temporal half of the falsifier). The
+metabolism (eat/rent/deposit) runs EVERY tick — gating it would starve the cell; the REGULATORY organs
+run on their chamber's incommensurate cross: WILL on FEAR (~3 ticks), speak on LOVE (~4), sleep-pressure
+on VOID (~7). The self-model stays every-tick — its forecast feeds the voice's coherence. Plain seeded
+floats, no pthreads → per-seed bit-identical.
+
+**Verified — suite 50/50 (+8 async tests), ASan/UBSan 0, clean build:**
+- Gate-invariant: NL_ASYNC default-off → all FOUR baselines bit-identical (the three frozen hashes AND
+  the NL_CONT baseline `a17cfd05…`). New honest baselines: `NL_ASYNC=1` → `01f9f1107666cfe49b05d026db38157f`;
+  `NL_CONT=1 NL_ASYNC=1` → `c367b36584eaa2937391ecca203bc677`.
+- Mortal + no immortality (solo + chorus), both alone and composed with continuation — the chambers'
+  RESONANCE_CEILING forbids a frozen phase-lock.
+- Coherence preserved through desynchronization: spoken `p_field(spoken|prev)` 0.0916 under NL_ASYNC vs
+  0.0886 default. keeping the self-model every-tick holds the voice.
+- Both facets compose: NL_CONT+NL_ASYNC is deterministic, mortal, no immortality — probabilistic
+  continuation running ON the asynchronous clock.
 
 ## Resume-here (for future-me after a summary)
 

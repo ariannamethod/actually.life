@@ -359,6 +359,16 @@ static int semtok_line(const char* line, int* out, int max_tokens){
 #define CONT_BURN       0.02f     /* soma-burn rate under drive (autophagy: raises future rent) */
 #define CONT_REFUND     0.003f    /* energy per unit |Δform| spent (metabolism, small & bounded — never immortality) */
 
+/* ── ASYNC (NL_ASYNC, opt-in, default off) — the six Kuramoto-coupled chambers as a DETERMINISTIC organ
+ * scheduler. the metabolism runs every tick; the REGULATORY organs (self-model, will, sleep, speak) fire
+ * on their chamber's phase-cross, so they run on incommensurate clocks and the metric combination feeding
+ * the hazard surface becomes aperiodic — the temporal face of the same field. plain seeded floats, no
+ * pthreads → per-seed bit-identical. chambers per AML/dario. ── */
+#define KUR_N       6
+#define KUR_K       0.08f     /* weak coupling — chambers drift in partial coherence, never phase-lock */
+#define KUR_RCEIL   0.90f     /* RESONANCE_CEILING on the order parameter — nudge apart above it (no frozen lock) */
+enum { CH_FEAR=0, CH_LOVE, CH_RAGE, CH_VOID, CH_FLOW, CH_COMPLEX };
+
 typedef struct {
     float rms1[E], rms2[E];
     float wq[E*E], wk[E*E], wv[E*E], wo[E*E];
@@ -665,6 +675,8 @@ static int   g_cont_on   = 0;                    /* NL_CONT=1 → probabilistic 
 static float g_debt      = 0.0f;                 /* prophetic debt — decayed accumulation of self-forecast error (felt) */
 static float g_fixedwill = 0.0f;                 /* CONTROL: NL_FIXEDWILL=K → blind form-spend of matched magnitude (falsifies will) */
 static long  g_n_burn = 0, g_n_shed = 0;         /* DASHBOARD: continuation events (labels for logs, never a switch) */
+static int   g_async_on = 0;                     /* NL_ASYNC=1 → the six Kuramoto chambers schedule the regulatory organs (opt-in) */
+static float g_phase[KUR_N] = {0};               /* chamber phases — deterministic coupled oscillators, seeded per-cell */
 
 static float digest(Model* m, Modes* mo, float* scar, const int* glyphs, int prev0, int n){
     static float before[RANK*E];
@@ -933,6 +945,25 @@ static float cont_will(Model* m, float* scar, float* scar_total, float energy, f
     g_debt *= (1.0f - 0.5f*drive);                                     /* the act pays the forecast down */
     if(!isfinite(refund)||refund<0.0f) refund=0.0f;
     return refund;
+}
+/* ── ASYNC: advance the six Kuramoto-coupled chambers one tick, return a bitmask of which crossed.
+ * dφ_k = ω_k + (K/N)·Σ_j sin(φ_j−φ_k); an anti-lock nudge when the order parameter is too high keeps
+ * the chambers from freezing into one phase (RESONANCE_CEILING). deterministic; seeded phases only. */
+static unsigned chambers_step(void){
+    static const float omega[KUR_N] = {2.094f,1.571f,1.257f,0.898f,0.698f,0.571f};  /* periods ~3,4,5,7,9,11 ticks — incommensurate */
+    float ms=0.0f, mc=0.0f;
+    for(int k=0;k<KUR_N;k++){ ms+=sinf(g_phase[k]); mc+=cosf(g_phase[k]); }
+    ms/=(float)KUR_N; mc/=(float)KUR_N;
+    float r=sqrtf(ms*ms+mc*mc);                                        /* Kuramoto order parameter (0 incoherent … 1 locked) */
+    unsigned fired=0u;
+    for(int k=0;k<KUR_N;k++){
+        float coup = KUR_K*(ms*cosf(g_phase[k]) - mc*sinf(g_phase[k]));/* (K/N)·Σ_j sin(φ_j−φ_k) */
+        g_phase[k] += omega[k] + coup;
+        if(r > KUR_RCEIL) g_phase[k] += 0.03f*(float)(k+1);            /* anti-lock: nudge apart when too coherent — no frozen sync */
+        if(g_phase[k] >= 6.2831853f){ fired |= (1u<<k); g_phase[k] -= 6.2831853f; }
+        if(!isfinite(g_phase[k]) || g_phase[k]<0.0f) g_phase[k]=0.0f;
+    }
+    return fired;
 }
 /* Δ2: does the receiver already own an emerged symbol with these parents? */
 static int emerged_by_pair(int a, int b){
@@ -1292,6 +1323,8 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_cont_on      = (getenv("NL_CONT")!=NULL);        /* PROBABILISTIC CONTINUATION + WILL (opt-in, default off) */
     { const char* fw=getenv("NL_FIXEDWILL"); g_fixedwill = fw? (float)atof(fw) : 0.0f; }  /* will-falsifier control */
     g_debt = 0.0f; g_n_burn = 0; g_n_shed = 0;
+    g_async_on     = (getenv("NL_ASYNC")!=NULL);       /* ASYNC: the Kuramoto chamber scheduler (opt-in, default off) */
+    if(g_async_on) for(int k=0;k<KUR_N;k++) g_phase[k] = (frand()+1.0f)*3.14159265f;  /* seeded phases (touches rng only when async) */
     g_self_felt    = 0.0f;
     ProtoSelf ps; memset(&ps,0,sizeof ps);             /* the forecast starts flat — it must learn its own interior */
     float scar_total=0.0f;
@@ -1311,6 +1344,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     int   fed=(food?1:0);                           /* ether-born cells start hungry, on the chorus */
     while(energy>0.0f && tick<200000){          /* cap = falsification guard: it MUST die */
         tick++;
+        unsigned cfired = g_async_on ? chambers_step() : ~0u;  /* ASYNC: which chambers cross this tick (all-set when synchronous) */
         float S0=mo.S, D0=mo.dissonance;            /* the interior at tick's start — what the self-model forecasts FROM */
         if(g_fixeddamp>0.0f){                        /* CONTROL (Fable #3): a DUMB fixed-gain S-damper of matched strength — if this */
             mo.S -= g_fixeddamp*mo.S;                /* matches the self-model's survival, the "self" is decoration, not a felt forecast */
@@ -1322,7 +1356,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         float integ = (soma_on && birth_norm>0.0f) ? wv_norm(m)/birth_norm : 1.0f; if(integ>1.0f) integ=1.0f;
         energy -= RENT * (1.0f + (scar_on? SCAR_RENT*scar_total : 0.0f)      /* wounds cost, and so does a corroded body: */
                                 + (soma_on? SOMA_RENT*(1.0f-integ) : 0.0f)); /* a body it cannot hold together costs more to run */
-        if(sleep_on && dream_on && !sleeping){      /* SLEEP PRESSURE accrues while awake, faster under torment. */
+        if(sleep_on && dream_on && !sleeping && (cfired & (1u<<CH_VOID))){  /* SLEEP PRESSURE accrues on its own clock (VOID), faster under torment */
             float torment = fabsf(mo.S) + tanhf(0.05f*fabsf(mo.dissonance));   /* gated on dream_on: a cell that */
             sleep_debt += SLEEP_RATE*(1.0f + SLEEP_STRESS*torment + (scar_on? SLEEP_SCAR*scar_total : 0.0f));  /* cannot dream */
             if(sleep_debt >= SLEEP_THRESH && recent_n>0) sleeping=1;   /* never sleeps → no deadlock (Codex #1). the tormented sleep sooner */
@@ -1371,21 +1405,21 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         }
         scar_total=0.0f; for(int i=0;i<VOCAB_CAP;i++) scar_total+=scar[i];
         if(homeo_on){ mo.dissonance *= DISS_DECAY; mo.S -= S_RELAX*mo.S; }
-        if(g_self_on){ g_self_felt=self_update(&ps,S0,D0,mo.S,mo.dissonance); /* ProtoSelf: the interior settled — how far did it stray from its own forecast? */
+        if(g_self_on){ g_self_felt=self_update(&ps,S0,D0,mo.S,mo.dissonance); /* the self-model learns every tick — gating it starves choose()'s coherence */
                        if(!isfinite(g_self_felt)) g_self_felt=0.0f; }        /* a diverged self-model must not poison choose()'s temperature */
         if(!g_cont_on){ if(fabsf(mo.S) >= S_DEATH){ contour_died=1; break; } }   /* the old hard contour cliff (default) */
         else {                                            /* NL_CONT: |S| becomes one channel of the hazard surface, not a door */
             g_debt = CONT_DEBT_DECAY*g_debt + (1.0f-CONT_DEBT_DECAY)*g_self_felt;/* prophetic-debt EMA of the forecast error */
             float cig = (birth_norm>0.0f)? wv_norm(m)/birth_norm : 1.0f; if(cig>1.0f)cig=1.0f;
             float hz0 = cont_hazard(energy,&mo,g_debt);
-            energy += cont_will(m,scar,&scar_total,energy,cig,hz0);              /* WILL: spend form to pay the forecast down */
+            if(cfired & (1u<<CH_FEAR)) energy += cont_will(m,scar,&scar_total,energy,cig,hz0);  /* WILL fires on its own clock (FEAR); the death-draw stays every tick */
             float hz = cont_hazard(energy,&mo,g_debt);
             if((frand()+1.0f)*0.5f < hz){ cont_died=1; if(fabsf(mo.S)>=S_DEATH) contour_died=1; break; }  /* the atom-binary: the tape continues, or not */
         }
         if(recent_n>0){                                   /* the field's confidence about what follows */
             float coh=field_coherence(recent[recent_n-1]);
             g_coh_floor = 0.99f*g_coh_floor + 0.01f*coh;   /* Stanley: a drifting silence-gate */
-            if(waste||ether){ float sp=SPEAK_RATE*(1.0f+fabsf(mo.S));
+            if((waste||ether) && (cfired & (1u<<CH_LOVE))){ float sp=SPEAK_RATE*(1.0f+fabsf(mo.S));  /* voice fires on its own clock (LOVE) */
                 if(coh>0.05f && coh>=g_coh_floor && (frand()+1.0f)*0.5f < sp)
                     { float uc=speak(waste,ether,label,m,&mo,scar,recent,&recent_n,tick); energy -= SPEAK_COST*(float)SPEAK_LEN*(1.0f-uc); } }  /* voice -> waste + colony */
         }
