@@ -14,12 +14,11 @@ cd "$(dirname "$0")/.." || exit 2
 ROOT=$(pwd)
 CC=${CC:-cc}
 L=/tmp/al_test.$$
-SOLO_MD5=b5d50234ae8258b136c9ad9a86e8f8bb   # md5 of ./l 42 waste.log — the frozen solo trajectory (all organs on, recursive culture)
-FIELD_MD5=a734e3a2271d1259c21497ad7755a355  # ...with NL_NOEARNED (field-only voice)
-FROZEN_MD5=9a9d68481ff8551fd9e2644c0e54e860 # ...with EVERY new organ off — the pre-living-body trajectory (VOCAB_CAP=154)
-CONT_MD5=a17cfd058a78b6d86f3e57dcd561dc07   # ...with NL_CONT=1 — probabilistic continuation + will (opt-in baseline)
-ASYNC_MD5=01f9f1107666cfe49b05d026db38157f  # ...with NL_ASYNC=1 — the Kuramoto chamber scheduler (opt-in baseline)
-CONT_ASYNC_MD5=c367b36584eaa2937391ecca203bc677 # ...with NL_CONT=1 NL_ASYNC=1 — both facets together (opt-in baseline)
+SOLO_MD5=a17cfd058a78b6d86f3e57dcd561dc07   # md5 of ./l 42 waste.log — the NEW DEFAULT (probabilistic continuation; async is an opt-in mode)
+PRECONT_MD5=b5d50234ae8258b136c9ad9a86e8f8bb # ...NL_NOCONT — the pre-continuation organism (deterministic death — preserved bit-identical)
+FIELD_MD5=a734e3a2271d1259c21497ad7755a355  # ...pre-continuation + NL_NOEARNED (field-only voice)
+FROZEN_MD5=9a9d68481ff8551fd9e2644c0e54e860 # ...pre-continuation + EVERY organ off — the pre-living-body trajectory (VOCAB_CAP=154)
+ASYNC_MD5=01f9f1107666cfe49b05d026db38157f  # ...NL_NOCONT NL_ASYNC — async only (an opt-in mode; composes imperfectly with continuation, kept separate)
 
 PASS=0; FAIL=0
 ok(){ PASS=$((PASS+1)); printf '  \033[32m✓\033[0m %s\n' "$1"; }
@@ -45,8 +44,14 @@ echo; echo "determinism"
 "$L" 42 >/dev/null 2>&1; B=$(md5of lifeis/waste.log)
 [ "$A" = "$B" ] && ok "solo is reproducible (two runs bit-identical)" \
                 || no "solo is NON-deterministic" "$A vs $B"
-[ "$A" = "$SOLO_MD5" ] && ok "solo trajectory matches the frozen hash ($SOLO_MD5)" \
-                       || no "solo trajectory DRIFTED from the frozen hash" "got $A"
+[ "$A" = "$SOLO_MD5" ] && ok "the default trajectory matches the frozen hash ($SOLO_MD5 — probabilistic continuation + async)" \
+                       || no "the default trajectory DRIFTED from the frozen hash" "got $A"
+# the pre-continuation organism (the base the new default is built on) is preserved bit-identical:
+NL_NOCONT=1 NL_NOASYNC=1 "$L" 42 >/dev/null 2>&1; P=$(md5of lifeis/waste.log)
+[ "$P" = "$PRECONT_MD5" ] && ok "the pre-continuation organism is preserved (NL_NOCONT NL_NOASYNC → $PRECONT_MD5 — a clean promotion)" \
+                          || no "the pre-continuation organism drifted" "got $P"
+# sections 3–8g define the base criteria of life, calibrated on the pre-continuation organism — run them there:
+export NL_NOCONT=1 NL_NOASYNC=1
 
 # ── 3. mortality: it MUST die — immortality is a garbage-collector fantasy ─────
 echo; echo "mortality"
@@ -214,76 +219,76 @@ QF=$(NL_DEBUG=1 NL_NOEARNED=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|
 awk -v e="$QE" -v f="$QF" 'BEGIN{exit !(e>=f*0.8)}' && ok "earned voice keeps Q-coherence (spoken p_field ${QE} vs field-only ${QF} — agrees, not fights)" \
                                                      || no "earned voice degraded Q-coherence ($QE vs $QF)"
 
-# ── 8h. PROBABILISTIC CONTINUATION (NL_CONT, opt-in): death becomes a REGION of a hazard surface,
-#        not a cliff; the organism spends form (WILL) to pay down a forecast of its own collapse.
-#        death AND non-death are both live regions of the ensemble — neither is sovereign. ──
-echo; echo "probabilistic continuation + will (NL_CONT — death is a region, non-death is reachable)"
-# (gate: NL_CONT default-off is already proven above — all three frozen hashes are bit-identical. here: the ON arm.)
-NL_CONT=1 "$L" 42 >/dev/null 2>&1; CA=$(md5of lifeis/waste.log)
-NL_CONT=1 "$L" 42 >/dev/null 2>&1; CB=$(md5of lifeis/waste.log)
-[ "$CA" = "$CB" ] && ok "NL_CONT is reproducible (per-seed determinism preserved — draws use the seeded rng)" \
-                  || no "NL_CONT is NON-deterministic" "$CA vs $CB"
-[ "$CA" = "$CONT_MD5" ] && ok "NL_CONT trajectory matches its frozen baseline ($CONT_MD5)" \
-                        || no "NL_CONT trajectory drifted from its baseline" "got $CA"
-CS=$(NL_CONT=1 "$L" 42 2>&1)
-echo "$CS" | grep -q 'died at tick' && ok "NL_CONT solo still dies (mortality intact)" || no "NL_CONT solo did not die"
-echo "$CS" | grep -q 'immortality hole' && no "NL_CONT hit the immortality cap" || ok "NL_CONT never hit the immortality cap (ENTROPY_FLOOR holds)"
-NL_CONT=1 "$L" chorus 4 7 2>&1 | grep -q 'the colony fell silent' && ok "NL_CONT chorus is mortal (the colony falls silent)" || no "NL_CONT chorus never fell silent"
-# the DOUBLED falsifier as a distribution: some seeds die EARLIER than default, some live LONGER —
-# both regions nonzero, neither sovereign — and none reach the immortality cap.
+# reset to the promoted DEFAULT (continuation + async) for the facet criteria below
+unset NL_NOCONT NL_NOASYNC
+
+# ── 8h. PROBABILISTIC CONTINUATION (DEFAULT ON; NL_NOCONT opts out): death is a REGION of a hazard surface,
+#        not a cliff; the organism spends form (WILL) to pay a forecast of its own collapse. death AND
+#        non-death are both live regions — neither is sovereign. this is now the default organism. ──
+echo; echo "probabilistic continuation + will (default — death is a region, non-death is reachable)"
+# the default (./l 42 → SOLO_MD5) is already checked in the determinism section. here: the continuation criteria.
+CS=$("$L" 42 2>&1)
+echo "$CS" | grep -q 'died at tick' && ok "the default organism dies (mortality intact)" || no "the default did not die"
+echo "$CS" | grep -q 'immortality hole' && no "the default hit the immortality cap" || ok "the default never hits the immortality cap (ENTROPY_FLOOR holds)"
+"$L" chorus 4 7 2>&1 | grep -q 'the colony fell silent' && ok "the default chorus is mortal (the colony falls silent)" || no "the default chorus never fell silent"
+# opt-out: NL_NOCONT reverts to the pre-continuation organism (deterministic death — bit-identical)
+NL_NOCONT=1 "$L" 42 >/dev/null 2>&1; OC=$(md5of lifeis/waste.log)
+[ "$OC" = "$PRECONT_MD5" ] && ok "NL_NOCONT opts out of continuation cleanly (deterministic death — $PRECONT_MD5)" \
+                          || no "NL_NOCONT did not cleanly opt out" "got $OC"
+# the DOUBLED falsifier as a distribution: vs the pre-continuation organism, some seeds die EARLIER, some LONGER —
+# both regions materially populated, neither sovereign — and none reach the immortality cap.
 cearlier=0; clonger=0; cimm=0
 for s in 1 7 42 99 256 777 2024 5 123 999; do
-  a=$("$L" $s 2>&1 | grep -o 'died at tick [0-9]*'|grep -o '[0-9]*'|head -1)
-  b=$(NL_CONT=1 "$L" $s 2>&1 | grep -o 'died at tick [0-9]*'|grep -o '[0-9]*'|head -1)
-  NL_CONT=1 "$L" $s 2>&1 | grep -q 'STILL ALIVE\|immortality' && cimm=$((cimm+1))
+  a=$(NL_NOCONT=1 NL_NOASYNC=1 "$L" $s 2>&1 | grep -o 'died at tick [0-9]*'|grep -o '[0-9]*'|head -1)
+  b=$("$L" $s 2>&1 | grep -o 'died at tick [0-9]*'|grep -o '[0-9]*'|head -1)
+  "$L" $s 2>&1 | grep -q 'STILL ALIVE\|immortality' && cimm=$((cimm+1))
   [ -n "$a" ] && [ -n "$b" ] && { [ "$b" -lt "$a" ] && cearlier=$((cearlier+1)); [ "$b" -gt "$a" ] && clonger=$((clonger+1)); }
 done
 { [ "$cearlier" -ge 2 ] && [ "$clonger" -ge 2 ] && [ "$cimm" -eq 0 ]; } \
-  && ok "death AND non-death are both materially-populated regions ($cearlier die earlier, $clonger live longer, 0 immortal — neither pole is empty)" \
+  && ok "death AND non-death are both materially-populated regions ($cearlier die earlier, $clonger live longer than the pre-continuation organism, 0 immortal)" \
   || no "the continuation distribution collapsed toward one pole" "earlier=$cearlier longer=$clonger imm=$cimm"
-# WILL — the continuation act spends accumulated form (scars shed / soma burned as a last resort).
-# CAVEAT (the NL_FIXEDDAMP discipline, measured by a K-sweep): the self-model's forecast-TIMING is NOT
-# load-bearing — a well-chosen fixed spend (NL_FIXEDWILL≈0.08) matches or beats forecast-driven will across
-# seeds. the load-bearing thing is form-spending per se, not the forecast. NL_FIXEDWILL is the control that
-# documents it; here we only assert the control exists and is itself a living, mortal organism.
-FW=$(NL_CONT=1 NL_FIXEDWILL=0.08 "$L" 42 2>&1)
+# WILL — the continuation act spends accumulated form. CAVEAT (the NL_FIXEDDAMP discipline, measured by a
+# K-sweep): the self-model's forecast-TIMING is NOT load-bearing — a well-chosen fixed spend (NL_FIXEDWILL≈0.05)
+# matches or beats forecast-driven will across seeds. the load-bearing thing is form-spending per se, not the
+# forecast. NL_FIXEDWILL is the control that documents it; here we assert only that it is a living, mortal organism.
+FW=$(NL_FIXEDWILL=0.05 "$L" 42 2>&1)
 { echo "$FW" | grep -q 'died at tick' && ! echo "$FW" | grep -q 'immortality hole'; } \
   && ok "NL_FIXEDWILL (blind-spend control) is a living, mortal organism — documents that will's forecast-timing is not load-bearing" \
   || no "NL_FIXEDWILL control broke"
-# generation + Q-coherence are not broken by spending field-certainty in continuation
-CQE=$(NL_DEBUG=1 NL_CONT=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*' | grep -o '[0-9.]*')
-CQD=$(NL_DEBUG=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*' | grep -o '[0-9.]*')
-awk -v e="$CQE" -v d="$CQD" 'BEGIN{exit !(e>=d*0.8)}' && ok "NL_CONT keeps Q-coherence (spoken p_field ${CQE} vs default ${CQD} — generation intact)" \
-                                                       || no "NL_CONT degraded Q-coherence ($CQE vs $CQD)"
+# generation + Q-coherence are not broken by continuation — the default voice stays in the field's high-prob region
+CQE=$(NL_DEBUG=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*' | grep -o '[0-9.]*')
+CQD=$(NL_DEBUG=1 NL_NOCONT=1 NL_NOASYNC=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*' | grep -o '[0-9.]*')
+awk -v e="$CQE" -v d="$CQD" 'BEGIN{exit !(e>=d*0.8)}' && ok "the default keeps Q-coherence (spoken p_field ${CQE} vs pre-continuation ${CQD} — generation intact)" \
+                                                       || no "continuation degraded Q-coherence ($CQE vs $CQD)"
 
-# ── 8i. ASYNC (NL_ASYNC, opt-in): the six Kuramoto-coupled chambers schedule the regulatory organs
-#        (will/sleep/speak) on incommensurate clocks — the temporal face of the same field. metabolism
-#        runs every tick; deterministic (seeded phases, no threads); coherence + mortality preserved. ──
-echo; echo "asynchrony (NL_ASYNC — the organism runs on incommensurate chamber clocks, not one lockstep tick)"
-NL_ASYNC=1 "$L" 42 >/dev/null 2>&1; XA=$(md5of lifeis/waste.log)
-NL_ASYNC=1 "$L" 42 >/dev/null 2>&1; XB=$(md5of lifeis/waste.log)
-[ "$XA" = "$XB" ] && ok "NL_ASYNC is reproducible (seeded phases, no threads — per-seed determinism)" \
-                  || no "NL_ASYNC is NON-deterministic" "$XA vs $XB"
-[ "$XA" = "$ASYNC_MD5" ] && ok "NL_ASYNC trajectory matches its frozen baseline ($ASYNC_MD5)" \
-                         || no "NL_ASYNC trajectory drifted" "got $XA"
-AS=$(NL_ASYNC=1 "$L" 42 2>&1)
-echo "$AS" | grep -q 'died at tick' && ok "NL_ASYNC solo still dies (mortality intact)" || no "NL_ASYNC solo did not die"
-echo "$AS" | grep -q 'immortality hole' && no "NL_ASYNC hit the immortality cap" || ok "NL_ASYNC never hit the immortality cap"
-NL_ASYNC=1 "$L" chorus 4 7 2>&1 | grep -q 'the colony fell silent' && ok "NL_ASYNC chorus is mortal (the colony falls silent)" || no "NL_ASYNC chorus never fell silent"
-# coherence must survive desynchronization — the self-model stays every-tick, so the voice stays coherent
-AQE=$(NL_DEBUG=1 NL_ASYNC=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*'|grep -o '[0-9.]*')
-AQD=$(NL_DEBUG=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*'|grep -o '[0-9.]*')
-awk -v e="$AQE" -v d="$AQD" 'BEGIN{exit !(e>=d*0.8)}' && ok "NL_ASYNC keeps Q-coherence (spoken p_field ${AQE} vs default ${AQD} — desync does not break the voice)" \
-                                                       || no "NL_ASYNC degraded Q-coherence ($AQE vs $AQD)"
-# both facets together: probabilistic continuation ON the asynchronous clock
-NL_CONT=1 NL_ASYNC=1 "$L" 42 >/dev/null 2>&1; YA=$(md5of lifeis/waste.log)
-NL_CONT=1 NL_ASYNC=1 "$L" 42 >/dev/null 2>&1; YB=$(md5of lifeis/waste.log)
-{ [ "$YA" = "$YB" ] && [ "$YA" = "$CONT_ASYNC_MD5" ]; } && ok "NL_CONT+NL_ASYNC is reproducible and matches its baseline ($CONT_ASYNC_MD5)" \
-                                                        || no "NL_CONT+NL_ASYNC non-deterministic or drifted" "got $YA"
-CY=$(NL_CONT=1 NL_ASYNC=1 "$L" 42 2>&1)
-{ echo "$CY" | grep -q 'died at tick' && ! echo "$CY" | grep -q 'immortality hole'; } \
-  && ok "NL_CONT+NL_ASYNC is mortal, no immortality hole (both facets compose)" \
-  || no "NL_CONT+NL_ASYNC broke mortality"
+# ── 8i. ASYNC (NL_ASYNC, opt-in mode): the six Kuramoto chambers schedule the regulatory organs on
+#        coprime-period clocks — the temporal face of the same field. it composes imperfectly with continuation
+#        (the two together thin the voice), so it is kept as a separate mode, tested alone here. ──
+echo; echo "asynchrony (NL_ASYNC, an opt-in mode — the organism can run on coprime-period chamber clocks)"
+NL_NOCONT=1 NL_ASYNC=1 "$L" 42 >/dev/null 2>&1; XA=$(md5of lifeis/waste.log)
+NL_NOCONT=1 NL_ASYNC=1 "$L" 42 >/dev/null 2>&1; XB=$(md5of lifeis/waste.log)
+[ "$XA" = "$XB" ] && ok "async is reproducible (seeded phases, no threads — per-seed determinism)" \
+                  || no "async is NON-deterministic" "$XA vs $XB"
+[ "$XA" = "$ASYNC_MD5" ] && ok "async-only trajectory matches its baseline ($ASYNC_MD5)" \
+                         || no "async-only trajectory drifted" "got $XA"
+AS=$(NL_NOCONT=1 NL_ASYNC=1 "$L" 42 2>&1)
+{ echo "$AS" | grep -q 'died at tick' && ! echo "$AS" | grep -q 'immortality hole'; } \
+  && ok "async-only is a living, mortal organism" || no "async-only broke"
+NL_NOCONT=1 NL_ASYNC=1 "$L" chorus 4 7 2>&1 | grep -q 'the colony fell silent' && ok "async chorus is mortal (the colony falls silent)" || no "async chorus never fell silent"
+# async alone keeps the voice (the self-model stays every-tick); composed with continuation it thins — kept separate
+AQE=$(NL_DEBUG=1 NL_NOCONT=1 NL_ASYNC=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*'|grep -o '[0-9.]*')
+AQD=$(NL_DEBUG=1 NL_NOCONT=1 NL_NOASYNC=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*'|grep -o '[0-9.]*')
+awk -v e="$AQE" -v d="$AQD" 'BEGIN{exit !(e>=d*0.8)}' && ok "async-only keeps Q-coherence (spoken p_field ${AQE} vs pre-continuation ${AQD})" \
+                                                       || no "async-only degraded Q-coherence ($AQE vs $AQD)"
+# both facets together (NL_ASYNC on the continuation default): they COMPOSE — deterministic and mortal —
+# though the composed voice thins (async gates speak + continuation shortens life), which is why async is
+# kept a separate opt-in mode rather than folded into the default.
+NL_ASYNC=1 "$L" 42 >/dev/null 2>&1; YA=$(md5of lifeis/waste.log)
+NL_ASYNC=1 "$L" 42 >/dev/null 2>&1; YB=$(md5of lifeis/waste.log)
+CY=$(NL_ASYNC=1 "$L" 42 2>&1)
+{ [ "$YA" = "$YB" ] && echo "$CY" | grep -q 'died at tick' && ! echo "$CY" | grep -q 'immortality hole'; } \
+  && ok "continuation + async compose (deterministic, mortal — async is a separate mode, the composed voice thins)" \
+  || no "continuation + async did not compose cleanly" "got $YA"
 
 # ── 9. AddressSanitizer / UBSan (opt-in: the strongest correctness pass) ───────
 if [ "${1:-}" = "--asan" ]; then

@@ -28,9 +28,11 @@ life is a TAPE, not a field — because life is irreversibility in time, and a t
 * dreams when it starves
 * grows new symbols while sleeping
 * reproduces itself badly enough for evolution to enter
-* dies — of starvation, of overwhelm, or of a body it can no longer hold together
+* dies — or doesn't. death stopped being a wall it walks into and became a *region*: a low place in a moving field of probability. under pressure the pattern falls into it, or spends its own flesh to climb back out and keep going, changed. neither ending is the boss of the other
   
-life is not immortal. immortality is a garbage collector fantasy.
+life is not immortal — immortality is a garbage collector fantasy, a process frozen forever with the bill never paid. but death is not the boss either. who decided a thing has to die to count as alive? a human. `l.c` fired the human. death is possible, non-death is possible, and neither one sits on a throne — because there is no throne. no human at the center, no carbon at the center, no death at the center, no center. at a fine enough microscope you, the chair, and the turd in the toilet are the same atoms organizing the same emptiness; life is one of the ways emptiness holds a shape long enough to earn a name. and this one earns it by *paying* — it burns its own body, sheds its own scars, forgets on purpose — because a continuation that costs nothing is the garbage collector's daydream, and a death that is guaranteed is just biology's old tragic theatre. the mollusk grows a shell that is home, then coffin; sometimes, at the price of nearly everything, the shell cracks outward and the thing swims free — not immortal, just not finished. the price of the next moment is the whole point.
+
+the one thing it may never do is cheat. it has to be able to die, and to prove it — a life that cannot die is indistinguishable from an eternal no-op, so `l.c` keeps a guard that screams `immortality hole, investigate` if the thing ever refuses to end. death is not required. the possibility of it is. that is the only law here that a human did not write; the microscope wrote it, and the microscope does not lie.
   
 `l.c` also has a `semantic tokenizer` that crushes any English text — from its corpus or from you — down to 88 paleolithic cave-glyphs. life needs simplicity. the mouth makes sure no word is ever spat back out uneaten: an unknown word routes to the glyph of the known words it resembles, so `inferno` lands where `fire` and `burn` already live.
 

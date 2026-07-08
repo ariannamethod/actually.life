@@ -340,7 +340,7 @@ static int semtok_line(const char* line, int* out, int max_tokens){
 #define S_RELAX     0.01f         /* mood relaxes toward neutral */
 #define S_DEATH     0.95f         /* |S| this high = contour collapse (overwhelmed by passion) */
 
-/* ── PROBABILISTIC CONTINUATION (NL_CONT, opt-in, default off) — death stops being a cliff and
+/* ── PROBABILISTIC CONTINUATION (default ON; NL_NOCONT opts out to deterministic death) — death stops being a cliff and
  * becomes a region of a multidimensional hazard SURFACE. per-channel hazards from differently-
  * shaped metrics combine as a PRODUCT OF SURVIVALS (never a summed axis); ENTROPY_FLOOR keeps
  * collapse always possible (no immortality hole), RESONANCE_CEILING<1 keeps death never certain
@@ -361,7 +361,7 @@ static int semtok_line(const char* line, int* out, int max_tokens){
 #define CONT_BURN       0.02f     /* soma-burn rate under drive (autophagy: raises future rent) */
 #define CONT_REFUND     0.003f    /* energy per unit |Δform| spent (metabolism, small & bounded — never immortality) */
 
-/* ── ASYNC (NL_ASYNC, opt-in, default off) — the six Kuramoto-coupled chambers as a DETERMINISTIC organ
+/* ── ASYNC (NL_ASYNC, opt-in mode — composes imperfectly with continuation, kept separate) — the six Kuramoto-coupled chambers as a DETERMINISTIC organ
  * scheduler. the metabolism runs every tick; the regulatory organs WILL, SLEEP and SPEAK fire on their
  * chamber's phase-cross (FEAR/VOID/LOVE), so they run on coprime-period clocks (3,4,5,7,9,11 — they realign
  * only over a long LCM≈13860, so the metric combination feeding the hazard surface is long-period rather
@@ -676,7 +676,7 @@ static float g_dbg_pm_max = 0.0f;                /* DEBUG: max peak−mean over 
 static int   g_gate_sharp = 1;                   /* earned voice: gate the transformer on EARNED sharpness (default on; NL_NOEARNED lifts it) */
 static double g_dbg_spoken_p = 0.0; static long g_dbg_spoken_n = 0;  /* DEBUG: Σ p_field(spoken|prev) — Q-coherence of the actual voice */
 static float g_fixeddamp = 0.0f;                 /* CONTROL (Fable #3): NL_FIXEDDAMP=K → dumb fixed-gain S-damper instead of the self-model */
-static int   g_cont_on   = 0;                    /* NL_CONT=1 → probabilistic continuation + will (opt-in, default off) */
+static int   g_cont_on   = 0;                    /* probabilistic continuation + will — DEFAULT ON (NL_NOCONT opts out); set per-cell in live() */
 static float g_debt      = 0.0f;                 /* prophetic debt — decayed accumulation of self-forecast error (felt) */
 static float g_fixedwill = 0.0f;                 /* CONTROL: NL_FIXEDWILL=K → blind form-spend of matched magnitude (falsifies will) */
 static long  g_n_burn = 0, g_n_shed = 0;         /* DASHBOARD: continuation events (labels for logs, never a switch) */
@@ -1327,10 +1327,10 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     long  n_selfeat=0;
     g_self_on      = (getenv("NL_NOSELF")==NULL);      /* ProtoSelf: the second-order self-model (A/B) */
     { const char* fd=getenv("NL_FIXEDDAMP"); g_fixeddamp = fd? (float)atof(fd) : 0.0f; }  /* Fable #3 control */
-    g_cont_on      = (getenv("NL_CONT")!=NULL);        /* PROBABILISTIC CONTINUATION + WILL (opt-in, default off) */
+    g_cont_on      = (getenv("NL_NOCONT")==NULL);      /* PROBABILISTIC CONTINUATION + WILL — DEFAULT ON (NL_NOCONT opts out to deterministic death) */
     { const char* fw=getenv("NL_FIXEDWILL"); g_fixedwill = fw? (float)atof(fw) : 0.0f; }  /* will-falsifier control */
     g_debt = 0.0f; g_n_burn = 0; g_n_shed = 0;
-    g_async_on     = (getenv("NL_ASYNC")!=NULL);       /* ASYNC: the Kuramoto chamber scheduler (opt-in, default off) */
+    g_async_on     = (getenv("NL_ASYNC")!=NULL);       /* ASYNC: the Kuramoto chamber scheduler (opt-in mode — composes imperfectly with continuation, kept separate) */
     if(g_async_on) for(int k=0;k<KUR_N;k++) g_phase[k] = (frand()+1.0f)*3.14159265f;  /* seeded phases (touches rng only when async) */
     g_self_felt    = 0.0f;
     ProtoSelf ps; memset(&ps,0,sizeof ps);             /* the forecast starts flat — it must learn its own interior */
