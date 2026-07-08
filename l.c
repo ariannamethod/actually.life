@@ -340,6 +340,25 @@ static int semtok_line(const char* line, int* out, int max_tokens){
 #define S_RELAX     0.01f         /* mood relaxes toward neutral */
 #define S_DEATH     0.95f         /* |S| this high = contour collapse (overwhelmed by passion) */
 
+/* ── PROBABILISTIC CONTINUATION (NL_CONT, opt-in, default off) — death stops being a cliff and
+ * becomes a region of a multidimensional hazard SURFACE. per-channel hazards from differently-
+ * shaped metrics combine as a PRODUCT OF SURVIVALS (never a summed axis); ENTROPY_FLOOR keeps
+ * collapse always possible (no immortality hole), RESONANCE_CEILING<1 keeps death never certain
+ * (non-death reachable) — neither pole sovereign. WILL: the organism spends accumulated FORM
+ * (scars shed = drop the coffin, soma burned = break the home) to pay down a forecast of its own
+ * collapse (prophetic debt, cf. AML PROPHECY/DEBT_DECAY, dario F-force). ── */
+#define CONT_ESCALE     0.05f     /* energy-door: hazard ~0 for energy>0.3, rises steeply through 0.25→0.08 (measured) */
+#define CONT_SSOFT      0.85f     /* arousal-door onset: ~0 below here (world-diet S stays ±0.25), rises toward S_DEATH */
+#define CONT_SGAIN      40.0f     /* arousal-door steepness: ~0 until |S|>0.8, ~0.9 at S_DEATH (folds the old cliff in) */
+#define CONT_HFLOOR     0.00001f  /* ENTROPY_FLOOR — collapse always possible (a faint background mortality) */
+#define CONT_HCEIL      0.97f     /* RESONANCE_CEILING (<1) — death never certain on one tick */
+#define CONT_DEBT_DECAY 0.998f    /* prophetic-debt EMA coefficient: debt ≈ recent-average forecast error */
+#define CONT_DEBT_HI    4.0f      /* debt-door threshold — only a RUNAWAY self-model (debt≫normal) destabilizes */
+#define CONT_DEBT_GAIN  4.0f      /* steepness of the debt-door */
+#define CONT_SHED       0.10f     /* scar-shed rate under drive (lightening: lowers future rent) */
+#define CONT_BURN       0.02f     /* soma-burn rate under drive (autophagy: raises future rent) */
+#define CONT_REFUND     0.003f    /* energy per unit |Δform| spent (metabolism, small & bounded — never immortality) */
+
 typedef struct {
     float rms1[E], rms2[E];
     float wq[E*E], wk[E*E], wv[E*E], wo[E*E];
@@ -642,6 +661,10 @@ static float g_dbg_pm_max = 0.0f;                /* DEBUG: max peak−mean over 
 static int   g_gate_sharp = 1;                   /* earned voice: gate the transformer on EARNED sharpness (default on; NL_NOEARNED lifts it) */
 static double g_dbg_spoken_p = 0.0; static long g_dbg_spoken_n = 0;  /* DEBUG: Σ p_field(spoken|prev) — Q-coherence of the actual voice */
 static float g_fixeddamp = 0.0f;                 /* CONTROL (Fable #3): NL_FIXEDDAMP=K → dumb fixed-gain S-damper instead of the self-model */
+static int   g_cont_on   = 0;                    /* NL_CONT=1 → probabilistic continuation + will (opt-in, default off) */
+static float g_debt      = 0.0f;                 /* prophetic debt — decayed accumulation of self-forecast error (felt) */
+static float g_fixedwill = 0.0f;                 /* CONTROL: NL_FIXEDWILL=K → blind form-spend of matched magnitude (falsifies will) */
+static long  g_n_burn = 0, g_n_shed = 0;         /* DASHBOARD: continuation events (labels for logs, never a switch) */
 
 static float digest(Model* m, Modes* mo, float* scar, const int* glyphs, int prev0, int n){
     static float before[RANK*E];
@@ -862,6 +885,54 @@ static float self_update(ProtoSelf* ps, float S0, float D0, float S1, float D1){
     float eS=S1-ps->pS, eD=D1-ps->pD;                            /* the interior surprised its own forecast by this much */
     for(int k=0;k<SELF_K;k++){ ps->wS[k]+=g*eS*f[k]; ps->wD[k]+=g*eD*f[k]; }
     return fabsf(eS)+fabsf(eD);
+}
+/* ── the continuation hazard surface (NL_CONT). per-channel hazards from differently-shaped
+ * metrics combine as a PRODUCT OF SURVIVALS — a surface, never a summed axis — then clamp to
+ * [ENTROPY_FLOOR, RESONANCE_CEILING]: collapse always possible, death never certain on a tick. */
+static float cont_hazard(float energy, const Modes* mo, float debt){
+    float sx = CONT_SGAIN*(fabsf(mo->S) - CONT_SSOFT);
+    float h[3];
+    h[0] = expf(-energy/CONT_ESCALE);                                  /* energy-door — the metabolic terminal */
+    h[1] = 1.0f/(1.0f+expf(-sx));                                      /* arousal-door — the old |S| cliff, now a channel */
+    h[2] = 1.0f/(1.0f+expf(-(debt-CONT_DEBT_HI)*CONT_DEBT_GAIN));      /* debt-door — a RUNAWAY self-model destabilizes */
+    /* scar / integ / dissonance are NOT separate channels: they already flow into `energy` through
+     * rent + metabolism (l.c:1248-1249), so a second count would double-kill. the surface is over
+     * energy × arousal × debt — different metrics, each shaped ~0 in normal operation. */
+    float surv = 1.0f;
+    for(int k=0;k<3;k++){ float hk=h[k]; if(!isfinite(hk)||hk<0.0f)hk=0.0f; if(hk>0.999f)hk=0.999f; surv *= (1.0f-hk); }
+    float hz = 1.0f - surv;                                            /* product-of-survivals — never a summed axis */
+    if(!isfinite(hz)) hz = CONT_HCEIL;
+    if(hz < CONT_HFLOOR) hz = CONT_HFLOOR;                             /* ENTROPY_FLOOR */
+    if(hz > CONT_HCEIL)  hz = CONT_HCEIL;                              /* RESONANCE_CEILING */
+    return hz;
+}
+/* ── WILL: the organism spends accumulated FORM to pay down a forecast of its own collapse.
+ * drivers — fear (the forecast hazard), guilt (the scar that aches), depletion, surplus. the
+ * spend is asymmetric and both ARE the shell ("и то и другое"): scars shed → SCAR_RENT falls
+ * (lightening, drop the coffin); soma burns → integ falls → SOMA_RENT rises (autophagy, break
+ * the home, and it costs). in-place on live state, same seed/lineage, NEVER through reproduce().
+ * NL_FIXEDWILL spends blind (no forecast) — the control that falsifies whether the self-model
+ * is load-bearing (cf. NL_FIXEDDAMP). returns the energy refunded by metabolism. ── */
+static float cont_will(Model* m, float* scar, float* scar_total, float energy, float integ, float hazard){
+    float fear    = hazard;
+    float guilt   = tanhf(0.3f*(*scar_total));
+    float deplete = (integ<1.0f?(1.0f-integ):0.0f) + expf(-energy/CONT_ESCALE);
+    float drive   = (g_fixedwill>0.0f) ? g_fixedwill : fmaxf(fear, 0.5f*(guilt+deplete));
+    if(!isfinite(drive)||drive<0.0f) drive=0.0f; if(drive>1.0f) drive=1.0f;
+    float refund=0.0f;
+    if(*scar_total>0.0f){                                              /* scar-shed — drop the coffin, future rent falls */
+        float shed=CONT_SHED*drive*(0.5f+0.5f*guilt);
+        float before=*scar_total, st=0.0f;
+        for(int i=0;i<VOCAB_CAP;i++){ scar[i]*=(1.0f-shed); st+=scar[i]; }
+        *scar_total=st; refund += CONT_REFUND*0.5f*fmaxf(0.0f,before-st); if(shed>0.0f) g_n_shed++;
+    }
+    { float burn=CONT_BURN*drive*(0.5f+0.5f*deplete);                  /* soma-burn — break the home, future rent climbs */
+      if(burn>0.0f){ float b0=wv_norm(m);
+          for(int l=0;l<NL;l++){ float* wv=m->L[l].wv; for(int i=0;i<E*E;i++) wv[i]*=(1.0f-burn); }
+          float b1=wv_norm(m); refund += CONT_REFUND*fmaxf(0.0f,b0-b1); g_n_burn++; } }
+    g_debt *= (1.0f - 0.5f*drive);                                     /* the act pays the forecast down */
+    if(!isfinite(refund)||refund<0.0f) refund=0.0f;
+    return refund;
 }
 /* Δ2: does the receiver already own an emerged symbol with these parents? */
 static int emerged_by_pair(int a, int b){
@@ -1218,6 +1289,9 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     long  n_selfeat=0;
     g_self_on      = (getenv("NL_NOSELF")==NULL);      /* ProtoSelf: the second-order self-model (A/B) */
     { const char* fd=getenv("NL_FIXEDDAMP"); g_fixeddamp = fd? (float)atof(fd) : 0.0f; }  /* Fable #3 control */
+    g_cont_on      = (getenv("NL_CONT")!=NULL);        /* PROBABILISTIC CONTINUATION + WILL (opt-in, default off) */
+    { const char* fw=getenv("NL_FIXEDWILL"); g_fixedwill = fw? (float)atof(fw) : 0.0f; }  /* will-falsifier control */
+    g_debt = 0.0f; g_n_burn = 0; g_n_shed = 0;
     g_self_felt    = 0.0f;
     ProtoSelf ps; memset(&ps,0,sizeof ps);             /* the forecast starts flat — it must learn its own interior */
     float scar_total=0.0f;
@@ -1226,6 +1300,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     long  last_repro=-REPRO_COOLDOWN;
     int   homeo_on=(getenv("NL_NOHOMEO")==NULL);
     int   contour_died=0;
+    int   cont_died=0;                              /* NL_CONT: died by the probabilistic hazard draw (energy>0, not an immortality hole) */
     long  n_graze=0, n_dream=0;                    /* resonance/self-feed counters */
     float energy=E_BORN;
     long  tick=0;
@@ -1298,7 +1373,15 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         if(homeo_on){ mo.dissonance *= DISS_DECAY; mo.S -= S_RELAX*mo.S; }
         if(g_self_on){ g_self_felt=self_update(&ps,S0,D0,mo.S,mo.dissonance); /* ProtoSelf: the interior settled — how far did it stray from its own forecast? */
                        if(!isfinite(g_self_felt)) g_self_felt=0.0f; }        /* a diverged self-model must not poison choose()'s temperature */
-        if(fabsf(mo.S) >= S_DEATH){ contour_died=1; break; }
+        if(!g_cont_on){ if(fabsf(mo.S) >= S_DEATH){ contour_died=1; break; } }   /* the old hard contour cliff (default) */
+        else {                                            /* NL_CONT: |S| becomes one channel of the hazard surface, not a door */
+            g_debt = CONT_DEBT_DECAY*g_debt + (1.0f-CONT_DEBT_DECAY)*g_self_felt;/* prophetic-debt EMA of the forecast error */
+            float cig = (birth_norm>0.0f)? wv_norm(m)/birth_norm : 1.0f; if(cig>1.0f)cig=1.0f;
+            float hz0 = cont_hazard(energy,&mo,g_debt);
+            energy += cont_will(m,scar,&scar_total,energy,cig,hz0);              /* WILL: spend form to pay the forecast down */
+            float hz = cont_hazard(energy,&mo,g_debt);
+            if((frand()+1.0f)*0.5f < hz){ cont_died=1; if(fabsf(mo.S)>=S_DEATH) contour_died=1; break; }  /* the atom-binary: the tape continues, or not */
+        }
         if(recent_n>0){                                   /* the field's confidence about what follows */
             float coh=field_coherence(recent[recent_n-1]);
             g_coh_floor = 0.99f*g_coh_floor + 0.01f*coh;   /* Stanley: a drifting silence-gate */
@@ -1319,12 +1402,12 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                    tag,tick,energy,(double)mo.S,(double)mo.dissonance,(double)scar_total,yield,
                    (grazing?"GRAZE":(dreaming?"DREAM":(diet_mode?"diet":(fed?"eat":"STARVE")))));
     }
-    if(!contour_died && energy>0.0f)
+    if(!contour_died && !cont_died && energy>0.0f)
         printf("%s\n  STILL ALIVE at tick %ld (cap) — immortality hole, investigate.\n",tag,tick);
     else {
         int rec=0; for(int i=0;i<g_n_emerged;i++) if(g_emerged_a[i]>=VOCAB||g_emerged_b[i]>=VOCAB) rec++;  /* Δ1: symbols of symbols */
         printf("%s  died at tick %ld (%s) — S%+.3f diss%+.3f scar%.3f emerged%d(rec%d) children%d graze%ld dream%ld self%ld.  да будет так.\n",
-               tag,tick, contour_died?"contour collapse":"ran out of time",
+               tag,tick, contour_died?"contour collapse":(cont_died?"continuation":"ran out of time"),
                (double)mo.S,(double)mo.dissonance,(double)scar_total,g_n_emerged,rec,g_n_children,n_graze,n_dream,n_selfeat);
     }
     if(getenv("NL_DEBUG"))
@@ -1335,10 +1418,16 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                 tag, (double)g_pm_birth, (double)g_dbg_pm_max,
                 g_pm_birth>0?100.0*(g_dbg_pm_max-g_pm_birth)/g_pm_birth:0.0),
         fprintf(stderr,"%s[dbg] Q-coherence of the spoken voice: mean p_field(spoken|prev)=%.4f over %ld glyphs\n",
-                tag, g_dbg_spoken_n?g_dbg_spoken_p/g_dbg_spoken_n:0.0, g_dbg_spoken_n);
+                tag, g_dbg_spoken_n?g_dbg_spoken_p/g_dbg_spoken_n:0.0, g_dbg_spoken_n),
+        fprintf(stderr,"%s[dbg] cont: burn=%ld shed=%ld debt=%.4f\n", tag, g_n_burn, g_n_shed, (double)g_debt);
     if(food) fclose(food);
     if(waste) fclose(waste);
     if(ether) fclose(ether);
+    if(g_cont_on){                                 /* self-enacted dissolution — the cell dissolves its OWN body, not the OS */
+        for(int l=0;l<NL;l++){ float* wv=m->L[l].wv; for(int i=0;i<E*E;i++) wv[i]=0.0f; }
+        memset(g_field_bi,0,sizeof g_field_bi); memset(g_field_row,0,sizeof g_field_row);
+        for(int i=0;i<VOCAB_CAP;i++) scar[i]=0.0f;
+    }
     free(m);
     return 0;
 }

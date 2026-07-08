@@ -17,6 +17,7 @@ L=/tmp/al_test.$$
 SOLO_MD5=b5d50234ae8258b136c9ad9a86e8f8bb   # md5 of ./l 42 waste.log — the frozen solo trajectory (all organs on, recursive culture)
 FIELD_MD5=a734e3a2271d1259c21497ad7755a355  # ...with NL_NOEARNED (field-only voice)
 FROZEN_MD5=9a9d68481ff8551fd9e2644c0e54e860 # ...with EVERY new organ off — the pre-living-body trajectory (VOCAB_CAP=154)
+CONT_MD5=a17cfd058a78b6d86f3e57dcd561dc07   # ...with NL_CONT=1 — probabilistic continuation + will (opt-in, a new honest baseline)
 
 PASS=0; FAIL=0
 ok(){ PASS=$((PASS+1)); printf '  \033[32m✓\033[0m %s\n' "$1"; }
@@ -210,6 +211,49 @@ QE=$(NL_DEBUG=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*'
 QF=$(NL_DEBUG=1 NL_NOEARNED=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*' | grep -o '[0-9.]*')
 awk -v e="$QE" -v f="$QF" 'BEGIN{exit !(e>=f*0.8)}' && ok "earned voice keeps Q-coherence (spoken p_field ${QE} vs field-only ${QF} — agrees, not fights)" \
                                                      || no "earned voice degraded Q-coherence ($QE vs $QF)"
+
+# ── 8h. PROBABILISTIC CONTINUATION (NL_CONT, opt-in): death becomes a REGION of a hazard surface,
+#        not a cliff; the organism spends form (WILL) to pay down a forecast of its own collapse.
+#        death AND non-death are both live regions of the ensemble — neither is sovereign. ──
+echo; echo "probabilistic continuation + will (NL_CONT — death is a region, non-death is reachable)"
+# (gate: NL_CONT default-off is already proven above — all three frozen hashes are bit-identical. here: the ON arm.)
+NL_CONT=1 "$L" 42 >/dev/null 2>&1; CA=$(md5of lifeis/waste.log)
+NL_CONT=1 "$L" 42 >/dev/null 2>&1; CB=$(md5of lifeis/waste.log)
+[ "$CA" = "$CB" ] && ok "NL_CONT is reproducible (per-seed determinism preserved — draws use the seeded rng)" \
+                  || no "NL_CONT is NON-deterministic" "$CA vs $CB"
+[ "$CA" = "$CONT_MD5" ] && ok "NL_CONT trajectory matches its frozen baseline ($CONT_MD5)" \
+                        || no "NL_CONT trajectory drifted from its baseline" "got $CA"
+CS=$(NL_CONT=1 "$L" 42 2>&1)
+echo "$CS" | grep -q 'died at tick' && ok "NL_CONT solo still dies (mortality intact)" || no "NL_CONT solo did not die"
+echo "$CS" | grep -q 'immortality hole' && no "NL_CONT hit the immortality cap" || ok "NL_CONT never hit the immortality cap (ENTROPY_FLOOR holds)"
+NL_CONT=1 "$L" chorus 4 7 2>&1 | grep -q 'the colony fell silent' && ok "NL_CONT chorus is mortal (the colony falls silent)" || no "NL_CONT chorus never fell silent"
+# the DOUBLED falsifier as a distribution: some seeds die EARLIER than default, some live LONGER —
+# both regions nonzero, neither sovereign — and none reach the immortality cap.
+cearlier=0; clonger=0; cimm=0
+for s in 1 7 42 99 256 777 2024 5 123 999; do
+  a=$("$L" $s 2>&1 | grep -o 'died at tick [0-9]*'|grep -o '[0-9]*'|head -1)
+  b=$(NL_CONT=1 "$L" $s 2>&1 | grep -o 'died at tick [0-9]*'|grep -o '[0-9]*'|head -1)
+  NL_CONT=1 "$L" $s 2>&1 | grep -q 'STILL ALIVE\|immortality' && cimm=$((cimm+1))
+  [ -n "$a" ] && [ -n "$b" ] && { [ "$b" -lt "$a" ] && cearlier=$((cearlier+1)); [ "$b" -gt "$a" ] && clonger=$((clonger+1)); }
+done
+{ [ "$cearlier" -ge 1 ] && [ "$clonger" -ge 1 ] && [ "$cimm" -eq 0 ]; } \
+  && ok "death AND non-death are both live regions ($cearlier die earlier, $clonger live longer, 0 immortal — neither sovereign)" \
+  || no "the continuation distribution collapsed to one pole" "earlier=$cearlier longer=$clonger imm=$cimm"
+# WILL earns its name: forecast-driven spend out-distributes a BLIND spend of matched magnitude
+# (NL_FIXEDWILL) — the self-model's forecast is load-bearing, not decoration (the NL_FIXEDDAMP discipline).
+cws=0; cfs=0
+for s in 1 7 42 99 256 777 2024 5; do
+  w=$(NL_CONT=1 "$L" $s 2>&1 | grep -o 'died at tick [0-9]*'|grep -o '[0-9]*'|head -1)
+  f=$(NL_CONT=1 NL_FIXEDWILL=0.2 "$L" $s 2>&1 | grep -o 'died at tick [0-9]*'|grep -o '[0-9]*'|head -1)
+  [ -n "$w" ] && cws=$((cws+w)); [ -n "$f" ] && cfs=$((cfs+f))
+done
+[ "$cws" -gt "$cfs" ] && ok "WILL is load-bearing: forecast-driven continuation out-distributes a blind spend ($cws vs $cfs ticks)" \
+                      || no "WILL matches the blind control — the self-model is not load-bearing here ($cws vs $cfs)"
+# generation + Q-coherence are not broken by spending field-certainty in continuation
+CQE=$(NL_DEBUG=1 NL_CONT=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*' | grep -o '[0-9.]*')
+CQD=$(NL_DEBUG=1 "$L" 42 2>&1 >/dev/null | grep -o 'p_field(spoken|prev)=[0-9.]*' | grep -o '[0-9.]*')
+awk -v e="$CQE" -v d="$CQD" 'BEGIN{exit !(e>=d*0.8)}' && ok "NL_CONT keeps Q-coherence (spoken p_field ${CQE} vs default ${CQD} — generation intact)" \
+                                                       || no "NL_CONT degraded Q-coherence ($CQE vs $CQD)"
 
 # ── 9. AddressSanitizer / UBSan (opt-in: the strongest correctness pass) ───────
 if [ "${1:-}" = "--asan" ]; then
