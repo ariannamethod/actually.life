@@ -351,6 +351,8 @@ static int semtok_line(const char* line, int* out, int max_tokens){
 #define CONT_SSOFT      0.85f     /* arousal-door onset: ~0 below here (world-diet S stays ±0.25), rises toward S_DEATH */
 #define CONT_SGAIN      40.0f     /* arousal-door steepness: ~0 until |S|>0.8, ~0.9 at S_DEATH (folds the old cliff in) */
 #define CONT_HFLOOR     0.00001f  /* ENTROPY_FLOOR — collapse always possible (a faint background mortality) */
+#define CONT_AGE        1e-8f     /* senescence: the floor rises with age so death is certain before the 200k cap
+                                   * (closes the floor-vs-cap hole — non-death stays reachable far past the default) */
 #define CONT_HCEIL      0.97f     /* RESONANCE_CEILING (<1) — death never certain on one tick */
 #define CONT_DEBT_DECAY 0.998f    /* prophetic-debt EMA coefficient: debt ≈ recent-average forecast error */
 #define CONT_DEBT_HI    4.0f      /* debt-door threshold — only a RUNAWAY self-model (debt≫normal) destabilizes */
@@ -360,10 +362,11 @@ static int semtok_line(const char* line, int* out, int max_tokens){
 #define CONT_REFUND     0.003f    /* energy per unit |Δform| spent (metabolism, small & bounded — never immortality) */
 
 /* ── ASYNC (NL_ASYNC, opt-in, default off) — the six Kuramoto-coupled chambers as a DETERMINISTIC organ
- * scheduler. the metabolism runs every tick; the REGULATORY organs (self-model, will, sleep, speak) fire
- * on their chamber's phase-cross, so they run on incommensurate clocks and the metric combination feeding
- * the hazard surface becomes aperiodic — the temporal face of the same field. plain seeded floats, no
- * pthreads → per-seed bit-identical. chambers per AML/dario. ── */
+ * scheduler. the metabolism runs every tick; the regulatory organs WILL, SLEEP and SPEAK fire on their
+ * chamber's phase-cross (FEAR/VOID/LOVE), so they run on incommensurate clocks and the metric combination
+ * feeding the hazard surface becomes aperiodic — the temporal face of the same field. the self-model
+ * stays every-tick — gating it starves the voice's coherence (measured). RAGE/FLOW/COMPLEX drift but are
+ * not yet gate-mapped. plain seeded floats, no pthreads → per-seed bit-identical. chambers per AML/dario. ── */
 #define KUR_N       6
 #define KUR_K       0.08f     /* weak coupling — chambers drift in partial coherence, never phase-lock */
 #define KUR_RCEIL   0.90f     /* RESONANCE_CEILING on the order parameter — nudge apart above it (no frozen lock) */
@@ -901,7 +904,7 @@ static float self_update(ProtoSelf* ps, float S0, float D0, float S1, float D1){
 /* ── the continuation hazard surface (NL_CONT). per-channel hazards from differently-shaped
  * metrics combine as a PRODUCT OF SURVIVALS — a surface, never a summed axis — then clamp to
  * [ENTROPY_FLOOR, RESONANCE_CEILING]: collapse always possible, death never certain on a tick. */
-static float cont_hazard(float energy, const Modes* mo, float debt){
+static float cont_hazard(float energy, const Modes* mo, float debt, long tick){
     float sx = CONT_SGAIN*(fabsf(mo->S) - CONT_SSOFT);
     float h[3];
     h[0] = expf(-energy/CONT_ESCALE);                                  /* energy-door — the metabolic terminal */
@@ -914,7 +917,8 @@ static float cont_hazard(float energy, const Modes* mo, float debt){
     for(int k=0;k<3;k++){ float hk=h[k]; if(!isfinite(hk)||hk<0.0f)hk=0.0f; if(hk>0.999f)hk=0.999f; surv *= (1.0f-hk); }
     float hz = 1.0f - surv;                                            /* product-of-survivals — never a summed axis */
     if(!isfinite(hz)) hz = CONT_HCEIL;
-    if(hz < CONT_HFLOOR) hz = CONT_HFLOOR;                             /* ENTROPY_FLOOR */
+    float floor = CONT_HFLOOR + CONT_AGE*(float)tick;                  /* ENTROPY_FLOOR rises with age (senescence): death is */
+    if(hz < floor) hz = floor;                                        /* certain before the 200k cap, non-death still reachable far past default */
     if(hz > CONT_HCEIL)  hz = CONT_HCEIL;                              /* RESONANCE_CEILING */
     return hz;
 }
@@ -1411,9 +1415,9 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         else {                                            /* NL_CONT: |S| becomes one channel of the hazard surface, not a door */
             g_debt = CONT_DEBT_DECAY*g_debt + (1.0f-CONT_DEBT_DECAY)*g_self_felt;/* prophetic-debt EMA of the forecast error */
             float cig = (birth_norm>0.0f)? wv_norm(m)/birth_norm : 1.0f; if(cig>1.0f)cig=1.0f;
-            float hz0 = cont_hazard(energy,&mo,g_debt);
+            float hz0 = cont_hazard(energy,&mo,g_debt,tick);
             if(cfired & (1u<<CH_FEAR)) energy += cont_will(m,scar,&scar_total,energy,cig,hz0);  /* WILL fires on its own clock (FEAR); the death-draw stays every tick */
-            float hz = cont_hazard(energy,&mo,g_debt);
+            float hz = cont_hazard(energy,&mo,g_debt,tick);
             if((frand()+1.0f)*0.5f < hz){ cont_died=1; if(fabsf(mo.S)>=S_DEATH) contour_died=1; break; }  /* the atom-binary: the tape continues, or not */
         }
         if(recent_n>0){                                   /* the field's confidence about what follows */
@@ -1441,7 +1445,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     else {
         int rec=0; for(int i=0;i<g_n_emerged;i++) if(g_emerged_a[i]>=VOCAB||g_emerged_b[i]>=VOCAB) rec++;  /* Δ1: symbols of symbols */
         printf("%s  died at tick %ld (%s) — S%+.3f diss%+.3f scar%.3f emerged%d(rec%d) children%d graze%ld dream%ld self%ld.  да будет так.\n",
-               tag,tick, contour_died?"contour collapse":(cont_died?"continuation":"ran out of time"),
+               tag,tick, cont_died?"continuation":(contour_died?"contour collapse":"ran out of time"),
                (double)mo.S,(double)mo.dissonance,(double)scar_total,g_n_emerged,rec,g_n_children,n_graze,n_dream,n_selfeat);
     }
     if(getenv("NL_DEBUG"))
@@ -1453,7 +1457,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                 g_pm_birth>0?100.0*(g_dbg_pm_max-g_pm_birth)/g_pm_birth:0.0),
         fprintf(stderr,"%s[dbg] Q-coherence of the spoken voice: mean p_field(spoken|prev)=%.4f over %ld glyphs\n",
                 tag, g_dbg_spoken_n?g_dbg_spoken_p/g_dbg_spoken_n:0.0, g_dbg_spoken_n),
-        fprintf(stderr,"%s[dbg] cont: burn=%ld shed=%ld debt=%.4f\n", tag, g_n_burn, g_n_shed, (double)g_debt);
+        (g_cont_on ? fprintf(stderr,"%s[dbg] cont: burn=%ld shed=%ld debt=%.4f\n", tag, g_n_burn, g_n_shed, (double)g_debt) : 0);
     if(food) fclose(food);
     if(waste) fclose(waste);
     if(ether) fclose(ether);
