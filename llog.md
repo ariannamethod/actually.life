@@ -631,6 +631,33 @@ from the shell (`NL_NOACT`, `NL_ED`, `NL_FIXEDDAMP`, `NL_NOSELF` — all gate-in
 Only these four routes are exhausted, not the idea — the thermostat that cannot be out-thought is still the
 one that lives.
 
+## THE l2.c ARC — subjectivity is relational, so build the friction (in flight)
+
+The will-design verdict is not a dead end but a *proof*: a lone organism is a superbly-regulated thermostat
+because it has no one to be a subject for or against. Subjectivity needs friction with an outside — another
+agent, and a contested world. So the project grows a second organism.
+
+**`l2.c` — a second self-contained file, asymmetric by design (Stage 0, done).** `l2.c` is a near-copy of
+`l.c` tuned to a different temperament (`CHOOSE_TEMP0` 0.85 vs 0.7 — hotter, more impulsive) — not a symmetric
+twin but a genuinely other creature: it lives a different life (seed 200: `l.c` dies at 4204, `l2.c` at 1015).
+It builds standalone (`cc -O2 -o l2 l2.c -lm`), lives and dies solo, and does not touch `l.c` (which stays
+bit-identical `a17cfd05`). Two self-contained files, no shared library — minimalism per organism.
+
+**The arena (next).** `lifeis/` becomes a contested pool: any `.txt` dropped in is indexed into claimable
+chunks; both organisms forage the pool; a chunk absorbed is *claimed* (rival-exclusion), and claims *expire*
+so territory must be re-won — the friction never settles into a stable partition. The coupling lives behind a
+toggle in each file, so each organism run SOLO stays bit-identical. Then mutual audibility through the ether
+(as in the chorus), and the load-bearing test on the new axis: an organism that models the *rival's* next
+claim and pre-empts it must beat a rival-reactor and a generic always-contest heuristic — subjectivity as a
+theory of the OTHER, where the theory of self was not load-bearing. A later phase adds predation (a hungry
+organism raiding the other's internals). The determinism discipline shifts from a frozen hash to reproducible
+ensemble statistics, since two processes on a shared filesystem interleave — the same trade the chorus already
+makes.
+
+Lineage read for this arc: dario's KK (bi-directional resonance memory, sentence-boundary injection — absorb
+and reformulate, not paste) is the *how* text is contested; caveLLMan (colony + weight-blend reproduction +
+pressure-death of the weakest) is the competitive engine `l.c` had simplified away, now made direct.
+
 ## Resume-here (for future-me after a summary)
 
 Working copy: `~/arianna/actually.life`. **Everything is committed AND pushed** to
