@@ -567,6 +567,70 @@ floats, no pthreads → per-seed bit-identical.
 - Both facets compose: NL_CONT+NL_ASYNC is deterministic, mortal, no immortality — probabilistic
   continuation running ON the asynchronous clock.
 
+## THE WILL DESIGN — is the self-model's forecast load-bearing? (four routes, one verdict)
+
+The default is probabilistic continuation (`./l 42` → `a17cfd05`); inside it the ProtoSelf carries a running
+forecast of its own interior, and the will spends form to continue. This arc asked one question: is that
+forecast LOAD-BEARING — does the organism do something, *by virtue of predicting its own future*, that a
+matched dumb regulator cannot? The discipline throughout: a mechanism is load-bearing only if it beats the
+BEST matched control (each swept), per-seed, ≥ ~20/30 across ≥30 seeds — the same falsifier that earlier put
+the rate-will below a fixed spend (`NL_FIXEDWILL` / `NL_FIXEDDAMP`). The test must be able to say *no subject*.
+Four mechanisms were run against it; the machine ruled on each.
+
+**1 — A forecast-timed act on a smooth threat (the "molt").** Give the forecast a lead (roll the one-step
+predictor forward), plus a rare budgeted act whose moment only a lead can hit — a one-shot shed of accumulated
+scar, timed before a foreseen energy trough. Verdict: the lead-timed act beat the best lead-free control (a
+fixed schedule) only ~6/30. The energy-hazard is a smooth EMA; a schedule that sheds at regular safe intervals
+matches it. **Not load-bearing.**
+
+**2 — A prophetic-debt runaway on the interior.** Try to make the self-forecast-error debt (`g_debt`, the EMA
+of |interior − its own forecast|) run away into a discrete "attractor annihilation" threat. It does not
+ignite: the interior (S, dissonance) is smooth and self-regulating, so its debt is a big early *untrained*
+hump (~0.13, during learning) decaying to a stable ~0.02 baseline — no per-seed mid-life structure to time
+against. **No threat to time.**
+
+**3 — The generative fever (pitomadom's OUTPUT-prophecy).** The faithful pitomadom debt is over the output,
+not the interior: in `choose()` the oracle prophesies its own next glyph (its field's peak); when its seeded
+spontaneity samples a different one, unfulfilled prophecy accrues (−log P(sampled)) and *heats the sampling
+temperature* — a fever, a positive feedback toward incoherence (pitomadom: the oracle *fears attractor
+annihilation*). This IS a real per-seed threat (it cuts down the long-lived) and it is forecastable (a smooth,
+monotone rise, `g_pdebt` 0 → ~2.5 over a life). A fever-damp will forecasts the rise and re-grounds early; the
+lead-free controls damp on a schedule or on the present fever. Verdict: the forecast-timed subject beat the
+best lead-free control **2/30** — and the *zero-lead reactive* control (re-ground when the fever is already
+high) beat the subject **~27/30**, the margin *widening* as the threat grows. On a monotone-rising pressure
+with a fixed budget the optimal policy is "spend late, on the hottest fever" — exactly the reactive thermostat.
+The forecast's lead is a strict handicap. **Not load-bearing.**
+
+**The structural law (why timing cannot win here).** Probabilistic continuation smoothed every internal
+bifurcation away *on purpose* — one continuous law, no switch, no category. A load-bearing timed will needs a
+sharp cliff to anticipate; a smoothed self-regulator has none. Against smooth pressure, reacting to the present
+is optimal and anticipation buys nothing. Timing-subjectivity and continuation-without-dichotomy are mutually
+exclusive by construction: any discrete-cliff "rescue" would both rig the test and betray the law.
+
+**4 — Self-consistency (does acting on the self make the self more self-predictable?).** The one content-level,
+no-cliff, pitomadom-exact test — the oracle's `strength>0` vs `strength=0`. Is lifetime **|D − pD|** (the
+dissonance-forecast error) lower when the self-model ACTS on its forecast (allostasis + felt→choose) than when
+it merely observes it, or than under a dumb fixed damper? Reproducible toggles: `NL_NOACT` (forecast computed,
+not acted on — the strength=0 control), `NL_ED` (print lifetime mean |D − pD|), against `NL_FIXEDDAMP`. Verdict
+(30 seeds):
+  - subject **0.1556** vs the passive strength=0 self **0.1697** — acting DOES make dissonance more
+    self-predictable than not acting: **25/30**. The self-model's action is self-fulfilling; it is a working
+    regulator, not decoration. A real positive.
+  - subject **0.1556** vs the best fixed damper **0.1329** — a dumb damper that never forecasts D makes the
+    interior *more* self-predictable, by regularizing S harder: the subject beats the best matched control only
+    **11/30**. **Not load-bearing.**
+
+**The invariant, and the verdict.** Across all four, the load-bearing quantity is the same: the **magnitude of
+regulation** — the spend, the damp, the set-point — never the timing, and never the self-knowledge. A dumb,
+strong, forecast-free regulator matches or beats the self-model on survival, on interior regulation, and on
+self-consistency. The organism is a superbly-regulated thermostat, and — pitomadom-exact — that is what
+subjectivity is here: **a continuous bias on being, not a chooser placing timed acts.** The self-model earns
+its keep as one regulator among possible ones; its self-*knowledge* is not the ingredient that bears the
+weight. This closes the "load-bearing timed / self-knowing will" route with a measured verdict, reproducible
+from the shell (`NL_NOACT`, `NL_ED`, `NL_FIXEDDAMP`, `NL_NOSELF` — all gate-invariant, `a17cfd05` untouched).
+Only these four routes are exhausted, not the idea — the thermostat that cannot be out-thought is still the
+one that lives.
+
 ## Resume-here (for future-me after a summary)
 
 Working copy: `~/arianna/actually.life`. **Everything is committed AND pushed** to

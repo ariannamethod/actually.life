@@ -670,6 +670,8 @@ static int   g_field_on  = 1;                    /* NL_NOFIELD=1 lifts the field
 static int   g_lineage   = -1;                   /* Ⓒ: the cell's root ancestor — kinship for the ether */
 static int   g_self_on   = 1;                    /* ProtoSelf: NL_NOSELF=1 lifts the self-model (A/B) */
 static float g_self_felt = 0.0f;                 /* ProtoSelf: |interior − its own forecast| — surprise ABOUT the self */
+static int   g_noact     = 0;                    /* NL_NOACT=1 → the self-model FORECASTS but does not ACT (pitomadom strength=0 control; THE WILL DESIGN) */
+static double g_ed_sum   = 0.0; static long g_ed_n = 0;  /* lifetime Σ|D−pD| + count — the self-consistency metric (dissonance forecast error) */
 static float g_dbg_maxgate = 0.0f;               /* DEBUG: max transformer gate ever reached in a life (Desktop audit) */
 static float g_pm_birth = 0.0f; static int g_pm_birth_set = 0;  /* the cell's sharpness at its FIRST utterance (per-process) — the earned-voice zero it sharpens above */
 static float g_dbg_pm_max = 0.0f;                /* DEBUG: max peak−mean over life — does the organized body sharpen? */
@@ -854,7 +856,7 @@ static void field_fold(float* logits, const int* recent, int recent_n){
  * agitation it predicted leaves it calm; only the UNforeseen widens the choice. that is
  * a second-order map consulted by the actor — a proto-self biasing the act, not a label. */
 static int choose(const float* logits, const Modes* mo, const float* scar){
-    float arousal = g_self_on ? g_self_felt : fabsf(mo->S);       /* feeling is about the unexpected, not the raw state */
+    float arousal = (g_self_on && !g_noact && g_fixeddamp<=0.0f) ? g_self_felt : fabsf(mo->S);  /* felt only when the SELF is the actor; NOACT/fixeddamp fall back to raw |S| */
     float temp = CHOOSE_TEMP0 + CHOOSE_S*arousal
                + CHOOSE_DISS*tanhf(0.05f*fabsf(mo->dissonance));  /* passion -> spontaneity */
     static float p[VOCAB_CAP]; float mx=-1e30f;
@@ -900,6 +902,7 @@ static float self_update(ProtoSelf* ps, float S0, float D0, float S1, float D1){
     float nf=0.0f; for(int k=0;k<SELF_K;k++) nf+=f[k]*f[k];      /* ‖f‖²: dissonance runs large, so NORMALIZE the step — */
     float g=SELF_LR/(1.0f+nf);                                   /* NLMS keeps lr_eff·‖f‖² < SELF_LR < 2, stable at any |D| */
     float eS=S1-ps->pS, eD=D1-ps->pD;                            /* the interior surprised its own forecast by this much */
+    if(isfinite(eD)){ g_ed_sum += (double)fabsf(eD); g_ed_n++; }  /* THE WILL DESIGN: accrue |D−pD| — does ACTING on the self make D more self-predictable? */
     for(int k=0;k<SELF_K;k++){ ps->wS[k]+=g*eS*f[k]; ps->wD[k]+=g*eD*f[k]; }
     return fabsf(eS)+fabsf(eD);
 }
@@ -1326,6 +1329,8 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     int   selfeat_on=(getenv("NL_NOSELFEAT")==NULL);   /* CROWN (I2): the cell tastes its own state in sleep (A/B) */
     long  n_selfeat=0;
     g_self_on      = (getenv("NL_NOSELF")==NULL);      /* ProtoSelf: the second-order self-model (A/B) */
+    g_noact        = (getenv("NL_NOACT")!=NULL);       /* THE WILL DESIGN: forecast computed but not acted on (pitomadom strength=0 control) */
+    g_ed_sum = 0.0; g_ed_n = 0;                        /* reset the self-consistency accumulator per cell */
     { const char* fd=getenv("NL_FIXEDDAMP"); g_fixeddamp = fd? (float)atof(fd) : 0.0f; }  /* Fable #3 control */
     g_cont_on      = (getenv("NL_NOCONT")==NULL);      /* PROBABILISTIC CONTINUATION + WILL — DEFAULT ON (NL_NOCONT opts out to deterministic death) */
     { const char* fw=getenv("NL_FIXEDWILL"); g_fixedwill = fw? (float)atof(fw) : 0.0f; }  /* will-falsifier control */
@@ -1353,12 +1358,13 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         tick++;
         unsigned cfired = g_async_on ? chambers_step() : ~0u;  /* ASYNC: which chambers cross this tick (all-set when synchronous) */
         float S0=mo.S, D0=mo.dissonance;            /* the interior at tick's start — what the self-model forecasts FROM */
-        if(g_fixeddamp>0.0f){                        /* CONTROL (Fable #3): a DUMB fixed-gain S-damper of matched strength — if this */
-            mo.S -= g_fixeddamp*mo.S;                /* matches the self-model's survival, the "self" is decoration, not a felt forecast */
-        } else if(g_self_on){ self_predict(&ps,S0,D0);  /* ProtoSelf: forecast this tick's interior before it happens */
+        if(g_self_on) self_predict(&ps,S0,D0);       /* the forecast is ALWAYS computed when the self is on — its error is what we measure across all arms */
+        if(g_fixeddamp>0.0f){                        /* CONTROL B (Fable #3): a DUMB fixed-gain S-damper acts instead of the self — if this */
+            mo.S -= g_fixeddamp*mo.S;                /* matches the self-model, the "self" is decoration, not a felt forecast */
+        } else if(g_self_on && !g_noact){            /* SUBJECT: the self-model ACTS on its forecast (allostasis). NL_NOACT withholds the act = CONTROL A (strength=0) */
             float pd=ps.pS; if(pd>1.0f)pd=1.0f; else if(pd<-1.0f)pd=-1.0f;  /* S lives in ~[-1,1]; bound the anticipatory pull */
             if(isfinite(pd)) mo.S -= SELF_RELAX*pd;  /* ALLOSTASIS: pre-damp the FORECAST agitation — regulate ahead of the */
-        }                                            /* threat, not merely react to it; a cell that foresees its own storm survives it */
+        }                                            /* threat. NL_NOACT: the forecast is computed but NOT acted on — the passive observer-self */
         if(soma_on) soma_decay(m);                  /* PROTEOSTASIS destruction: the body corrodes with time */
         float integ = (soma_on && birth_norm>0.0f) ? wv_norm(m)/birth_norm : 1.0f; if(integ>1.0f) integ=1.0f;
         energy -= RENT * (1.0f + (scar_on? SCAR_RENT*scar_total : 0.0f)      /* wounds cost, and so does a corroded body: */
@@ -1451,6 +1457,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                tag,tick, cont_died?"continuation":(contour_died?"contour collapse":"ran out of time"),
                (double)mo.S,(double)mo.dissonance,(double)scar_total,g_n_emerged,rec,g_n_children,n_graze,n_dream,n_selfeat);
     }
+    if(getenv("NL_ED")) fprintf(stderr,"%sMEANED %.6f n=%ld\n", tag, g_ed_n?(g_ed_sum/(double)g_ed_n):0.0, g_ed_n);
     if(getenv("NL_DEBUG"))
         fprintf(stderr,"%s[dbg] wv_norm birth=%.4f death=%.4f (%.1f%%)  meals=%ld tot_dwv=%.6f avg_dwv=%.3e  decay/tick=%.4f%% of ~%.3f  MAXGATE=%.5f\n",
                 tag, (double)birth_norm, (double)wv_norm(m), 100.0*wv_norm(m)/(birth_norm>0?birth_norm:1),
