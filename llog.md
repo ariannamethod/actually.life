@@ -643,16 +643,23 @@ twin but a genuinely other creature: it lives a different life (seed 200: `l.c` 
 It builds standalone (`cc -O2 -o l2 l2.c -lm`), lives and dies solo, and does not touch `l.c` (which stays
 bit-identical `a17cfd05`). Two self-contained files, no shared library — minimalism per organism.
 
-**The arena (next).** `lifeis/` becomes a contested pool: any `.txt` dropped in is indexed into claimable
-chunks; both organisms forage the pool; a chunk absorbed is *claimed* (rival-exclusion), and claims *expire*
-so territory must be re-won — the friction never settles into a stable partition. The coupling lives behind a
-toggle in each file, so each organism run SOLO stays bit-identical. Then mutual audibility through the ether
-(as in the chorus), and the load-bearing test on the new axis: an organism that models the *rival's* next
-claim and pre-empts it must beat a rival-reactor and a generic always-contest heuristic — subjectivity as a
-theory of the OTHER, where the theory of self was not load-bearing. A later phase adds predation (a hungry
-organism raiding the other's internals). The determinism discipline shifts from a frozen hash to reproducible
-ensemble statistics, since two processes on a shared filesystem interleave — the same trade the chorus already
-makes.
+**The arena — Stage 1a, live.** `NL_ARENA` turns `lifeis/` into a contested pool: the corpus lines are the
+claimable chunks; foraging takes the lowest UNCLAIMED chunk and stakes a claim in a shared ledger
+(`lifeis/arena/claims`), so the rival is excluded from it (filesystem-mediated, like the ether); when the whole
+territory is claimed the loser starves. Solo (no rival) it is deterministic and, run without the toggle, the
+organism eats the corpus line-by-line exactly as before (`a17cfd05` — gate-invariant). Two asymmetric organisms
+(`l` temp 0.7, `l2` temp 0.85) foraging the same pool compete for real: solo-arena `l` lives 4069, `l2` 4992;
+in competition `l2` is often starved early (2071, 2053 across matches vs its solo 4992) as `l` out-forages it —
+the friction a lone thermostat never had, per-match-varying (the ensemble non-determinism of two processes on a
+shared filesystem, the same trade the chorus already makes). Known softness, deferred to Stage 1b: claims are
+append-only without a lock, so a race can double-claim a chunk (total claims can exceed the pool); and there is
+no expiry yet — an atomic/locked claim and expiring claims (so territory is re-won and the two never settle into
+a stable partition — the anti-settling that keeps the friction alive) are the next increment.
+
+**Then (Stage 2+).** Mutual audibility through the ether (as in the chorus); the load-bearing test on the new
+axis — an organism that models the *rival's* next claim and pre-empts it must beat a rival-reactor and a generic
+always-contest heuristic (subjectivity as a theory of the OTHER, where the theory of self was not load-bearing);
+and a later phase adds predation (a hungry organism raiding the other's internals).
 
 Lineage read for this arc: dario's KK (bi-directional resonance memory, sentence-boundary injection — absorb
 and reformulate, not paste) is the *how* text is contested; caveLLMan (colony + weight-blend reproduction +

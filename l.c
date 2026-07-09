@@ -1274,6 +1274,45 @@ static float dream_once(Model* m, Modes* mo, float* scar, int* recent, int* rece
     return dy * DREAM_FRAC * expf(-(float)streak/DREAM_DECAY);
 }
 
+/* ── THE ARENA (NL_ARENA, opt-in) — lifeis/ becomes a CONTESTED pool. the chunks are the corpus lines; a chunk
+ * absorbed is CLAIMED in a shared ledger, excluding it from the rival (rival-exclusion, filesystem-mediated like
+ * the ether). when the whole territory is claimed the loser starves. two organisms (l.c and l2.c) foraging the
+ * same pool compete for text — the friction a lone thermostat never had, so subjectivity can live BETWEEN them.
+ * gate-invariant: NL_ARENA off → the organism eats the corpus line-by-line as always (a17cfd05). ── */
+static int    g_arena_on = 0;
+static char** g_pool = NULL;                  /* the contested chunks (corpus lines), indexed once per process */
+static int    g_pool_n = 0;
+static void arena_index(const char* path){    /* read the pool once */
+    FILE* f = path? fopen(path,"r") : NULL; if(!f) return;
+    int cap=64; g_pool=(char**)malloc((size_t)cap*sizeof(char*)); g_pool_n=0;
+    char buf[4096];
+    while(fgets(buf,sizeof buf,f)){
+        int L=(int)strlen(buf); while(L>0 && (buf[L-1]=='\n'||buf[L-1]=='\r')) buf[--L]=0;
+        if(L==0) continue;
+        if(g_pool_n>=cap){ cap*=2; g_pool=(char**)realloc(g_pool,(size_t)cap*sizeof(char*)); }
+        g_pool[g_pool_n++]=strdup(buf);
+    }
+    fclose(f);
+    mkdir("lifeis", 0755); mkdir("lifeis/arena", 0755);
+}
+static void arena_mark(unsigned char* claimed){   /* mark every claimed chunk from the shared ledger */
+    FILE* f=fopen("lifeis/arena/claims","r"); if(!f) return;
+    int id; while(fscanf(f,"%d",&id)==1) if(id>=0 && id<g_pool_n) claimed[id]=1;
+    fclose(f);
+}
+static int arena_next(char* out, int cap){        /* claim + return the lowest UNCLAIMED chunk; 0 when the ground is taken */
+    if(g_pool_n<=0 || !out || cap<=0) return 0;
+    unsigned char* claimed=(unsigned char*)calloc((size_t)g_pool_n,1); if(!claimed) return 0;
+    arena_mark(claimed);
+    int id=-1; for(int i=0;i<g_pool_n;i++) if(!claimed[i]){ id=i; break; }
+    free(claimed);
+    if(id<0) return 0;                             /* all claimed — starve; the rival holds the territory */
+    FILE* c=fopen("lifeis/arena/claims","a"); if(c){ fprintf(c,"%d\n",id); fclose(c); }  /* stake the claim */
+    int L=(int)strlen(g_pool[id]); if(L>=cap) L=cap-1;
+    memcpy(out,g_pool[id],(size_t)L); out[L]=0;
+    return L;
+}
+
 /* ── live — one organism, birth to death ─────────────────────────────────────
  * the single-cell life, extracted so a chorus can fork many of them. corpus is
  * its food, waste its voice, seed its body AND its dice, label>=0 tags its prints
@@ -1331,6 +1370,8 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_self_on      = (getenv("NL_NOSELF")==NULL);      /* ProtoSelf: the second-order self-model (A/B) */
     g_noact        = (getenv("NL_NOACT")!=NULL);       /* THE WILL DESIGN: forecast computed but not acted on (pitomadom strength=0 control) */
     g_ed_sum = 0.0; g_ed_n = 0;                        /* reset the self-consistency accumulator per cell */
+    g_arena_on     = (getenv("NL_ARENA")!=NULL);       /* THE ARENA: forage a CONTESTED pool instead of the corpus (opt-in; gate-invariant off) */
+    if(g_arena_on && !g_pool) arena_index(corpus);
     { const char* fd=getenv("NL_FIXEDDAMP"); g_fixeddamp = fd? (float)atof(fd) : 0.0f; }  /* Fable #3 control */
     g_cont_on      = (getenv("NL_NOCONT")==NULL);      /* PROBABILISTIC CONTINUATION + WILL — DEFAULT ON (NL_NOCONT opts out to deterministic death) */
     { const char* fw=getenv("NL_FIXEDWILL"); g_fixedwill = fw? (float)atof(fw) : 0.0f; }  /* will-falsifier control */
@@ -1396,7 +1437,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
             /* cannot live on fresh dream bursts forever, the "decay until death unless fed" guard is restored */
         } else if(diet_mode){
             yield=ingest(m,&mo,scar,diet_glyphs,diet_n,recent,&recent_n,&dream_streak); meal=diet_glyphs; meal_n=diet_n;
-        } else if(fed && fgets(line,sizeof(line),food)){   /* fed==1 implies food!=NULL (invariant) */
+        } else if(fed && (g_arena_on ? (arena_next(line,(int)sizeof line)>0) : (fgets(line,sizeof(line),food)!=NULL))){   /* ARENA: forage the contested pool; else the corpus line-by-line (fed==1 implies food!=NULL) */
             int n=semtok_line(line,glyphs,CTX);
             if(n>=1){ yield=ingest(m,&mo,scar,glyphs,n,recent,&recent_n,&dream_streak); meal=glyphs; meal_n=n; }
         } else {                                 /* corpus exhausted -> eat the chorus, then dream */

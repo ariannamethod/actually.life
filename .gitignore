@@ -1,5 +1,6 @@
 # the organism's droppings — runtime, not genome
 l
+l2
 *.o
 a.out
 lifeis/waste*.log
@@ -7,6 +8,7 @@ lifeis/slice_*.txt
 lifeis/ether.txt
 lifeis/births.txt
 lifeis/children/
+lifeis/arena/
 # kept: lifeis/world.txt (the food)
 
 # ASan/UBSan debug symbol bundles
