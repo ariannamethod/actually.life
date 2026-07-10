@@ -705,12 +705,26 @@ the rival does not move smoothly; it JUMPS by hunger/state (fed → own front, h
 velocity forecast misses while always-raid simply keeps denying food. Gate-invariant (`NL_MIND` off, `NL_ARENA`
 off → `a17cfd05`). This is theory-of-self's verdict in a new setting: a fixed strategy beats the model, once more.
 
-**Then (Stage 3c).** The blood-spore — thicken the trail. The mind failed because it reads a bare coordinate;
-if each organism DROPPED a spore of its STATE as it foraged (its hunger, scars, mood — a trace that dries like
-blood, cf. caveLLMan's DNA pool expiring), the rival could read the OTHER's interior, not just its position, and
-forecast WHEN it will raid (the hunger-driven target-switch) rather than a straight-line velocity. The same
-falsifier decides whether a state-reading mind clears the bar the movement-mind could not. A later phase adds
-predation (a hungry organism raiding — or absorbing the spore of — the other's internals).
+**The arena — Stage 3c, the blood-spore + the state-reading mind (a nearer miss).** Every claim now drops a
+blood-spore — `id, time, owner, and the HUNGER the organism foraged in` — a trace that dries with the same
+expiry (cf. caveLLMan's DNA pool). So the mind reads the rival's INTERIOR, not just its coordinate: with
+`NL_MIND` it goes for the rival's plate only when the two states are ASYMMETRIC (I'm hungry and it is fed — raid
+a calm forager; or I'm fed and it is hungry — it is leaving to come at me, so I take its abandoned ground), and
+stays home when the states match. Falsifier (same organism, 30 seeds): the state-mind beats the reactor 16/30,
+always-raid **17/30** (up from the movement-mind's 13/30 — reading the interior does help), own-front 18/30. But
+the best control is still beaten only 16/30, short of the 20/30 bar: a nearer miss, still not load-bearing. The
+pattern now holds three times — theory of SELF (a fixed damper wins), theory of the OTHER by movement (always-raid
+wins), theory of the OTHER by state (a coin flip): a model, of self or other, does not beat a constant. The
+reason is the STAKES: foraging or raiding badly costs a single forage, so a dumb rule is cheap and the model
+never earns its keep. Gate-invariant (`a17cfd05`, suite 48/48).
+
+**Then — killing (the high-stakes act, where a dumb rule is catastrophic, not cheap).** The remaining shot at a
+load-bearing model: an organism may kill the other to seize its resources, but a kill is a probabilistic draw
+(wanting is a pressure, not a certainty), and the corpse's carapace DRAGS THE KILLER DOWN — it must revive the
+corpse (birth a new organism from the victim's genome-spore) or die of the weight. So "always kill" sinks under
+accumulated corpses; the kill DECISION — read the rival's spore, kill only when it is weak and you can bear the
+burden — is where reading the OTHER might finally beat a constant, because here being dumb is fatal. This subsumes
+the predation idea and couples death to life: to take a life obligates you to give one back.
 
 Lineage read for this arc: dario's KK (bi-directional resonance memory, sentence-boundary injection — absorb
 and reformulate, not paste) is the *how* text is contested; caveLLMan (colony + weight-blend reproduction +

@@ -1335,28 +1335,32 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
     int fd=fileno(c); flock(fd, LOCK_EX);                     /* atomic: two organisms never claim the same ground at once */
     time_t now=time(NULL);
     unsigned char* claimed=(unsigned char*)calloc((size_t)g_pool_n,1);
-    int rival_last=-1; long rival_ts=-1;
-    if(claimed){ rewind(c); int id, own; long ts;
-        while(fscanf(c,"%d %ld %d",&id,&ts,&own)==3)
+    int rival_last=-1; long rival_ts=-1; float rival_h=0.0f;
+    if(claimed){ rewind(c); int id, own; long ts; float h;
+        while(fscanf(c,"%d %ld %d %f",&id,&ts,&own,&h)==4)
             if(id>=0 && id<g_pool_n && (long)(now-(time_t)ts) < ARENA_EXPIRE){
                 claimed[id]=1;
-                if(own!=g_arena_id && ts>=rival_ts){ rival_ts=ts; rival_last=id; }   /* the rival's most RECENT claim — where it eats now (its plate) */
+                if(own!=g_arena_id && ts>=rival_ts){ rival_ts=ts; rival_last=id; rival_h=h; }   /* the rival's freshest blood-spore: where it eats now AND the HUNGER it ate in */
             }
     }
     int mp = (*my_pos>=0 && *my_pos<g_pool_n)? *my_pos : 0;
     float hunger = arena_hunger(energy, dabs);
-    int rtarget = rival_last;
-    if(g_mind_on && rival_last>=0 && g_rival_prev>=0){          /* THEORY OF THE OTHER: extrapolate the rival's velocity — aim where it is HEADING, not where it was */
-        int vel = rival_last - g_rival_prev;
-        rtarget = rival_last + vel*MIND_LEAD;
-        if(rtarget<0) rtarget=0; if(rtarget>=g_pool_n) rtarget=g_pool_n-1;
+    (void)g_rival_prev;
+    int target;
+    if(g_mind_on && rival_last>=0){
+        /* STATE-READING mind (Stage 3c): read the rival's HUNGER from the blood-spore, not just its position. go for
+         * its plate when the states are ASYMMETRIC — I'm hungry and it is fed (raid a calm forager), or I'm fed and
+         * it is hungry (it is leaving to come at me → I take its abandoned ground). when the states MATCH, stay home:
+         * two hungry cells raiding each other is chaos, two fed cells forage in peace. this needs the OTHER's interior. */
+        int i_hungry = hunger > g_raid_th, r_hungry = rival_h > g_raid_th;
+        target = (i_hungry != r_hungry) ? rival_last : mp;
+    } else {
+        target = (rival_last>=0 && hunger > g_raid_th) ? rival_last : mp;  /* the reactor / base: raid when hungry, else own front */
     }
-    if(rival_last>=0) g_rival_prev = rival_last;                /* remember the rival's position for the next velocity estimate */
-    int target = (rival_last>=0 && hunger > g_raid_th) ? rtarget : mp;  /* hungry → the rival's plate (its PREDICTED spot when the mind is on); fed → my own front */
     int pick=-1, bestd=1<<30;
     if(claimed) for(int i=0;i<g_pool_n;i++){ if(claimed[i]) continue; int d=i-target; if(d<0)d=-d; if(d<bestd){ bestd=d; pick=i; } }  /* the nearest UNCLAIMED chunk to the target */
     if(claimed) free(claimed);
-    if(pick>=0){ fseek(c,0,SEEK_END); fprintf(c,"%d %ld %d\n",pick,(long)now,g_arena_id); fflush(c); }  /* stake: id, time, OWNER (the rival can now see whose claim it is) */
+    if(pick>=0){ fseek(c,0,SEEK_END); fprintf(c,"%d %ld %d %.4f\n",pick,(long)now,g_arena_id,(double)hunger); fflush(c); }  /* drop the blood-spore: WHERE, WHEN, WHO, and the HUNGER it foraged in */
     flock(fd, LOCK_UN); fclose(c);
     if(pick<0) return 0;                          /* every chunk is held and unexpired — starve until the ground frees */
     *my_pos = pick;
