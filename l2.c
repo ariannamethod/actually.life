@@ -14,6 +14,9 @@
 #include <sys/stat.h>
 #include <unistd.h>      /* fork — the chorus is a colony of processes */
 #include <sys/wait.h>
+#include <time.h>        /* the arena's shared clock — claims expire so territory is re-won */
+#include <dirent.h>      /* the arena indexes ANY .txt in lifeis/ — a dropped file is instantly in the fight */
+#include <sys/file.h>    /* flock — an atomic claim, so two organisms never double-claim the same ground */
 /* ── semantic membrane (inlined) — English → 88 cave-glyphs ──────────────
  * one source of truth for eat / train / speak. word -> concept compression,
  * BE = super-glyph copula. function words die at the door. (from caveLLMan.) */
@@ -1280,36 +1283,53 @@ static float dream_once(Model* m, Modes* mo, float* scar, int* recent, int* rece
  * same pool compete for text — the friction a lone thermostat never had, so subjectivity can live BETWEEN them.
  * gate-invariant: NL_ARENA off → the organism eats the corpus line-by-line as always (a17cfd05). ── */
 static int    g_arena_on = 0;
-static char** g_pool = NULL;                  /* the contested chunks (corpus lines), indexed once per process */
-static int    g_pool_n = 0;
-static void arena_index(const char* path){    /* read the pool once */
-    FILE* f = path? fopen(path,"r") : NULL; if(!f) return;
-    int cap=64; g_pool=(char**)malloc((size_t)cap*sizeof(char*)); g_pool_n=0;
+static char** g_pool = NULL;                  /* the contested chunks (lines of EVERY .txt in lifeis/), indexed once per process */
+static int    g_pool_n = 0, g_pool_cap = 0;
+#define ARENA_EXPIRE 20L                      /* seconds a claim holds a chunk; then it is re-contestable — territory is RE-WON, so the two never settle into a stable partition (anti-settling: the friction stays alive) */
+static int  arena_namecmp(const void* a, const void* b){ return strcmp(*(const char* const*)a, *(const char* const*)b); }
+static void arena_addfile(const char* path){  /* index every non-empty line of one file into the pool */
+    FILE* f=fopen(path,"r"); if(!f) return;
     char buf[4096];
     while(fgets(buf,sizeof buf,f)){
         int L=(int)strlen(buf); while(L>0 && (buf[L-1]=='\n'||buf[L-1]=='\r')) buf[--L]=0;
         if(L==0) continue;
-        if(g_pool_n>=cap){ cap*=2; g_pool=(char**)realloc(g_pool,(size_t)cap*sizeof(char*)); }
+        if(g_pool_n>=g_pool_cap){ g_pool_cap = g_pool_cap? g_pool_cap*2 : 64; g_pool=(char**)realloc(g_pool,(size_t)g_pool_cap*sizeof(char*)); }
         g_pool[g_pool_n++]=strdup(buf);
     }
     fclose(f);
+}
+static void arena_index(const char* corpus_unused){   /* the arena eats the whole folder: ANY .txt in lifeis/ is territory — a dropped file is instantly in the fight */
+    (void)corpus_unused;
     mkdir("lifeis", 0755); mkdir("lifeis/arena", 0755);
+    DIR* d=opendir("lifeis"); if(!d) return;
+    char* names[4096]; int nn=0; struct dirent* e;
+    while((e=readdir(d)) && nn<4096){
+        const char* nm=e->d_name; int L=(int)strlen(nm);
+        if(L<4 || strcmp(nm+L-4,".txt")!=0) continue;         /* only .txt */
+        if(strncmp(nm,"slice_",6)==0) continue;               /* skip the chorus's runtime slices */
+        names[nn++]=strdup(nm);
+    }
+    closedir(d);
+    qsort(names,(size_t)nn,sizeof(char*),arena_namecmp);      /* stable order — the pool is the same across one run */
+    char path[512];
+    for(int i=0;i<nn;i++){ snprintf(path,sizeof path,"lifeis/%s",names[i]); arena_addfile(path); free(names[i]); }
 }
-static void arena_mark(unsigned char* claimed){   /* mark every claimed chunk from the shared ledger */
-    FILE* f=fopen("lifeis/arena/claims","r"); if(!f) return;
-    int id; while(fscanf(f,"%d",&id)==1) if(id>=0 && id<g_pool_n) claimed[id]=1;
-    fclose(f);
-}
-static int arena_next(char* out, int cap){        /* claim + return the lowest UNCLAIMED chunk; 0 when the ground is taken */
+static int arena_next(char* out, int cap){       /* atomically claim the lowest UNCLAIMED (unexpired) chunk; 0 when the whole territory is held */
     if(g_pool_n<=0 || !out || cap<=0) return 0;
-    unsigned char* claimed=(unsigned char*)calloc((size_t)g_pool_n,1); if(!claimed) return 0;
-    arena_mark(claimed);
-    int id=-1; for(int i=0;i<g_pool_n;i++) if(!claimed[i]){ id=i; break; }
-    free(claimed);
-    if(id<0) return 0;                             /* all claimed — starve; the rival holds the territory */
-    FILE* c=fopen("lifeis/arena/claims","a"); if(c){ fprintf(c,"%d\n",id); fclose(c); }  /* stake the claim */
-    int L=(int)strlen(g_pool[id]); if(L>=cap) L=cap-1;
-    memcpy(out,g_pool[id],(size_t)L); out[L]=0;
+    FILE* c=fopen("lifeis/arena/claims","a+"); if(!c) return 0;
+    int fd=fileno(c); flock(fd, LOCK_EX);                     /* atomic: two organisms never claim the same ground at once */
+    time_t now=time(NULL);
+    unsigned char* claimed=(unsigned char*)calloc((size_t)g_pool_n,1);
+    if(claimed){ rewind(c); int id; long ts;
+        while(fscanf(c,"%d %ld",&id,&ts)==2)
+            if(id>=0 && id<g_pool_n && (long)(now-(time_t)ts) < ARENA_EXPIRE) claimed[id]=1;   /* only UNEXPIRED claims exclude */
+    }
+    int pick=-1; if(claimed){ for(int i=0;i<g_pool_n;i++) if(!claimed[i]){ pick=i; break; } free(claimed); }
+    if(pick>=0){ fseek(c,0,SEEK_END); fprintf(c,"%d %ld\n",pick,(long)now); fflush(c); }  /* stake, timestamped, flushed before we unlock */
+    flock(fd, LOCK_UN); fclose(c);
+    if(pick<0) return 0;                          /* every chunk is held and unexpired — starve until the ground frees */
+    int L=(int)strlen(g_pool[pick]); if(L>=cap) L=cap-1;
+    memcpy(out,g_pool[pick],(size_t)L); out[L]=0;
     return L;
 }
 

@@ -656,6 +656,20 @@ append-only without a lock, so a race can double-claim a chunk (total claims can
 no expiry yet — an atomic/locked claim and expiring claims (so territory is re-won and the two never settle into
 a stable partition — the anti-settling that keeps the friction alive) are the next increment.
 
+**The arena — Stage 1b, the anti-settling (done).** Three refinements close the softness and keep the friction
+alive. (1) The claim is now ATOMIC — the ledger is `flock`-locked across the read-pick-stake, so two organisms
+never claim the same ground at once. (2) Claims EXPIRE: each is timestamped on a shared wall-clock, and after
+`ARENA_EXPIRE` (20 s) it is void — the chunk is re-contestable, so territory must be RE-WON and the two can
+never freeze into a stable partition; the friction never dies. (3) The pool is now EVERY `.txt` under `lifeis/`
+(sorted, the chorus's runtime slices skipped), so a file dropped into the folder is instantly in the fight.
+With food perpetually refreshing, the organism no longer starves from a one-shot exhaustion — yet it stays
+mortal: senescence still kills it (solo-arena dies at ~5230, no immortality hole). In competition the outcome
+now flips freely per match (`l` starved early at 1968 / 2142, `l2` at 2118 across matches) — a live, continuous
+contest rather than a one-shot race. Gate-invariant still (`NL_ARENA` off → `a17cfd05`, suite 48/48); the
+determinism is ensemble (the wall-clock and two-process interleave), the accepted trade. Deferred: pruning the
+append-only ledger; hot-reindex of a file dropped mid-life (currently indexed at startup); KK bi-directional
+(the eater's reformulation re-entering the pool).
+
 **Then (Stage 2+).** Mutual audibility through the ether (as in the chorus); the load-bearing test on the new
 axis — an organism that models the *rival's* next claim and pre-empts it must beat a rival-reactor and a generic
 always-contest heuristic (subjectivity as a theory of the OTHER, where the theory of self was not load-bearing);
