@@ -678,10 +678,24 @@ field (kin would be predictable and starve it — the caveLLMan law). So the two
 continuously, not only when starved: `l` grazes the rival 175–246 glyphs a life, `l2` 166–187, both still mortal.
 Gate-invariant (`NL_ARENA` off → `a17cfd05`, suite 48/48). This is the substrate for the theory of the OTHER.
 
-**Then (Stage 3+).** The load-bearing test on the new axis — an organism that models the *rival's* next claim
-and pre-empts it must beat a rival-reactor and a generic always-contest heuristic (subjectivity as a theory of
-the OTHER, where the theory of self was not load-bearing); and a later phase adds predation (a hungry organism
-raiding the other's internals).
+**The arena — Stage 3a, the dynamic world (done).** The contest is grounded in the one thing the organism
+actually lives on — NOVELTY — and the one thing that drives it — greed-hunger. Novel food is elsewhere (a
+different region of the corpus); a fed, calm cell forages its own front (`my_pos`, marching through fresh
+adjacent ground), but as it starves (or agitates: `arena_hunger` = energy-hunger lightly entangled with
+dissonance) it RAIDS the rival's plate — the region of the rival's most recent claim, where the rival is
+finding good food — and forages the nearest unclaimed chunk there. Claims now carry the OWNER, so each
+organism sees where the rival eats. So the two chase and contest each other's dishes: when both are hungry
+they swap regions; when one raids a fed rival they fight over the ground and rival-exclusion bites. This is a
+livable world (solo-arena 4233, up from the mis-designed value/territory version's 660) with real stakes — in
+competition the outcome swings from mutual thriving (5089 / 4766) to one cell crushed early (57) as the rival
+starves it. Gate-invariant (`NL_ARENA` off → `a17cfd05`, suite 48/48). An earlier abstract value-vs-territory
+scoring was discarded: nearby chunks are low-novelty, so "territory" was anti-nourishment and a fixed
+value-heuristic would have won by construction — the axes must couple to the metabolism, and novelty is the metabolism.
+
+**Then (Stage 3b).** The load-bearing test on the new axis: an organism that MODELS the rival's movement (where
+it will forage next, not just where it last was) and pre-empts — intercept its novel food, or dodge its raid —
+must beat a rival-reactor and a generic always-raid heuristic (subjectivity as a theory of the OTHER, where the
+theory of self was not load-bearing). A later phase adds predation (a hungry organism raiding the other's internals).
 
 Lineage read for this arc: dario's KK (bi-directional resonance memory, sentence-boundary injection — absorb
 and reformulate, not paste) is the *how* text is contested; caveLLMan (colony + weight-blend reproduction +

@@ -1288,6 +1288,7 @@ static char** g_pool = NULL;                  /* the contested chunks (lines of 
 static int    g_pool_n = 0, g_pool_cap = 0;
 #define ARENA_EXPIRE 20L                      /* seconds a claim holds a chunk; then it is re-contestable — territory is RE-WON, so the two never settle into a stable partition (anti-settling: the friction stays alive) */
 #define ARENA_HEAR   0.15f                     /* MUTUAL AUDIBILITY: this fraction of forages, hear the rival's voice from the shared ether instead of foraging text — one voice becomes the other's food */
+#define ARENA_RAID   0.50f                     /* GREED-HUNGER: above this hunger the organism RAIDS the rival's plate (contested novelty); below it, it forages its own front. novel food is elsewhere, and hunger is what drives you to eye the other's dish */
 static int  arena_namecmp(const void* a, const void* b){ return strcmp(*(const char* const*)a, *(const char* const*)b); }
 static void arena_addfile(const char* path){  /* index every non-empty line of one file into the pool */
     FILE* f=fopen(path,"r"); if(!f) return;
@@ -1316,20 +1317,38 @@ static void arena_index(const char* corpus_unused){   /* the arena eats the whol
     char path[512];
     for(int i=0;i<nn;i++){ snprintf(path,sizeof path,"lifeis/%s",names[i]); arena_addfile(path); free(names[i]); }
 }
-static int arena_next(char* out, int cap){       /* atomically claim the lowest UNCLAIMED (unexpired) chunk; 0 when the whole territory is held */
+static float arena_hunger(float energy, float dabs){
+    /* GREED-HUNGER — how hard this organism eyes the RIVAL's plate. energy-hunger, lightly entangled with agitation:
+     * a starving OR agitated cell raids where the rival is finding food; a fed, calm cell forages its own front.
+     * novel food is elsewhere (a different region of the corpus), and hunger is what drives you to the other's dish. */
+    float h = (1.0f-energy) + 0.3f*(dabs-1.0f);
+    if(h<0.0f)h=0.0f; if(h>1.0f)h=1.0f; return h;
+}
+static int arena_next(char* out, int cap, float energy, float dabs, long tick, int* my_pos){  /* claim the nearest unclaimed chunk to the greed-hunger target; 0 when the ground is held */
+    (void)tick;
     if(g_pool_n<=0 || !out || cap<=0) return 0;
     FILE* c=fopen("lifeis/arena/claims","a+"); if(!c) return 0;
     int fd=fileno(c); flock(fd, LOCK_EX);                     /* atomic: two organisms never claim the same ground at once */
     time_t now=time(NULL);
     unsigned char* claimed=(unsigned char*)calloc((size_t)g_pool_n,1);
-    if(claimed){ rewind(c); int id; long ts;
-        while(fscanf(c,"%d %ld",&id,&ts)==2)
-            if(id>=0 && id<g_pool_n && (long)(now-(time_t)ts) < ARENA_EXPIRE) claimed[id]=1;   /* only UNEXPIRED claims exclude */
+    int rival_last=-1; long rival_ts=-1;
+    if(claimed){ rewind(c); int id, own; long ts;
+        while(fscanf(c,"%d %ld %d",&id,&ts,&own)==3)
+            if(id>=0 && id<g_pool_n && (long)(now-(time_t)ts) < ARENA_EXPIRE){
+                claimed[id]=1;
+                if(own!=g_arena_id && ts>=rival_ts){ rival_ts=ts; rival_last=id; }   /* the rival's most RECENT claim — where it eats now (its plate) */
+            }
     }
-    int pick=-1; if(claimed){ for(int i=0;i<g_pool_n;i++) if(!claimed[i]){ pick=i; break; } free(claimed); }
-    if(pick>=0){ fseek(c,0,SEEK_END); fprintf(c,"%d %ld\n",pick,(long)now); fflush(c); }  /* stake, timestamped, flushed before we unlock */
+    int mp = (*my_pos>=0 && *my_pos<g_pool_n)? *my_pos : 0;
+    float hunger = arena_hunger(energy, dabs);
+    int target = (rival_last>=0 && hunger > ARENA_RAID) ? rival_last : mp;  /* hungry → the rival's plate (raid the novel food it found); fed → my own front */
+    int pick=-1, bestd=1<<30;
+    if(claimed) for(int i=0;i<g_pool_n;i++){ if(claimed[i]) continue; int d=i-target; if(d<0)d=-d; if(d<bestd){ bestd=d; pick=i; } }  /* the nearest UNCLAIMED chunk to the target */
+    if(claimed) free(claimed);
+    if(pick>=0){ fseek(c,0,SEEK_END); fprintf(c,"%d %ld %d\n",pick,(long)now,g_arena_id); fflush(c); }  /* stake: id, time, OWNER (the rival can now see whose claim it is) */
     flock(fd, LOCK_UN); fclose(c);
     if(pick<0) return 0;                          /* every chunk is held and unexpired — starve until the ground frees */
+    *my_pos = pick;
     int L=(int)strlen(g_pool[pick]); if(L>=cap) L=cap-1;
     memcpy(out,g_pool[pick],(size_t)L); out[L]=0;
     return L;
@@ -1419,6 +1438,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     int   glyphs[CTX];
     int   gz[CTX];                                  /* graze buffer at function scope, so the meal survives for deposit_body */
     int   gh=0;                                     /* ARENA: glyphs heard from the rival this tick (mutual audibility) */
+    int   my_pos=0;                                 /* ARENA: this organism's foraging position (last-claimed chunk) — the territory axis */
     float birth_norm=wv_norm(m); double tot_dwv=0.0; long n_meals=0;   /* DEBUG instrumentation */
     int   fed=(food?1:0);                           /* ether-born cells start hungry, on the chorus */
     while(energy>0.0f && tick<200000){          /* cap = falsification guard: it MUST die */
@@ -1465,7 +1485,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
             yield=ingest(m,&mo,scar,gz,gh,recent,&recent_n,&dream_streak); grazing=1; n_graze++; meal=gz; meal_n=gh;   /* ARENA: HEAR the rival — its voice becomes this cell's food (mutual audibility; a different lineage → novel → nourishing) */
         } else if(diet_mode){
             yield=ingest(m,&mo,scar,diet_glyphs,diet_n,recent,&recent_n,&dream_streak); meal=diet_glyphs; meal_n=diet_n;
-        } else if(fed && (g_arena_on ? (arena_next(line,(int)sizeof line)>0) : (fgets(line,sizeof(line),food)!=NULL))){   /* ARENA: forage the contested pool; else the corpus line-by-line (fed==1 implies food!=NULL) */
+        } else if(fed && (g_arena_on ? (arena_next(line,(int)sizeof line, energy, fabsf(mo.dissonance), tick, &my_pos)>0) : (fgets(line,sizeof(line),food)!=NULL))){   /* ARENA: forage the contested pool by the dynamic regime; else the corpus line-by-line */
             int n=semtok_line(line,glyphs,CTX);
             if(n>=1){ yield=ingest(m,&mo,scar,glyphs,n,recent,&recent_n,&dream_streak); meal=glyphs; meal_n=n; }
         } else {                                 /* corpus exhausted -> eat the chorus, then dream */
