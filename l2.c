@@ -323,7 +323,7 @@ static int semtok_line(const char* line, int* out, int max_tokens){
 #define SLEEP_DRAIN  0.10f        /* pressure shed per sleeping tick → a sleep cycle ~10 ticks */
 
 /* ── Phase A step 7: the voice that chooses — choice = subjectivity ── */
-#define CHOOSE_TEMP0  0.85f       /* base decisiveness — l2 runs hotter than l.c (0.7): more impulsive, a distinct temperament (asymmetry) */
+#define CHOOSE_TEMP0  0.85f       /* base decisiveness — l2 hotter (0.7): impulsive (asymmetry) */
 #define CHOOSE_S      0.8f        /* arousal (|S|) widens the choice */
 #define CHOOSE_DISS   1.0f        /* dissonance (bounded) widens it further — passion = spontaneity */
 #define CHOOSE_AFFECT 5.0f        /* mood pulls toward kindred-charged glyphs */
@@ -1283,9 +1283,11 @@ static float dream_once(Model* m, Modes* mo, float* scar, int* recent, int* rece
  * same pool compete for text — the friction a lone thermostat never had, so subjectivity can live BETWEEN them.
  * gate-invariant: NL_ARENA off → the organism eats the corpus line-by-line as always (a17cfd05). ── */
 static int    g_arena_on = 0;
+static int    g_arena_id = 0;                 /* this organism's voice-id in the shared ether (NL_ID or pid) — so l and l2 hear each OTHER, not themselves */
 static char** g_pool = NULL;                  /* the contested chunks (lines of EVERY .txt in lifeis/), indexed once per process */
 static int    g_pool_n = 0, g_pool_cap = 0;
 #define ARENA_EXPIRE 20L                      /* seconds a claim holds a chunk; then it is re-contestable — territory is RE-WON, so the two never settle into a stable partition (anti-settling: the friction stays alive) */
+#define ARENA_HEAR   0.15f                     /* MUTUAL AUDIBILITY: this fraction of forages, hear the rival's voice from the shared ether instead of foraging text — one voice becomes the other's food */
 static int  arena_namecmp(const void* a, const void* b){ return strcmp(*(const char* const*)a, *(const char* const*)b); }
 static void arena_addfile(const char* path){  /* index every non-empty line of one file into the pool */
     FILE* f=fopen(path,"r"); if(!f) return;
@@ -1342,7 +1344,11 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     char tag[24]; if(label>=0) snprintf(tag,sizeof tag,"[cell %d] ",label); else tag[0]='\0';
     seed_rng(seed);
     Model* m=model_new();                          /* own seed -> own random body */
-    FILE* ether = ether_path ? fopen(ether_path,"a") : NULL;   /* the shared voice of the colony */
+    g_arena_on = (getenv("NL_ARENA")!=NULL);       /* ARENA: set early so the ether wiring below sees it */
+    g_arena_id = getenv("NL_ID") ? atoi(getenv("NL_ID")) : (int)getpid();  /* a stable per-organism voice-id */
+    if(g_arena_on){ mkdir("lifeis",0755); mkdir("lifeis/arena",0755); }
+    const char* eth_path = ether_path ? ether_path : (g_arena_on ? "lifeis/arena/ether" : NULL);  /* ARENA: l and l2 share ONE ether — mutual audibility */
+    FILE* ether = eth_path ? fopen(eth_path,"a") : NULL;   /* the shared voice of the colony / the arena */
     long params=(long)(sizeof(Model)/sizeof(float));
 
     int diet_glyphs[CTX]; int diet_n=0;
@@ -1390,8 +1396,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_self_on      = (getenv("NL_NOSELF")==NULL);      /* ProtoSelf: the second-order self-model (A/B) */
     g_noact        = (getenv("NL_NOACT")!=NULL);       /* THE WILL DESIGN: forecast computed but not acted on (pitomadom strength=0 control) */
     g_ed_sum = 0.0; g_ed_n = 0;                        /* reset the self-consistency accumulator per cell */
-    g_arena_on     = (getenv("NL_ARENA")!=NULL);       /* THE ARENA: forage a CONTESTED pool instead of the corpus (opt-in; gate-invariant off) */
-    if(g_arena_on && !g_pool) arena_index(corpus);
+    if(g_arena_on && !g_pool) arena_index(corpus);     /* THE ARENA: forage a CONTESTED pool instead of the corpus (g_arena_on set at the top for the ether wiring) */
     { const char* fd=getenv("NL_FIXEDDAMP"); g_fixeddamp = fd? (float)atof(fd) : 0.0f; }  /* Fable #3 control */
     g_cont_on      = (getenv("NL_NOCONT")==NULL);      /* PROBABILISTIC CONTINUATION + WILL — DEFAULT ON (NL_NOCONT opts out to deterministic death) */
     { const char* fw=getenv("NL_FIXEDWILL"); g_fixedwill = fw? (float)atof(fw) : 0.0f; }  /* will-falsifier control */
@@ -1413,6 +1418,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     char  line[4096];
     int   glyphs[CTX];
     int   gz[CTX];                                  /* graze buffer at function scope, so the meal survives for deposit_body */
+    int   gh=0;                                     /* ARENA: glyphs heard from the rival this tick (mutual audibility) */
     float birth_norm=wv_norm(m); double tot_dwv=0.0; long n_meals=0;   /* DEBUG instrumentation */
     int   fed=(food?1:0);                           /* ether-born cells start hungry, on the chorus */
     while(energy>0.0f && tick<200000){          /* cap = falsification guard: it MUST die */
@@ -1455,6 +1461,8 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
             if(sleep_debt <= 0.0f){ sleeping=0; sleep_debt=0.0f; }  /* wake — but do NOT reset dream_streak (Codex #2): */
             /* only a REAL meal (ingest) resets it, so dreams keep decaying across sleep bouts — a starving cell */
             /* cannot live on fresh dream bursts forever, the "decay until death unless fed" guard is restored */
+        } else if(g_arena_on && ether && (frand()+1.0f)*0.5f < ARENA_HEAR && (gh=ether_graze(m, eth_path, g_arena_id, gz, CTX))>=1){
+            yield=ingest(m,&mo,scar,gz,gh,recent,&recent_n,&dream_streak); grazing=1; n_graze++; meal=gz; meal_n=gh;   /* ARENA: HEAR the rival — its voice becomes this cell's food (mutual audibility; a different lineage → novel → nourishing) */
         } else if(diet_mode){
             yield=ingest(m,&mo,scar,diet_glyphs,diet_n,recent,&recent_n,&dream_streak); meal=diet_glyphs; meal_n=diet_n;
         } else if(fed && (g_arena_on ? (arena_next(line,(int)sizeof line)>0) : (fgets(line,sizeof(line),food)!=NULL))){   /* ARENA: forage the contested pool; else the corpus line-by-line (fed==1 implies food!=NULL) */
@@ -1463,7 +1471,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         } else {                                 /* corpus exhausted -> eat the chorus, then dream */
             fed=0;
             int gn=0;
-            if(ether) gn=ether_graze(m, ether_path, label, gz, CTX);  /* FIRST: eat a neighbour's voice (composites whole, Δ2) */
+            if(ether) gn=ether_graze(m, eth_path, g_arena_on? g_arena_id : label, gz, CTX);  /* FIRST: eat a neighbour's voice — in the arena, the rival's (composites whole, Δ2) */
             if(gn>=1){                               /* the colony feeds itself through speech */
                 yield=ingest(m,&mo,scar,gz,gn,recent,&recent_n,&dream_streak); grazing=1; n_graze++; meal=gz; meal_n=gn;
             } else if(dream_on && energy<DREAM_THRESH && recent_n>0){  /* ELSE: hunger-dream when the world is gone */
@@ -1495,7 +1503,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
             g_coh_floor = 0.99f*g_coh_floor + 0.01f*coh;   /* Stanley: a drifting silence-gate */
             if((waste||ether) && (cfired & (1u<<CH_LOVE))){ float sp=SPEAK_RATE*(1.0f+fabsf(mo.S));  /* voice fires on its own clock (LOVE) */
                 if(coh>0.05f && coh>=g_coh_floor && (frand()+1.0f)*0.5f < sp)
-                    { float uc=speak(waste,ether,label,m,&mo,scar,recent,&recent_n,tick); energy -= SPEAK_COST*(float)SPEAK_LEN*(1.0f-uc); } }  /* voice -> waste + colony */
+                    { float uc=speak(waste,ether,g_arena_on? g_arena_id : label,m,&mo,scar,recent,&recent_n,tick); energy -= SPEAK_COST*(float)SPEAK_LEN*(1.0f-uc); } }  /* voice -> waste + colony/arena */
         }
         if(energy > REPRO_THRESH && tick - last_repro > REPRO_COOLDOWN){
             char cpath[256]; cpath[0]='\0';

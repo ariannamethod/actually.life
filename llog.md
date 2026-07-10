@@ -670,10 +670,18 @@ determinism is ensemble (the wall-clock and two-process interleave), the accepte
 append-only ledger; hot-reindex of a file dropped mid-life (currently indexed at startup); KK bi-directional
 (the eater's reformulation re-entering the pool).
 
-**Then (Stage 2+).** Mutual audibility through the ether (as in the chorus); the load-bearing test on the new
-axis — an organism that models the *rival's* next claim and pre-empts it must beat a rival-reactor and a generic
-always-contest heuristic (subjectivity as a theory of the OTHER, where the theory of self was not load-bearing);
-and a later phase adds predation (a hungry organism raiding the other's internals).
+**The arena — Stage 2, mutual audibility (done).** In the arena `l` and `l2` share ONE ether
+(`lifeis/arena/ether`), each with a distinct voice-id (`NL_ID`, or its pid), so `ether_graze` skips its own echo
+and eats the OTHER's. A fraction of forages (`ARENA_HEAR` = 0.15) the organism HEARS the rival instead of
+foraging text — its glyphs enter this cell's context and feed it, because a different lineage is novel to the
+field (kin would be predictable and starve it — the caveLLMan law). So the two now perceive each other
+continuously, not only when starved: `l` grazes the rival 175–246 glyphs a life, `l2` 166–187, both still mortal.
+Gate-invariant (`NL_ARENA` off → `a17cfd05`, suite 48/48). This is the substrate for the theory of the OTHER.
+
+**Then (Stage 3+).** The load-bearing test on the new axis — an organism that models the *rival's* next claim
+and pre-empts it must beat a rival-reactor and a generic always-contest heuristic (subjectivity as a theory of
+the OTHER, where the theory of self was not load-bearing); and a later phase adds predation (a hungry organism
+raiding the other's internals).
 
 Lineage read for this arc: dario's KK (bi-directional resonance memory, sentence-boundary injection — absorb
 and reformulate, not paste) is the *how* text is contested; caveLLMan (colony + weight-blend reproduction +
