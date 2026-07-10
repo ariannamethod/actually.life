@@ -1289,6 +1289,10 @@ static int    g_pool_n = 0, g_pool_cap = 0;
 #define ARENA_EXPIRE 20L                      /* seconds a claim holds a chunk; then it is re-contestable — territory is RE-WON, so the two never settle into a stable partition (anti-settling: the friction stays alive) */
 #define ARENA_HEAR   0.15f                     /* MUTUAL AUDIBILITY: this fraction of forages, hear the rival's voice from the shared ether instead of foraging text — one voice becomes the other's food */
 #define ARENA_RAID   0.50f                     /* GREED-HUNGER: above this hunger the organism RAIDS the rival's plate (contested novelty); below it, it forages its own front. novel food is elsewhere, and hunger is what drives you to eye the other's dish */
+#define MIND_LEAD    8                          /* THEORY OF THE OTHER: how far the mind extrapolates the rival's MOVEMENT to intercept where it is heading, not where it was */
+static int    g_mind_on = 0;                   /* NL_MIND=1 → predict the rival's movement and pre-empt (the load-bearing test: does a model of the OTHER beat a reactor?) */
+static float  g_raid_th = ARENA_RAID;          /* NL_RAID_TH override — the falsifier's lead-free controls: always-raid (0), own-front (>1), reactor (default) */
+static int    g_rival_prev = -1;               /* the rival's previously-observed position — the mind's velocity estimate */
 static int  arena_namecmp(const void* a, const void* b){ return strcmp(*(const char* const*)a, *(const char* const*)b); }
 static void arena_addfile(const char* path){  /* index every non-empty line of one file into the pool */
     FILE* f=fopen(path,"r"); if(!f) return;
@@ -1341,7 +1345,14 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
     }
     int mp = (*my_pos>=0 && *my_pos<g_pool_n)? *my_pos : 0;
     float hunger = arena_hunger(energy, dabs);
-    int target = (rival_last>=0 && hunger > ARENA_RAID) ? rival_last : mp;  /* hungry → the rival's plate (raid the novel food it found); fed → my own front */
+    int rtarget = rival_last;
+    if(g_mind_on && rival_last>=0 && g_rival_prev>=0){          /* THEORY OF THE OTHER: extrapolate the rival's velocity — aim where it is HEADING, not where it was */
+        int vel = rival_last - g_rival_prev;
+        rtarget = rival_last + vel*MIND_LEAD;
+        if(rtarget<0) rtarget=0; if(rtarget>=g_pool_n) rtarget=g_pool_n-1;
+    }
+    if(rival_last>=0) g_rival_prev = rival_last;                /* remember the rival's position for the next velocity estimate */
+    int target = (rival_last>=0 && hunger > g_raid_th) ? rtarget : mp;  /* hungry → the rival's plate (its PREDICTED spot when the mind is on); fed → my own front */
     int pick=-1, bestd=1<<30;
     if(claimed) for(int i=0;i<g_pool_n;i++){ if(claimed[i]) continue; int d=i-target; if(d<0)d=-d; if(d<bestd){ bestd=d; pick=i; } }  /* the nearest UNCLAIMED chunk to the target */
     if(claimed) free(claimed);
@@ -1365,6 +1376,9 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     Model* m=model_new();                          /* own seed -> own random body */
     g_arena_on = (getenv("NL_ARENA")!=NULL);       /* ARENA: set early so the ether wiring below sees it */
     g_arena_id = getenv("NL_ID") ? atoi(getenv("NL_ID")) : (int)getpid();  /* a stable per-organism voice-id */
+    g_mind_on  = (getenv("NL_MIND")!=NULL);        /* THEORY OF THE OTHER: model the rival's movement + pre-empt (the load-bearing test) */
+    { const char* rt=getenv("NL_RAID_TH"); g_raid_th = rt? (float)atof(rt) : ARENA_RAID; }  /* the falsifier's lead-free controls */
+    g_rival_prev = -1;
     if(g_arena_on){ mkdir("lifeis",0755); mkdir("lifeis/arena",0755); }
     const char* eth_path = ether_path ? ether_path : (g_arena_on ? "lifeis/arena/ether" : NULL);  /* ARENA: l and l2 share ONE ether — mutual audibility */
     FILE* ether = eth_path ? fopen(eth_path,"a") : NULL;   /* the shared voice of the colony / the arena */

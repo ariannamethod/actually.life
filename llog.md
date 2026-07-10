@@ -692,10 +692,25 @@ starves it. Gate-invariant (`NL_ARENA` off → `a17cfd05`, suite 48/48). An earl
 scoring was discarded: nearby chunks are low-novelty, so "territory" was anti-nourishment and a fixed
 value-heuristic would have won by construction — the axes must couple to the metabolism, and novelty is the metabolism.
 
-**Then (Stage 3b).** The load-bearing test on the new axis: an organism that MODELS the rival's movement (where
-it will forage next, not just where it last was) and pre-empts — intercept its novel food, or dodge its raid —
-must beat a rival-reactor and a generic always-raid heuristic (subjectivity as a theory of the OTHER, where the
-theory of self was not load-bearing). A later phase adds predation (a hungry organism raiding the other's internals).
+**The arena — Stage 3b, the theory of the OTHER (a nuanced negative).** `NL_MIND` gives an organism a model of
+the rival: from the owner-stamped claims trail it estimates the rival's velocity and, when it raids, aims where
+the rival is HEADING (`rival_last + vel·MIND_LEAD`) rather than where it was. The lead-free controls (via
+`NL_RAID_TH`): the reactor (raid where the rival *was*), always-raid (`NL_RAID_TH=0`, relentless), own-front
+(`NL_RAID_TH=2`, never raid). Falsifier — the same organism (temp 0.7) with the mind vs without, same seed, 30
+seeds, who outlives whom. Verdict: the mind BEATS the reactor **20/30** (aiming where the rival heads does beat
+reacting to where it was — a real edge), but it LOSES to always-raid **13/30** and ties own-front **15/30**. The
+best lead-free control (always-raid) beats the mind, so the movement-mind is NOT load-bearing: dumb relentless
+aggression out-denies clever interception. Diagnosis: the trail the mind reads is thin — POSITIONS only — and
+the rival does not move smoothly; it JUMPS by hunger/state (fed → own front, hungry → raid), so a linear
+velocity forecast misses while always-raid simply keeps denying food. Gate-invariant (`NL_MIND` off, `NL_ARENA`
+off → `a17cfd05`). This is theory-of-self's verdict in a new setting: a fixed strategy beats the model, once more.
+
+**Then (Stage 3c).** The blood-spore — thicken the trail. The mind failed because it reads a bare coordinate;
+if each organism DROPPED a spore of its STATE as it foraged (its hunger, scars, mood — a trace that dries like
+blood, cf. caveLLMan's DNA pool expiring), the rival could read the OTHER's interior, not just its position, and
+forecast WHEN it will raid (the hunger-driven target-switch) rather than a straight-line velocity. The same
+falsifier decides whether a state-reading mind clears the bar the movement-mind could not. A later phase adds
+predation (a hungry organism raiding — or absorbing the spore of — the other's internals).
 
 Lineage read for this arc: dario's KK (bi-directional resonance memory, sentence-boundary injection — absorb
 and reformulate, not paste) is the *how* text is contested; caveLLMan (colony + weight-blend reproduction +
