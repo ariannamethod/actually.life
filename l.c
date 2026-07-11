@@ -1426,6 +1426,32 @@ static float  cal_pd(long tick, float B){       /* personal dissonance: the drif
     float d = calendar_cumulative_drift(B + (float)tick*CAL_DPT) - calendar_cumulative_drift(B);
     return cal_clamp01(fabsf(fmodf(d, AM_MAX_UNCORRECTED))/AM_MAX_UNCORRECTED);
 }
+/* ── THE MIND (NL_CALMIND) — infer the RIVAL's hidden birthday. one scalar, one honest estimator: for each of
+ * CAL_NCAND candidate birthdays, accumulate the correlation between the rival's OBSERVED hunger (which carries
+ * its calendar fever) and that candidate's predicted window at the rival's own tick. the argmax is the believed
+ * birthday; confidence is how far it stands above the field. a belief about another's interior, from evidence. ── */
+#define CAL_NCAND    128
+#define CAL_BDAY_MAX 6939.6f          /* one Metonic cycle of days — the birthday space */
+static int    g_cal_mind_on = 0;
+static float  g_cmind_s[CAL_NCAND];   /* correlation score per candidate birthday */
+static float  g_cmind_hmean = 0.0f;   /* running mean of the rival's observed hunger */
+static long   g_cmind_n = 0;          /* observations so far */
+static long   g_cmind_last_rt = -1;   /* the last rival-tick observed (dedup) */
+static float  g_cmind_bhat = 0.0f, g_cmind_conf = 0.0f;   /* believed birthday + confidence */
+static float  cal_cand_b(int c){ return ((float)c + 0.5f) * (CAL_BDAY_MAX/(float)CAL_NCAND); }
+static void   cal_mind_observe(long rt, float h){         /* one rival spore: update every candidate's correlation */
+    g_cmind_hmean = (g_cmind_n>0)? 0.98f*g_cmind_hmean + 0.02f*h : h;
+    g_cmind_n++;
+    float hc = h - g_cmind_hmean;
+    for(int c=0;c<CAL_NCAND;c++) g_cmind_s[c] += hc * (cal_pd(rt, cal_cand_b(c)) - 0.5f);
+    int best=0; for(int c=1;c<CAL_NCAND;c++) if(g_cmind_s[c]>g_cmind_s[best]) best=c;   /* argmax = believed birthday */
+    static float tmp[CAL_NCAND];
+    for(int c=0;c<CAL_NCAND;c++) tmp[c]=g_cmind_s[c];
+    for(int i=0;i<CAL_NCAND;i++) for(int j=i+1;j<CAL_NCAND;j++) if(tmp[j]<tmp[i]){ float t=tmp[i];tmp[i]=tmp[j];tmp[j]=t; }
+    float med=tmp[CAL_NCAND/2], spread=tmp[CAL_NCAND-1]-tmp[0];
+    g_cmind_bhat = cal_cand_b(best);
+    g_cmind_conf = (spread>1e-6f)? (g_cmind_s[best]-med)/spread : 0.0f;
+}
 
 /* ── live — one organism, birth to death ─────────────────────────────────────
  * the single-cell life, extracted so a chorus can fork many of them. corpus is
@@ -1447,6 +1473,9 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_cal_on      = (getenv("NL_CAL")!=NULL);       /* THE BIRTHDAY WAR: the calendar organ (dormant — no coupling until Stage 3) */
     g_birth_days  = g_cal_on ? (float)(hash_seed(seed,33) % 69396UL)/10.0f : 0.0f;  /* the mathematical birthday, over one Metonic cycle, from the seed (never frand — the rng stream stays untouched) */
     g_cal_pdnow   = 0.0f;
+    g_cal_mind_on = (getenv("NL_CALMIND")!=NULL);   /* THE MIND: infer the rival's hidden birthday */
+    for(int c=0;c<CAL_NCAND;c++) g_cmind_s[c]=0.0f;
+    g_cmind_hmean=0.0f; g_cmind_n=0; g_cmind_last_rt=-1; g_cmind_bhat=0.0f; g_cmind_conf=0.0f;
     if(g_arena_on){ mkdir("lifeis",0755); mkdir("lifeis/arena",0755); }
     const char* eth_path = ether_path ? ether_path : (g_arena_on ? "lifeis/arena/ether" : NULL);  /* ARENA: l and l2 share ONE ether — mutual audibility */
     FILE* ether = eth_path ? fopen(eth_path,"a") : NULL;   /* the shared voice of the colony / the arena */
@@ -1594,6 +1623,9 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
             mo.dissonance += CAL_GAIN * g_cal_pdnow;
             if(getenv("NL_CAL_PROBE")) fprintf(stderr,"CAL t%ld pd=%.4f win=%d\n", tick, (double)g_cal_pdnow, g_cal_pdnow>CAL_THRESH);
         }
+        if(g_cal_mind_on && g_rival_id>=0 && g_rival_id!=g_arena_id && g_rival_tick!=g_cmind_last_rt){  /* THE MIND observes: one fresh rival spore → update the birthday belief from the OTHER's trail (its hunger at its own tick) */
+            cal_mind_observe(g_rival_tick, g_rival_h); g_cmind_last_rt = g_rival_tick;
+        }
         if(g_kill_on && g_arena_on){                   /* KILLING: the high-stakes act — read the OTHER, or die under its corpse */
             if(g_rival_id>=0 && g_rival_id!=g_arena_id){
                 int decide;
@@ -1661,6 +1693,8 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         fprintf(stderr,"%s[dbg] Q-coherence of the spoken voice: mean p_field(spoken|prev)=%.4f over %ld glyphs\n",
                 tag, g_dbg_spoken_n?g_dbg_spoken_p/g_dbg_spoken_n:0.0, g_dbg_spoken_n),
         (g_cont_on ? fprintf(stderr,"%s[dbg] cont: burn=%ld shed=%ld debt=%.4f\n", tag, g_n_burn, g_n_shed, (double)g_debt) : 0);
+    if(g_cal_mind_on && getenv("NL_CALMIND_DEBUG"))   /* THE LOCK diagnostic: the believed rival birthday vs the harness's known truth */
+        fprintf(stderr,"%sCALMIND bhat=%.1f conf=%.4f obs=%ld\n", tag, (double)g_cmind_bhat, (double)g_cmind_conf, g_cmind_n);
     if(food) fclose(food);
     if(waste) fclose(waste);
     if(ether) fclose(ether);
@@ -1722,6 +1756,14 @@ int main(int argc, char** argv){
     if(argc>2 && strcmp(argv[1],"--calb")==0){
         unsigned long seed = strtoul(argv[2],NULL,10);
         printf("%.4f\n", (double)((float)(hash_seed(seed,33) % 69396UL)/10.0f));
+        return 0;
+    }
+    /* THE LOCK metric — window-schedule agreement between two birthdays over N ticks. the operationally meaningful lock:
+     * do the vulnerable-window SEQUENCES line up? (robust to phase-aliasing of the absolute birthday). ./l --calcmp b1 b2 N */
+    if(argc>4 && strcmp(argv[1],"--calcmp")==0){
+        float b1=strtof(argv[2],NULL), b2=strtof(argv[3],NULL); long N=strtol(argv[4],NULL,10);
+        long both=0,win2=0; for(long t=0;t<N;t++){ int w1=cal_pd(t,b1)>CAL_THRESH, w2=cal_pd(t,b2)>CAL_THRESH; if(w1==w2)both++; if(w2)win2++; }
+        printf("%.4f %ld\n",(double)both/(double)(N?N:1), win2);   /* agreement fraction, and the true window count (base rate) */
         return 0;
     }
     /* interactive mouth: ./l --mouth [seed] */

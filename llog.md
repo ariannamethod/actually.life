@@ -773,6 +773,25 @@ is a *smooth* consequence of the victim's own fever, so it does not violate the 
   voice — and test the LOCK (does it infer the rival's birthday ≥70% by mid-life), the definitive channel test. No
   tuning of `CAL_GAIN` to clear the gate — the channel is enriched with existing physics or the impossibility branch
   (the organism's expressive surface too narrow to carry another's calendar) is itself the finding.
+- **Step 6 — the mind, and the lock (done). The verdict: EXISTENCE holds, INFERABILITY fails.** `NL_CALMIND` carries
+  one honest estimator: 128 candidate birthdays over a Metonic cycle, each accumulating the correlation between the
+  rival's OBSERVED hunger (which carries its fever) and that candidate's predicted window at the rival's own tick;
+  the argmax is the believed birthday `b̂`. `./l --calcmp b1 b2 N` scores the operationally meaningful lock — do the
+  vulnerable-window SCHEDULES line up (robust to the ~7-fold phase-aliasing of the absolute birthday, since `cal_pd`'s
+  linear drift is birthday-independent and only its phase carries the birthday). The physics is NOT the wall: across
+  200 birthdays the per-tick fever variance is 0.04 (sd 0.20) and random-pair window-agreement is 0.745 < 1.0, so
+  birthdays are genuinely distinguishable. The decomposition, offline and then in the live arena, is the finding:
+  the ORACLE arm (the estimator fed the rival's CLEAN fever) locks — mean window-agreement 0.915 over 6 birthdays,
+  well above the 0.745 base rate — so the interior, hidden-state optimum EXISTS: knowing the rival's birthday DOES
+  predict its vulnerable windows. The CHANNEL arm (the estimator fed the real behavioral leak, r=0.132) does not:
+  12 live `l`-vs-`l2` arena matches gave mean window-agreement **0.7848, lock 4/12** — indistinguishable from the
+  0.745 chance baseline. An SNR sweep places the reliable-lock threshold at r≈0.82 (6× the real channel); cadence and
+  voice are secondary leaks of the SAME fever and cannot bridge a 6× gap. So the ninth falsifier negative is the
+  sharpest: the subjectivity (a model of the rival's private calendar) is load-bearing in principle — the optimum is
+  real and interior — but epistemically inaccessible, because this physics hides the birthday too well to invert from
+  behavior. The theorem gains a corollary: an interior, hidden-state optimum is necessary but NOT sufficient for a
+  model to bear weight; the hidden state must also be INFERABLE through the channel the world leaves open. Here it is
+  not. No `CAL_GAIN` or estimator tuning was applied to force a lock — the gap is the result.
 
 Lineage read for this arc: dario's KK (bi-directional resonance memory, sentence-boundary injection — absorb
 and reformulate, not paste) is the *how* text is contested; caveLLMan (colony + weight-blend reproduction +
