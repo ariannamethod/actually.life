@@ -756,8 +756,23 @@ is a *smooth* consequence of the victim's own fever, so it does not violate the 
   `frand`, so the rng stream is untouched). It is DORMANT — computed but coupled to nothing — so `NL_CAL` off AND
   `NL_CAL` on are both bit-identical to `a17cfd05` (suite 48/48). `NL_CAL_PROBE` streams the signal: 5–20 wormhole
   windows per life, duty 0.04–0.26 across seeds, each seed its own pattern — enough windows to learn from, rare
-  enough that always-strike bleeds. Next: Step 2 pre-registers the world constants (`CAL_DPT`, `CAL_GAIN`) from the
-  probe under a ±30% solo-lifespan health constraint, before any policy exists.
+  enough that always-strike bleeds.
+- **Step 2–3 — the fever coupled, pre-registered, measured (done):** `CAL_GAIN` fixed at 0.04 from the DISS_DECAY
+  math (in-window steady-state lift ≈ +2), before any policy exists. The fever injects `CAL_GAIN·cal_pd` into
+  `mo.dissonance`, then flows only through EXISTING plumbing (dissonance → sleep → choice temperature → arousal
+  → `arena_hunger` → the blood-spore). Health constraint HELD: solo `NL_CAL` median lifespan 4291 vs baseline
+  4094, ratio 1.05 (the fever torments, it does not execute), 0 immortality. `NL_CAL` off → `a17cfd05`; `NL_CAL`
+  on is a new deterministic trajectory `31e8929e…`. The blood-spore now carries a fifth field, the forager's own
+  tick (a tree-ring read alike by model and controls); `./l --calb <seed>` prints an organism's birthday (per-seed
+  unique) for the harness. THE LEAK, measured over 47.6k spores from 10 arena matches — point-biserial of spore
+  hunger vs the owner's true in-window bit: **r = 0.132** (in-window mean hunger 0.447 vs out 0.359), a near-miss
+  of the pre-registered 0.15 gate. The fever leaks through the clamped hunger field, but marginally — exactly the
+  audit's predicted weak point. Next (both, per Oleg): (a) enrich the world-side trace honestly — the fever already
+  drives `interior_glyph` to speak stress/pain into the ether in-window, a second channel the leak-gate did not
+  measure; (b) build the inferring model (Step 6) reading the full trail — spore hunger, owner-tick cadence, and the
+  voice — and test the LOCK (does it infer the rival's birthday ≥70% by mid-life), the definitive channel test. No
+  tuning of `CAL_GAIN` to clear the gate — the channel is enriched with existing physics or the impossibility branch
+  (the organism's expressive surface too narrow to carry another's calendar) is itself the finding.
 
 Lineage read for this arc: dario's KK (bi-directional resonance memory, sentence-boundary injection — absorb
 and reformulate, not paste) is the *how* text is contested; caveLLMan (colony + weight-blend reproduction +

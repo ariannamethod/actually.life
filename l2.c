@@ -1295,6 +1295,7 @@ static float  g_raid_th = ARENA_RAID;          /* NL_RAID_TH override — the fa
 static int    g_rival_prev = -1;               /* the rival's previously-observed position — the mind's velocity estimate */
 static int    g_rival_id = -1;                 /* the rival's voice-id (from the claims owner) — WHOM to kill */
 static float  g_rival_h  = 0.0f;               /* the rival's freshest hunger (from its blood-spore) — how WEAK it is now */
+static long   g_rival_tick = 0;                /* the rival's OWN tick at its freshest spore — the mind reads the trail in the rival's clock */
 /* ── KILLING (NL_KILL, opt-in; the HIGH-STAKES act — where a dumb rule is FATAL, not cheap). an organism may kill the
  * other to seize its resources, but the kill is a PROBABILISTIC draw (wanting is a pressure, not a certainty), and the
  * corpse's carapace DRAGS THE KILLER DOWN — it must REVIVE it (reproduce) or die of the weight. "always-kill" sinks under
@@ -1351,11 +1352,11 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
     time_t now=time(NULL);
     unsigned char* claimed=(unsigned char*)calloc((size_t)g_pool_n,1);
     int rival_last=-1; long rival_ts=-1; float rival_h=0.0f;
-    if(claimed){ rewind(c); int id, own; long ts; float h;
-        while(fscanf(c,"%d %ld %d %f",&id,&ts,&own,&h)==4)
+    if(claimed){ rewind(c); int id, own; long ts; float h; long otick;
+        while(fscanf(c,"%d %ld %d %f %ld",&id,&ts,&own,&h,&otick)==5)
             if(id>=0 && id<g_pool_n && (long)(now-(time_t)ts) < ARENA_EXPIRE){
                 claimed[id]=1;
-                if(own!=g_arena_id && ts>=rival_ts){ rival_ts=ts; rival_last=id; rival_h=h; g_rival_id=own; g_rival_h=h; }   /* the rival's freshest blood-spore: where it eats now, WHO it is, and the HUNGER it ate in */
+                if(own!=g_arena_id && ts>=rival_ts){ rival_ts=ts; rival_last=id; rival_h=h; g_rival_id=own; g_rival_h=h; g_rival_tick=otick; }   /* the rival's freshest blood-spore: WHERE it eats, WHO it is, the HUNGER it ate in, and its OWN tick (the tree-ring the mind reads) */
             }
     }
     int mp = (*my_pos>=0 && *my_pos<g_pool_n)? *my_pos : 0;
@@ -1375,7 +1376,7 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
     int pick=-1, bestd=1<<30;
     if(claimed) for(int i=0;i<g_pool_n;i++){ if(claimed[i]) continue; int d=i-target; if(d<0)d=-d; if(d<bestd){ bestd=d; pick=i; } }  /* the nearest UNCLAIMED chunk to the target */
     if(claimed) free(claimed);
-    if(pick>=0){ fseek(c,0,SEEK_END); fprintf(c,"%d %ld %d %.4f\n",pick,(long)now,g_arena_id,(double)hunger); fflush(c); }  /* drop the blood-spore: WHERE, WHEN, WHO, and the HUNGER it foraged in */
+    if(pick>=0){ fseek(c,0,SEEK_END); fprintf(c,"%d %ld %d %.4f %ld\n",pick,(long)now,g_arena_id,(double)hunger,tick); fflush(c); }  /* drop the blood-spore: WHERE, WHEN, WHO, the HUNGER it foraged in, and its OWN tick — a tree-ring, read alike by model and controls */
     flock(fd, LOCK_UN); fclose(c);
     if(pick<0) return 0;                          /* every chunk is held and unexpired — starve until the ground frees */
     *my_pos = pick;
@@ -1405,6 +1406,7 @@ static int arena_struck_down(int me){               /* has the rival freshly mar
 #define AM_MAX_UNCORRECTED  33.0f
 #define CAL_DPT             5.0f      /* days per tick — the birthday runs on the organism's own clock, not wall time (per-seed deterministic) */
 #define CAL_THRESH          0.55f     /* the wormhole crossing — janus-bpe.c tunnel_threshold, verbatim */
+#define CAL_GAIN            0.04f     /* the fever's lift on dissonance — pre-registered from DISS_DECAY=0.98: in-window steady-state ≈ CAL_GAIN/(1-DISS_DECAY) ≈ +2 (torments, does not execute) */
 static const int g_metonic_leap_years[7] = {3, 6, 8, 11, 14, 17, 19};
 static int    g_cal_on = 0;                    /* NL_CAL=1 → the calendar organ is live (opt-in) */
 static float  g_birth_days = 0.0f;             /* this organism's mathematical birthday, in drift-days (from its seed) */
@@ -1587,8 +1589,9 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
             tot_dwv+=dwv; n_meals++;
         }
         scar_total=0.0f; for(int i=0;i<VOCAB_CAP;i++) scar_total+=scar[i];
-        if(g_cal_on){                                   /* THE BIRTHDAY WAR: compute the calendar dissonance (dormant — read but not yet coupled to the physics) */
+        if(g_cal_on){                                   /* THE BIRTHDAY WAR: the calendar fever — personal dissonance lifts the interior, then flows through EXISTING plumbing (dissonance → sleep → temperature → hunger → the blood-spore). the leak is a side effect of the physics, not a beacon. */
             g_cal_pdnow = cal_pd(tick, g_birth_days);
+            mo.dissonance += CAL_GAIN * g_cal_pdnow;
             if(getenv("NL_CAL_PROBE")) fprintf(stderr,"CAL t%ld pd=%.4f win=%d\n", tick, (double)g_cal_pdnow, g_cal_pdnow>CAL_THRESH);
         }
         if(g_kill_on && g_arena_on){                   /* KILLING: the high-stakes act — read the OTHER, or die under its corpse */
@@ -1715,6 +1718,12 @@ static void births_line(long idx, char* out){
 }
 
 int main(int argc, char** argv){
+    /* THE BIRTHDAY WAR — print an organism's mathematical birthday for a seed (the harness reads it to compute the true in-window bit): ./l --calb <seed> */
+    if(argc>2 && strcmp(argv[1],"--calb")==0){
+        unsigned long seed = strtoul(argv[2],NULL,10);
+        printf("%.4f\n", (double)((float)(hash_seed(seed,33) % 69396UL)/10.0f));
+        return 0;
+    }
     /* interactive mouth: ./l --mouth [seed] */
     if(argc>1 && strcmp(argv[1],"--mouth")==0){
         unsigned long seed = argc>2 ? strtoul(argv[2],NULL,10) : 42UL;
