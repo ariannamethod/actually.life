@@ -1293,6 +1293,21 @@ static int    g_pool_n = 0, g_pool_cap = 0;
 static int    g_mind_on = 0;                   /* NL_MIND=1 → predict the rival's movement and pre-empt (the load-bearing test: does a model of the OTHER beat a reactor?) */
 static float  g_raid_th = ARENA_RAID;          /* NL_RAID_TH override — the falsifier's lead-free controls: always-raid (0), own-front (>1), reactor (default) */
 static int    g_rival_prev = -1;               /* the rival's previously-observed position — the mind's velocity estimate */
+static int    g_rival_id = -1;                 /* the rival's voice-id (from the claims owner) — WHOM to kill */
+static float  g_rival_h  = 0.0f;               /* the rival's freshest hunger (from its blood-spore) — how WEAK it is now */
+/* ── KILLING (NL_KILL, opt-in; the HIGH-STAKES act — where a dumb rule is FATAL, not cheap). an organism may kill the
+ * other to seize its resources, but the kill is a PROBABILISTIC draw (wanting is a pressure, not a certainty), and the
+ * corpse's carapace DRAGS THE KILLER DOWN — it must REVIVE it (reproduce) or die of the weight. "always-kill" sinks under
+ * accumulated corpses; the kill DECISION (strike only when the rival is WEAK and you can BEAR the burden) is the load-
+ * bearing test — read the OTHER, or die. couples death to life: to take a life obligates you to give one back. ── */
+#define KILL_PROB    0.03f                      /* per-tick probability the strike lands when the organism decides to kill (low — wanting is not doing) */
+#define KILL_GAIN    0.30f                      /* energy devoured from the victim on a kill */
+#define KILL_WEAK    0.55f                      /* the rival is WEAK enough to kill when its hunger is above this */
+#define KILL_STRONG  0.45f                      /* you are STRONG enough to bear the corpse when your energy is above this */
+#define CORPSE_DRAIN 0.015f                     /* per-tick energy the carapace of each un-revived corpse drags out of the killer */
+static int    g_kill_on     = 0;                /* NL_KILL=1 → killing is live in this world (can kill AND be killed) */
+static int    g_kill_always = 0;               /* CONTROL: NL_KILL_ALWAYS=1 → strike whenever the draw lands (no reading the OTHER) */
+static int    g_kill_never  = 0;               /* CONTROL: NL_KILL_NEVER=1 → never strike (killable, but no model, no aggression) */
 static int  arena_namecmp(const void* a, const void* b){ return strcmp(*(const char* const*)a, *(const char* const*)b); }
 static void arena_addfile(const char* path){  /* index every non-empty line of one file into the pool */
     FILE* f=fopen(path,"r"); if(!f) return;
@@ -1340,7 +1355,7 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
         while(fscanf(c,"%d %ld %d %f",&id,&ts,&own,&h)==4)
             if(id>=0 && id<g_pool_n && (long)(now-(time_t)ts) < ARENA_EXPIRE){
                 claimed[id]=1;
-                if(own!=g_arena_id && ts>=rival_ts){ rival_ts=ts; rival_last=id; rival_h=h; }   /* the rival's freshest blood-spore: where it eats now AND the HUNGER it ate in */
+                if(own!=g_arena_id && ts>=rival_ts){ rival_ts=ts; rival_last=id; rival_h=h; g_rival_id=own; g_rival_h=h; }   /* the rival's freshest blood-spore: where it eats now, WHO it is, and the HUNGER it ate in */
             }
     }
     int mp = (*my_pos>=0 && *my_pos<g_pool_n)? *my_pos : 0;
@@ -1368,6 +1383,47 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
     memcpy(out,g_pool[pick],(size_t)L); out[L]=0;
     return L;
 }
+static void arena_strike(int victim, int killer){   /* write a kill-mark to the shared ledger — the strike lands on the OTHER's process */
+    FILE* f=fopen("lifeis/arena/kills","a"); if(f){ fprintf(f,"%d %d %ld\n",victim,killer,(long)time(NULL)); fclose(f); }
+}
+static int arena_struck_down(int me){               /* has the rival freshly marked ME for death? read the kill-ledger */
+    FILE* f=fopen("lifeis/arena/kills","r"); if(!f) return 0;
+    int v,k; long ts; int dead=0; time_t now=time(NULL);
+    while(fscanf(f,"%d %d %ld",&v,&k,&ts)==3) if(v==me && (long)(now-(time_t)ts) < ARENA_EXPIRE){ dead=1; break; }
+    fclose(f); return dead;
+}
+
+/* ── THE BIRTHDAY WAR — the calendar organ (NL_CAL, opt-in; dormant until Stage 3 couples it). ported from
+ * janus-bpe.c (an exact port from ariannamethod.c): a computable temporal field. each organism carries a
+ * per-seed BIRTHDAY; the Metonic-corrected Hebrew–Gregorian drift since that birth, folded to the 33-day
+ * boundary, is `cal_pd` — a quasi-periodic, per-organism-PRIVATE dissonance. above CAL_THRESH the organism
+ * is in a wormhole window: soft, killable. the birthday is the hidden self-fact the rival must infer. ── */
+#define AM_ANNUAL_DRIFT     11.25f
+#define AM_GREGORIAN_YEAR   365.25f
+#define AM_METONIC_YEARS    19
+#define AM_METONIC_LEAPS    7
+#define AM_MAX_UNCORRECTED  33.0f
+#define CAL_DPT             5.0f      /* days per tick — the birthday runs on the organism's own clock, not wall time (per-seed deterministic) */
+#define CAL_THRESH          0.55f     /* the wormhole crossing — janus-bpe.c tunnel_threshold, verbatim */
+static const int g_metonic_leap_years[7] = {3, 6, 8, 11, 14, 17, 19};
+static int    g_cal_on = 0;                    /* NL_CAL=1 → the calendar organ is live (opt-in) */
+static float  g_birth_days = 0.0f;             /* this organism's mathematical birthday, in drift-days (from its seed) */
+static float  g_cal_pdnow = 0.0f;             /* the current personal dissonance — how far the world has drifted from this birth */
+static float  cal_clamp01(float x){ if(!isfinite(x)) return 0.0f; return x<0?0:(x>1?1:x); }
+static float  calendar_cumulative_drift(float days){    /* Metonic-corrected Hebrew–Gregorian drift — quasi-periodic, non-linear */
+    float years = days/AM_GREGORIAN_YEAR;
+    float base = years * AM_ANNUAL_DRIFT;
+    int full = (int)(years/AM_METONIC_YEARS);
+    float corr = (float)(full*AM_METONIC_LEAPS)*30.0f;
+    float partial = fmodf(years,(float)AM_METONIC_YEARS);
+    int yic = (int)partial + 1;
+    for(int i=0;i<AM_METONIC_LEAPS;i++) if(g_metonic_leap_years[i]<=yic) corr += 30.0f;
+    return base - corr;
+}
+static float  cal_pd(long tick, float B){       /* personal dissonance: the drift accrued SINCE this birth, folded to the 33-day boundary */
+    float d = calendar_cumulative_drift(B + (float)tick*CAL_DPT) - calendar_cumulative_drift(B);
+    return cal_clamp01(fabsf(fmodf(d, AM_MAX_UNCORRECTED))/AM_MAX_UNCORRECTED);
+}
 
 /* ── live — one organism, birth to death ─────────────────────────────────────
  * the single-cell life, extracted so a chorus can fork many of them. corpus is
@@ -1382,7 +1438,13 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_arena_id = getenv("NL_ID") ? atoi(getenv("NL_ID")) : (int)getpid();  /* a stable per-organism voice-id */
     g_mind_on  = (getenv("NL_MIND")!=NULL);        /* THEORY OF THE OTHER: model the rival's movement + pre-empt (the load-bearing test) */
     { const char* rt=getenv("NL_RAID_TH"); g_raid_th = rt? (float)atof(rt) : ARENA_RAID; }  /* the falsifier's lead-free controls */
-    g_rival_prev = -1;
+    g_rival_prev = -1; g_rival_id = -1; g_rival_h = 0.0f;
+    g_kill_on     = (getenv("NL_KILL")!=NULL);     /* KILLING: the high-stakes act (can kill AND be killed) */
+    g_kill_always = (getenv("NL_KILL_ALWAYS")!=NULL);  /* CONTROL: strike blindly */
+    g_kill_never  = (getenv("NL_KILL_NEVER")!=NULL);   /* CONTROL: never strike */
+    g_cal_on      = (getenv("NL_CAL")!=NULL);       /* THE BIRTHDAY WAR: the calendar organ (dormant — no coupling until Stage 3) */
+    g_birth_days  = g_cal_on ? (float)(hash_seed(seed,33) % 69396UL)/10.0f : 0.0f;  /* the mathematical birthday, over one Metonic cycle, from the seed (never frand — the rng stream stays untouched) */
+    g_cal_pdnow   = 0.0f;
     if(g_arena_on){ mkdir("lifeis",0755); mkdir("lifeis/arena",0755); }
     const char* eth_path = ether_path ? ether_path : (g_arena_on ? "lifeis/arena/ether" : NULL);  /* ARENA: l and l2 share ONE ether — mutual audibility */
     FILE* ether = eth_path ? fopen(eth_path,"a") : NULL;   /* the shared voice of the colony / the arena */
@@ -1457,6 +1519,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     int   gz[CTX];                                  /* graze buffer at function scope, so the meal survives for deposit_body */
     int   gh=0;                                     /* ARENA: glyphs heard from the rival this tick (mutual audibility) */
     int   my_pos=0;                                 /* ARENA: this organism's foraging position (last-claimed chunk) — the territory axis */
+    int   corpse_debt=0;                            /* KILLING: how many un-revived corpses drag this killer down (each drains until reproduced) */
     float birth_norm=wv_norm(m); double tot_dwv=0.0; long n_meals=0;   /* DEBUG instrumentation */
     int   fed=(food?1:0);                           /* ether-born cells start hungry, on the chorus */
     while(energy>0.0f && tick<200000){          /* cap = falsification guard: it MUST die */
@@ -1524,6 +1587,25 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
             tot_dwv+=dwv; n_meals++;
         }
         scar_total=0.0f; for(int i=0;i<VOCAB_CAP;i++) scar_total+=scar[i];
+        if(g_cal_on){                                   /* THE BIRTHDAY WAR: compute the calendar dissonance (dormant — read but not yet coupled to the physics) */
+            g_cal_pdnow = cal_pd(tick, g_birth_days);
+            if(getenv("NL_CAL_PROBE")) fprintf(stderr,"CAL t%ld pd=%.4f win=%d\n", tick, (double)g_cal_pdnow, g_cal_pdnow>CAL_THRESH);
+        }
+        if(g_kill_on && g_arena_on){                   /* KILLING: the high-stakes act — read the OTHER, or die under its corpse */
+            if(g_rival_id>=0 && g_rival_id!=g_arena_id){
+                int decide;
+                if(g_kill_always)     decide = 1;                                       /* CONTROL: strike blindly */
+                else if(g_kill_never) decide = 0;                                       /* CONTROL: never strike */
+                else                  decide = (g_rival_h > KILL_WEAK && energy > KILL_STRONG);  /* the DECISION: strike only when the rival is WEAK and you can BEAR the burden */
+                if(decide && (frand()+1.0f)*0.5f < KILL_PROB){                           /* the probabilistic draw — wanting is a pressure, not a certainty */
+                    arena_strike(g_rival_id, g_arena_id);                                /* the strike lands on the rival's process */
+                    energy += KILL_GAIN;                                                 /* devour its resources */
+                    corpse_debt += 1;                                                    /* but its carapace now drags you down */
+                }
+            }
+            if(corpse_debt>0) energy -= CORPSE_DRAIN*(float)corpse_debt;                 /* the weight of every un-revived corpse, each tick */
+            if(arena_struck_down(g_arena_id)){ contour_died=1; break; }                  /* struck down by the rival — the tape ends */
+        }
         if(homeo_on){ mo.dissonance *= DISS_DECAY; mo.S -= S_RELAX*mo.S; }
         if(g_self_on){ g_self_felt=self_update(&ps,S0,D0,mo.S,mo.dissonance); /* the self-model learns every tick — gating it starves choose()'s coherence */
                        if(!isfinite(g_self_felt)) g_self_felt=0.0f; }        /* a diverged self-model must not poison choose()'s temperature */
@@ -1547,6 +1629,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
             char cpath[256]; cpath[0]='\0';
             if(reproduce(m,scar,seed,tick,cpath)){
                 energy *= REPRO_SPLIT;
+                if(corpse_debt>0) corpse_debt--;   /* KILLING: birth REVIVES a corpse — new life offloads the carapace you took */
                 if(ether){ FILE* b=fopen("lifeis/births.txt","a"); if(b){ fprintf(b,"%s\n",cpath); fclose(b);} } /* the child's genome awaits a slot */
             }
             last_repro=tick;

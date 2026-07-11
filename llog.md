@@ -718,13 +718,46 @@ wins), theory of the OTHER by state (a coin flip): a model, of self or other, do
 reason is the STAKES: foraging or raiding badly costs a single forage, so a dumb rule is cheap and the model
 never earns its keep. Gate-invariant (`a17cfd05`, suite 48/48).
 
-**Then — killing (the high-stakes act, where a dumb rule is catastrophic, not cheap).** The remaining shot at a
-load-bearing model: an organism may kill the other to seize its resources, but a kill is a probabilistic draw
-(wanting is a pressure, not a certainty), and the corpse's carapace DRAGS THE KILLER DOWN — it must revive the
-corpse (birth a new organism from the victim's genome-spore) or die of the weight. So "always kill" sinks under
-accumulated corpses; the kill DECISION — read the rival's spore, kill only when it is weak and you can bear the
-burden — is where reading the OTHER might finally beat a constant, because here being dumb is fatal. This subsumes
-the predation idea and couples death to life: to take a life obligates you to give one back.
+**Killing — the high-stakes act (a fourth negative).** `NL_KILL` (exploratory, kept as the base for what follows):
+an organism may kill the other to seize its resources; the kill is a probabilistic draw; the corpse's carapace
+drains the killer until it revives it by reproducing. Kill-on-state (strike only when the rival is weak and you can
+bear the burden) beats a never-killer 25/30 — killing beats pacifism — but LOSES to always-kill 1–2/30. In a
+two-body world the kill is instant-lethal and the first strike wins; the corpse-burden cannot punish the aggressor
+because killing ENDS the competition, leaving no third party to exploit its spent state. And a 3-body colony
+(tested) is no rescue: a lone aggressor dropped among models is last-standing 17/20 and out-reproduces two models
+combined — the colony AMPLIFIES aggression.
+
+**The theorem (an adversarial audit's gift, not a verdict).** A model bears weight only where the optimum is
+INTERIOR and HIDDEN-STATE-dependent. This physics produces no such regime by itself: against smooth pressure the
+optimum is react-to-the-present (magnitude wins); where a discrete cliff is bolted on (an instant kill) the optimum
+is strike-first (aggression wins); there is no middle. Eight settings, one shape — a model of self or other never
+beats a dumb aggressive/magnitude constant. The positive that stands: subjectivity is real (acting on the self is
+self-fulfilling, 25/30), but it is thermodynamic regulation and aggression, not a chooser placing timed acts. This
+is written up as the preprint "THE WILL DESIGN" (ariannamethod.research/inwork).
+
+## THE BIRTHDAY WAR — engineering an interior, hidden-state optimum so a model can finally bear weight
+
+The theorem is a specification: to make a model load-bearing, build a regime where the optimum is interior and
+hidden-state-dependent, honestly. The seed is Janus's calendar (an exact port from `ariannamethod.c`): each organism
+carries a computable, per-organism-PRIVATE mathematical BIRTHDAY, and the Metonic-corrected Hebrew–Gregorian drift
+since that birth — folded to the 33-day boundary — is a quasi-periodic dissonance. Above a threshold the organism is
+in a WORMHOLE window: soft, killable. The calendar is public (a calendar-aware constant ties any self-calendar
+model), so the one hidden variable is the RIVAL's birthday — which a model must INFER from the rival's observable
+trail. The design decomposes the question into two falsifiable legs: **(a) EXISTENCE** — does the interior optimum
+exist at all? tested by an ORACLE arm given the rival's true birthday; if it cannot beat every constant, the regime
+does not exist. **(b) INFERABILITY** — can the birthday be inferred fast enough to matter? tested by the inferring
+model. Load-bearing subjectivity = both pass. The strike economics keep it honest: a window-landed strike kills, an
+armored strike REBOUNDS (the striker takes a permanent scar), so blind aggression self-wounds; and the vulnerability
+is a *smooth* consequence of the victim's own fever, so it does not violate the anti-cliff continuation law.
+
+- **Step 0 — ground frozen:** `./l 42` → `a17cfd05`, suite 48/48.
+- **Step 1 — the calendar organ, dormant (done):** `NL_CAL` ports the calendar constants, `calendar_cumulative_drift`,
+  and `cal_pd` (personal dissonance, folded); the birthday is derived from the seed via `hash_seed(seed,33)` (never
+  `frand`, so the rng stream is untouched). It is DORMANT — computed but coupled to nothing — so `NL_CAL` off AND
+  `NL_CAL` on are both bit-identical to `a17cfd05` (suite 48/48). `NL_CAL_PROBE` streams the signal: 5–20 wormhole
+  windows per life, duty 0.04–0.26 across seeds, each seed its own pattern — enough windows to learn from, rare
+  enough that always-strike bleeds. Next: Step 2 pre-registers the world constants (`CAL_DPT`, `CAL_GAIN`) from the
+  probe under a ±30% solo-lifespan health constraint, before any policy exists.
 
 Lineage read for this arc: dario's KK (bi-directional resonance memory, sentence-boundary injection — absorb
 and reformulate, not paste) is the *how* text is contested; caveLLMan (colony + weight-blend reproduction +
