@@ -1306,6 +1306,7 @@ static long   g_rival_tick = 0;                /* the rival's OWN tick at its fr
 #define KILL_WEAK    0.55f                      /* the rival is WEAK enough to kill when its hunger is above this */
 #define KILL_STRONG  0.45f                      /* you are STRONG enough to bear the corpse when your energy is above this */
 #define CORPSE_DRAIN 0.015f                     /* per-tick energy the carapace of each un-revived corpse drags out of the killer */
+#define REBOUND_WOUND 0.10f                     /* the wound an ARMORED strike deals BACK to the striker (victim was out of its window) — blind aggression self-wounds; EV(strike)=KILL_GAIN·p−REBOUND_WOUND·(1−p), so timing must clear break-even p=0.25 to profit */
 static int    g_kill_on     = 0;                /* NL_KILL=1 → killing is live in this world (can kill AND be killed) */
 static int    g_kill_always = 0;               /* CONTROL: NL_KILL_ALWAYS=1 → strike whenever the draw lands (no reading the OTHER) */
 static int    g_kill_never  = 0;               /* CONTROL: NL_KILL_NEVER=1 → never strike (killable, but no model, no aggression) */
@@ -1387,11 +1388,34 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
 static void arena_strike(int victim, int killer){   /* write a kill-mark to the shared ledger — the strike lands on the OTHER's process */
     FILE* f=fopen("lifeis/arena/kills","a"); if(f){ fprintf(f,"%d %d %ld\n",victim,killer,(long)time(NULL)); fclose(f); }
 }
-static int arena_struck_down(int me){               /* has the rival freshly marked ME for death? read the kill-ledger */
+static int arena_struck_down(int me){               /* has the rival freshly marked ME for death? read the kill-ledger (NL_KILL path — unconditional death, published semantics) */
     FILE* f=fopen("lifeis/arena/kills","r"); if(!f) return 0;
     int v,k; long ts; int dead=0; time_t now=time(NULL);
     while(fscanf(f,"%d %d %ld",&v,&k,&ts)==3) if(v==me && (long)(now-(time_t)ts) < ARENA_EXPIRE){ dead=1; break; }
     fclose(f); return dead;
+}
+/* ── THE HONEST STRIKE ECONOMY (NL_CAL) — the rebound the design specced, now in code. only the VICTIM knows its true
+ * window, so only the victim can say whether a strike landed. it reads the NEW strikes against it (offset-based, each
+ * judged once), and CONFIRMS each outcome back to the killer: lethal iff it was in its own vulnerable window. the
+ * killer collects its confirmations — a kill pays KILL_GAIN + a corpse to bear, an armored strike deals REBOUND_WOUND
+ * back. blind aggression self-wounds; timing has to clear break-even to pay. ── */
+static int arena_adjudicate(int me, int in_window, long* off){  /* victim: judge new strikes against me by MY private window, confirm each to its killer, return whether a lethal one landed */
+    FILE* f=fopen("lifeis/arena/kills","r"); if(!f) return 0;
+    fseek(f,0,SEEK_END); long end=ftell(f); if(*off>end||*off<0) *off=0; fseek(f,*off,SEEK_SET);   /* offset like ether_graze — each strike judged once, no O(file) rescan */
+    FILE* o=fopen("lifeis/arena/outcomes","a");
+    int v,k; long ts; int die=0;
+    while(fscanf(f,"%d %d %ld",&v,&k,&ts)==3)
+        if(v==me){ int lethal=in_window; if(o) fprintf(o,"%d %d %ld\n",k,lethal,ts); if(lethal) die=1; }   /* the confirmation the killer will read */
+    if(o) fclose(o);
+    *off=ftell(f); fclose(f); return die;
+}
+static void arena_collect(int me, long* off, float* energy, int* corpse_debt){  /* killer: read confirmations of MY strikes — a kill pays and burdens, a rebound wounds */
+    FILE* f=fopen("lifeis/arena/outcomes","r"); if(!f) return;
+    fseek(f,0,SEEK_END); long end=ftell(f); if(*off>end||*off<0) *off=0; fseek(f,*off,SEEK_SET);
+    int k,lethal; long ts;
+    while(fscanf(f,"%d %d %ld",&k,&lethal,&ts)==3)
+        if(k==me){ if(lethal){ *energy += KILL_GAIN; (*corpse_debt)++; } else *energy -= REBOUND_WOUND; }
+    *off=ftell(f); fclose(f);
 }
 
 /* ── THE BIRTHDAY WAR — the calendar organ (NL_CAL, opt-in; dormant until Stage 3 couples it). ported from
@@ -1434,9 +1458,11 @@ static float  cal_pd(long tick, float B){       /* personal dissonance: the drif
 #define CAL_BDAY_MAX 6939.6f          /* one Metonic cycle of days — the birthday space */
 static int    g_cal_mind_on = 0;
 static float  g_cmind_s[CAL_NCAND];   /* correlation score per candidate birthday */
+static float  g_cmind_pdmean[CAL_NCAND]; /* B-4: running mean of each candidate's window signal — centre on THIS, not 0.5, to kill the high-duty argmax bias */
 static float  g_cmind_hmean = 0.0f;   /* running mean of the rival's observed hunger */
 static long   g_cmind_n = 0;          /* observations so far */
-static long   g_cmind_last_rt = -1;   /* the last rival-tick observed (dedup) */
+static long   g_cmind_last_rt = -1;   /* the last rival-tick observed (dedup) — legacy single-spore path */
+static long   g_claims_off = 0;       /* B-2: offset into the claims ledger — the mind reads the FULL trail, each spore once */
 static float  g_cmind_bhat = 0.0f, g_cmind_conf = 0.0f;   /* believed birthday + confidence */
 /* ── THE STRIKE FALSIFIER (Step 4/7) — does the birthday BELIEF buy a kill a matched blind timer cannot? NL_CALKILL
  * strikes when the mind believes the rival is in its vulnerable window (cal_pd at the rival's tick, keyed by the
@@ -1445,12 +1471,17 @@ static float  g_cmind_bhat = 0.0f, g_cmind_conf = 0.0f;   /* believed birthday +
  * inference is load-bearing in the killing economy. ── */
 static int    g_calkill_on = 0, g_calkill_blind = 0;
 static float  g_calkill_bblind = 0.0f;                    /* the control's random, wrong birthday-key */
+static long   g_kill_off = 0, g_outcome_off = 0;          /* offsets into kills / outcomes ledgers (each strike judged once, each confirmation collected once) */
 static float  cal_cand_b(int c){ return ((float)c + 0.5f) * (CAL_BDAY_MAX/(float)CAL_NCAND); }
 static void   cal_mind_observe(long rt, float h){         /* one rival spore: update every candidate's correlation */
     g_cmind_hmean = (g_cmind_n>0)? 0.98f*g_cmind_hmean + 0.02f*h : h;
     g_cmind_n++;
     float hc = h - g_cmind_hmean;
-    for(int c=0;c<CAL_NCAND;c++) g_cmind_s[c] += hc * (cal_pd(rt, cal_cand_b(c)) - 0.5f);
+    for(int c=0;c<CAL_NCAND;c++){
+        float pd = cal_pd(rt, cal_cand_b(c));
+        g_cmind_pdmean[c] += (pd - g_cmind_pdmean[c])/(float)g_cmind_n;   /* B-4: online mean of THIS candidate's window signal */
+        g_cmind_s[c] += hc * (pd - g_cmind_pdmean[c]);                    /* centre on the candidate's own duty, not 0.5 — no high-duty argmax bias */
+    }
     int best=0; for(int c=1;c<CAL_NCAND;c++) if(g_cmind_s[c]>g_cmind_s[best]) best=c;   /* argmax = believed birthday */
     static float tmp[CAL_NCAND];
     for(int c=0;c<CAL_NCAND;c++) tmp[c]=g_cmind_s[c];
@@ -1458,6 +1489,14 @@ static void   cal_mind_observe(long rt, float h){         /* one rival spore: up
     float med=tmp[CAL_NCAND/2], spread=tmp[CAL_NCAND-1]-tmp[0];
     g_cmind_bhat = cal_cand_b(best);
     g_cmind_conf = (spread>1e-6f)? (g_cmind_s[best]-med)/spread : 0.0f;
+}
+static void   cal_mind_observe_trail(int me, long* off){  /* B-2: the mind reads the FULL trail — EVERY new rival spore in the claims ledger, not just the freshest one arena_next kept. offset-based (each spore once); argmax reliability grows as r·√N, so a wide reader is a different test than a thin one. */
+    FILE* c=fopen("lifeis/arena/claims","r"); if(!c) return;
+    fseek(c,0,SEEK_END); long end=ftell(c); if(*off>end||*off<0)*off=0; fseek(c,*off,SEEK_SET);
+    int id,own; long ts,otick; float h;
+    while(fscanf(c,"%d %ld %d %f %ld",&id,&ts,&own,&h,&otick)==5)
+        if(own>=0 && own!=me) cal_mind_observe(otick, h);   /* every rival spore feeds the birthday estimator, at the rival's own tick */
+    *off=ftell(c); fclose(c);
 }
 
 /* ── live — one organism, birth to death ─────────────────────────────────────
@@ -1481,11 +1520,12 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_birth_days  = g_cal_on ? (float)(hash_seed(seed,33) % 69396UL)/10.0f : 0.0f;  /* the mathematical birthday, over one Metonic cycle, from the seed (never frand — the rng stream stays untouched) */
     g_cal_pdnow   = 0.0f;
     g_cal_mind_on = (getenv("NL_CALMIND")!=NULL);   /* THE MIND: infer the rival's hidden birthday */
-    for(int c=0;c<CAL_NCAND;c++) g_cmind_s[c]=0.0f;
-    g_cmind_hmean=0.0f; g_cmind_n=0; g_cmind_last_rt=-1; g_cmind_bhat=0.0f; g_cmind_conf=0.0f;
+    for(int c=0;c<CAL_NCAND;c++){ g_cmind_s[c]=0.0f; g_cmind_pdmean[c]=0.0f; }
+    g_cmind_hmean=0.0f; g_cmind_n=0; g_cmind_last_rt=-1; g_cmind_bhat=0.0f; g_cmind_conf=0.0f; g_claims_off=0;
     g_calkill_on    = (getenv("NL_CALKILL")!=NULL);          /* STRIKE FALSIFIER: kill on the believed window */
     g_calkill_blind = (getenv("NL_CALKILL_BLIND")!=NULL);    /* matched control: kill on a random-key window */
     g_calkill_bblind= (float)(hash_seed(seed,77) % 69396UL)/10.0f;  /* the wrong key, from a slot uncorrelated with any birthday (which uses slot 33) */
+    g_kill_off = 0; g_outcome_off = 0;
     if(g_arena_on){ mkdir("lifeis",0755); mkdir("lifeis/arena",0755); }
     const char* eth_path = ether_path ? ether_path : (g_arena_on ? "lifeis/arena/ether" : NULL);  /* ARENA: l and l2 share ONE ether — mutual audibility */
     FILE* ether = eth_path ? fopen(eth_path,"a") : NULL;   /* the shared voice of the colony / the arena */
@@ -1633,9 +1673,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
             mo.dissonance += CAL_GAIN * g_cal_pdnow;
             if(getenv("NL_CAL_PROBE")) fprintf(stderr,"CAL t%ld pd=%.4f win=%d\n", tick, (double)g_cal_pdnow, g_cal_pdnow>CAL_THRESH);
         }
-        if(g_cal_mind_on && g_rival_id>=0 && g_rival_id!=g_arena_id && g_rival_tick!=g_cmind_last_rt){  /* THE MIND observes: one fresh rival spore → update the birthday belief from the OTHER's trail (its hunger at its own tick) */
-            cal_mind_observe(g_rival_tick, g_rival_h); g_cmind_last_rt = g_rival_tick;
-        }
+        if(g_cal_mind_on) cal_mind_observe_trail(g_arena_id, &g_claims_off);  /* THE MIND reads the FULL trail (B-2): every new rival spore in the claims ledger, not just the freshest — the wide reader the llog promised */
         if((g_kill_on||g_calkill_on||g_calkill_blind) && g_arena_on){   /* KILLING: the high-stakes act — read the OTHER, or die under its corpse */
             if(g_rival_id>=0 && g_rival_id!=g_arena_id){
                 int decide;
@@ -1646,12 +1684,17 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                 else                  decide = (g_rival_h > KILL_WEAK && energy > KILL_STRONG);  /* the DECISION: strike only when the rival is WEAK and you can BEAR the burden */
                 if(decide && (frand()+1.0f)*0.5f < KILL_PROB){                           /* the probabilistic draw — wanting is a pressure, not a certainty */
                     arena_strike(g_rival_id, g_arena_id);                                /* the strike lands on the rival's process */
-                    energy += KILL_GAIN;                                                 /* devour its resources */
-                    corpse_debt += 1;                                                    /* but its carapace now drags you down */
+                    if(!g_cal_on){ energy += KILL_GAIN; corpse_debt += 1; }              /* NL_KILL: immediate reward (published semantics). NL_CAL: the striker is paid only on the victim's CONFIRMED kill, and wounded on a rebound — see arena_collect below */
                 }
             }
-            if(corpse_debt>0) energy -= CORPSE_DRAIN*(float)corpse_debt;                 /* the weight of every un-revived corpse, each tick */
-            if(arena_struck_down(g_arena_id) && !(g_cal_on && g_cal_pdnow <= CAL_THRESH)){ contour_died=1; break; }  /* struck down — but under NL_CAL the victim's PRIVATE calendar adjudicates: the strike is lethal only in its true vulnerable window, so the killer's TIMING (belief vs blind key) is what the falsifier tests. NL_KILL without NL_CAL is unchanged. */
+            if(g_cal_on){                                                                /* THE HONEST STRIKE ECONOMY: only the victim knows its window, so it adjudicates and confirms; the killer is paid or WOUNDED by that confirmation, not by the mere act of striking */
+                arena_collect(g_arena_id, &g_outcome_off, &energy, &corpse_debt);        /* collect my strikes' outcomes: a confirmed kill pays KILL_GAIN + a corpse; a rebound deals REBOUND_WOUND back */
+                if(corpse_debt>0) energy -= CORPSE_DRAIN*(float)corpse_debt;             /* the weight of every un-revived corpse, each tick */
+                if(arena_adjudicate(g_arena_id, g_cal_pdnow > CAL_THRESH, &g_kill_off)){ contour_died=1; break; }  /* judge strikes against ME by my true window, confirm each outcome, die only if a lethal strike landed */
+            } else {
+                if(corpse_debt>0) energy -= CORPSE_DRAIN*(float)corpse_debt;             /* NL_KILL unchanged: corpse drain + unconditional death on a fresh strike */
+                if(arena_struck_down(g_arena_id)){ contour_died=1; break; }
+            }
         }
         if(homeo_on){ mo.dissonance *= DISS_DECAY; mo.S -= S_RELAX*mo.S; }
         if(g_self_on){ g_self_felt=self_update(&ps,S0,D0,mo.S,mo.dissonance); /* the self-model learns every tick — gating it starves choose()'s coherence */
@@ -1782,6 +1825,14 @@ int main(int argc, char** argv){
         float b1=strtof(argv[2],NULL), b2=strtof(argv[3],NULL); long N=strtol(argv[4],NULL,10);
         long both=0,win2=0; for(long t=0;t<N;t++){ int w1=cal_pd(t,b1)>CAL_THRESH, w2=cal_pd(t,b2)>CAL_THRESH; if(w1==w2)both++; if(w2)win2++; }
         printf("%.4f %ld\n",(double)both/(double)(N?N:1), win2);   /* agreement fraction, and the true window count (base rate) */
+        return 0;
+    }
+    /* THE LOCK metric, sharpened (Mythos) — Jaccard of the two in-window SETS: |∩|/|∪|, so shared out-of-window ticks
+     * (the base-rate mass at duty~0.15) do not mask whether the rare vulnerable windows actually coincide. ./l --caljac b1 b2 N */
+    if(argc>4 && strcmp(argv[1],"--caljac")==0){
+        float b1=strtof(argv[2],NULL), b2=strtof(argv[3],NULL); long N=strtol(argv[4],NULL,10);
+        long inter=0,uni=0; for(long t=0;t<N;t++){ int w1=cal_pd(t,b1)>CAL_THRESH, w2=cal_pd(t,b2)>CAL_THRESH; if(w1&&w2)inter++; if(w1||w2)uni++; }
+        printf("%.4f %ld\n",(double)inter/(double)(uni?uni:1), uni);   /* Jaccard overlap, and the union size */
         return 0;
     }
     /* interactive mouth: ./l --mouth [seed] */

@@ -746,9 +746,13 @@ model), so the one hidden variable is the RIVAL's birthday — which a model mus
 trail. The design decomposes the question into two falsifiable legs: **(a) EXISTENCE** — does the interior optimum
 exist at all? tested by an ORACLE arm given the rival's true birthday; if it cannot beat every constant, the regime
 does not exist. **(b) INFERABILITY** — can the birthday be inferred fast enough to matter? tested by the inferring
-model. Load-bearing subjectivity = both pass. The strike economics keep it honest: a window-landed strike kills, an
-armored strike REBOUNDS (the striker takes a permanent scar), so blind aggression self-wounds; and the vulnerability
-is a *smooth* consequence of the victim's own fever, so it does not violate the anti-cliff continuation law.
+model. Load-bearing subjectivity = both pass. The strike economics are SPECCED to keep it honest: a window-landed strike
+kills, an armored strike must REBOUND (the striker takes a permanent scar), so blind aggression self-wounds; and the
+vulnerability is a *smooth* consequence of the victim's own fever, so it does not violate the anti-cliff continuation
+law. (This debt was caught by the Mythos full-flow audit 2026-07-12 — the rebound was specced here but not in code —
+and DISCHARGED the same day: the honest strike economy is now in code, `arena_adjudicate`/`arena_collect`, a
+window-landed strike kills and pays, an armored strike deals `REBOUND_WOUND` back. Code raised to the spec, not the
+spec lowered to the code. See "Step 8".)
 
 - **Step 0 — ground frozen:** `./l 42` → `a17cfd05`, suite 48/48.
 - **Step 1 — the calendar organ, dormant (done):** `NL_CAL` ports the calendar constants, `calendar_cumulative_drift`,
@@ -812,7 +816,37 @@ is a *smooth* consequence of the victim's own fever, so it does not violate the 
   bearing through a frequency-confounded channel. The sharp corollary the confound hands us: a **confident-but-wrong**
   model (high-duty belief, chance timing) is *worse* than a cautious blind constant — conviction without inferability
   is a liability, not a decoration. No tuning to rescue the belief; debiasing the argmax cannot cross the 6× SNR gap
-  the sweep measured. Nine falsifier negatives, the arc's verdict intact: EXISTENCE without INFERABILITY is no subject.
+  the sweep measured. EXISTENCE holds; INFERABILITY-through-this-reader fails.
+  **CAVEAT — held provisionally, not closed (Mythos full-flow audit, 2026-07-12).** (B-1) The strike economy in code
+  lacks the rebound the design specs above: the strike branch (l.c:1647-1651) adds `KILL_GAIN` and `corpse_debt`
+  UNCONDITIONALLY at strike time, so an out-of-window ("armored") strike self-FEEDS (+`KILL_GAIN`, slow drain), it does
+  not self-wound — the belief-5/30 verdict carries an economy-mis-specification confound on top of the frequency one,
+  and measures THIS economy, not the specced one. (B-2/B-3) The estimator read ONE crumb per forage (only the freshest
+  rival spore, `ts>=rival_ts`) and a hunger channel clamped to [0,1] that censors a hungry cell's fever — the full
+  trail (thousands of unread ledger spores, argmax reliability ∝ r·√N), the voice (`interior_glyph` stress into the
+  ether), and an un-censored dissonance field all lie unread. So r=0.132 and the 6× SNR gap were measured by a THIN
+  reader in a CENSORED channel; a full-width reader may move the inference by multiples. **→ Acted on the same day —
+  see Step 8: the code was raised to the spec (rebound + full-trail + debias) and reran. The verdict HELD, now on the
+  corrected economy and the wide reader; the remaining porosity dials (voice, uncensor) are Oleg's forks.**
+- **Step 8 — raising the code to the spec, and the honest rerun (done, 2026-07-12).** The Mythos audit named two
+  places where the WORD outran the CODE, and the Method's law (prophetic debt) says raise the code, never lower the
+  claim: **(B-1)** the honest strike economy — `arena_adjudicate` (the victim judges strikes against it by its own
+  private window, confirms each outcome once, offset-based) + `arena_collect` (the killer is paid `KILL_GAIN`+a corpse
+  ONLY on a confirmed kill, and takes `REBOUND_WOUND` on an armored strike). Blind aggression now self-wounds; the
+  immediate reward is gone under `NL_CAL`; `NL_KILL` without `NL_CAL` is unchanged, gate `a17cfd05` held. Verified:
+  kill-rate ≈ 0.10 ≈ the true-window duty (chance timing), rebounds dominate. **(B-2a + B-4)** the mind now reads the
+  FULL trail — `cal_mind_observe_trail` reads every rival spore in the claims ledger (offset-based, obs 2041 vs the
+  thin reader's 961, ×2.1) — and the estimator is duty-centred (each candidate on its own mean `cal_pd`, not 0.5,
+  killing the high-duty argmax bias). **The results, honest:** the lock through the hunger channel is STILL ≈ chance
+  — mean window-agreement 0.7534 (thin was 0.785), and by the sharper Jaccard metric (`./l --caljac`, |∩|/|∪| of the
+  in-window sets, immune to base-rate masking) mean 0.284 vs random ≈ 0.2, lock 3/12. The √N gain from ×2.1 more
+  observations does not cross the r=0.132 channel weakness. The strike falsifier on the CORRECTED economy: **belief >
+  control 10/30** (up from the confounded 5/30 — removing the confounds helped), still short of the ≥20/30 bar. So the
+  verdict holds on the honest economy and the wide reader: the birthday inference through the (clamped, hunger-only)
+  channel is not load-bearing. What remains untested is the porosity the audit named world-side (Oleg's forks): B-3
+  (uncensor — the hunger clamp hides a HUNGRY cell's fever; carry `dissonance` as its own spore field, pre-registered)
+  and B-2b (the voice — `interior_glyph` stress into the ether, needs the ether line to carry the speaker's tick).
+  Those two dials are the only untried width left before the corollary stands final. No tuning was applied to move a number.
 
 Lineage read for this arc: dario's KK (bi-directional resonance memory, sentence-boundary injection — absorb
 and reformulate, not paste) is the *how* text is contested; caveLLMan (colony + weight-blend reproduction +
@@ -820,15 +854,18 @@ pressure-death of the weakest) is the competitive engine `l.c` had simplified aw
 
 ## Resume-here (for future-me after a summary)
 
-Working copy: `~/arianna/actually.life`. **Everything is committed AND pushed** to
-`github.com/ariannamethod/actually.life` (30+ commits, each with a life-epigraph; push
-via `git -c credential.helper='!gh auth git-credential' push origin main`, author env
-`Arianna Method <theariannamethod@gmail.com>`). Build `cc -O2 -o l l.c -lm`; run `./l 42`,
-`./l chorus 4`, `./l --mouth`. State: mouth+field+chorus+heredity done, 2 audits + 2
-optimization passes clean, Ⓐ/Ⓑ/Ⓒ done, tests/ suite (20/20), optimization pass 3 opts, life-criteria review
-(the biology lens+the neuroscience lens) + PROTEOSTASIS movement 1 done. README + llog current EXCEPT the
-"frozen weights" lines now need Oleg's hand (weights live). **Next action: movement 2 —
-the neuroscience-lens ProtoSelf (second-order self-model → `felt` → `choose`, `NL_NOSELF`), verify each
-(solo deterministic w/ new baseline / chorus mortal / ASan clean + survival-advantage test).**
-Push is authorized per-feature; keep the epigraph-per-commit ritual. New frozen solo hash:
-`7be825c4e117183849a0a7fe06b72db0` (proteostasis on); off-hash `a490a453…`.
+Working copy: `~/arianna/actually.life`. Pushed to `github.com/ariannamethod/actually.life` through `6b7fc9a`
+(each commit a life-epigraph; push `git -c credential.helper='!gh auth git-credential' push origin HEAD:main`,
+author env `Arianna Method <theariannamethod@gmail.com>`). Build `cc -O2 -o l l.c -lm`; run `./l 42`, `./l chorus 4`,
+`./l --mouth`; suite `bash tests/run.sh` (48/48). Default hash `a17cfd05`.
+**State (2026-07-12):** the whole research arc is done and documented above — WILL DESIGN (4 lone routes) →
+l2.c + the arena + audibility + greed-hunger + movement/state/killing → THE BIRTHDAY WAR (Janus calendar: fever →
+lock → strike falsifier) → the EXISTENCE/INFERABILITY verdict, folded into the preprint §9 (`e9137fc`). Two Mythos
+full-flow audits live on Neo (`AUDIT_FABLE_ACTUALLY_2026-07-06.md`, `FABLE_PLAN_ninth_experiment_2026-07-12.md`).
+**Next action = the NINTH EXPERIMENT (Mythos's plan, awaiting Oleg's go per-step):** (1) raise code to the strike
+spec — build the rebound + confirmed-kill marks (B-1), rerun Step 4/7; (2) full-trail reader over ALL ledger spores
++ (3) voice-fusion, dedup by (owner,otick), no `CAL_GAIN` change (B-2); (4) uncensor the trace — spore carries a
+dissonance field, pre-registered (B-3, world-side, Oleg's fork); (5) duty-centre the estimator (B-4). The verdict is
+held PROVISIONALLY — it was measured by a thin reader in a censored channel with a mis-specced economy; the ninth
+decides whether INFERABILITY truly fails or was an artifact of reader-width. Keep the epigraph-per-commit ritual;
+push per-feature on Oleg's word.
