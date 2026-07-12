@@ -792,6 +792,27 @@ is a *smooth* consequence of the victim's own fever, so it does not violate the 
   behavior. The theorem gains a corollary: an interior, hidden-state optimum is necessary but NOT sufficient for a
   model to bear weight; the hidden state must also be INFERABLE through the channel the world leaves open. Here it is
   not. No `CAL_GAIN` or estimator tuning was applied to force a lock — the gap is the result.
+  → Folded into the preprint as a new §9, "The Janus Edition: A Machine Built to Break the Theorem"
+  (`ariannamethod.research/inwork/the_will_design.md`, pushed `e9137fc`): names the theorem the seven negatives
+  share, dispatches the colony as a mirage of a door (the correction the audit demanded of the old §9), builds the
+  Janus birthday quantity, and reports the EXISTENCE/INFERABILITY split as the eighth formal experiment (the llog's
+  "ninth" counts sub-stages; the paper counts formal experiments). Abstract + reproducibility updated.
+- **Step 4/7 — the strike falsifier, in the killing economy (done). Belief fails 5/30; the confound sharpens it.**
+  `NL_CALKILL` strikes when the mind BELIEVES the rival is in its vulnerable window (`cal_pd(rival_tick, b̂) >
+  CAL_THRESH`); the matched control `NL_CALKILL_BLIND` uses the same window mechanism keyed by a RANDOM birthday
+  (`hash_seed(seed,77)`, `./l --calbb`). To make the timing MATTER, the victim's PRIVATE calendar now adjudicates:
+  a strike is lethal only in the victim's true window (`g_cal_on && g_cal_pdnow > CAL_THRESH` at `arena_struck_down`),
+  so the killer only chooses WHEN and the hidden state decides IF — and NL_KILL without NL_CAL is unchanged (gate
+  `a17cfd05` held). Falsifier: `l` switches key belief↔blind against a fixed blind `l2`, 30 seeds, who outlives whom.
+  **belief > control 5/30, control > belief 22/30, tie 3** — belief fails the ≥20/30 bar decisively. Not load-bearing
+  in the killing economy, confirming the lock. The DIRECTION (belief loses) is a named, reproducible **frequency
+  confound, not a timing failure**: the estimator's argmax is biased toward high-duty birthdays (mean `b̂` window-duty
+  313/1000 vs the blind key's 98/1000, base rate ~150/1000), so the belief-striker strikes ~3× more, accrues corpse-
+  debt, and dies earlier. The clean TIMING verdict is the lock (0.785 ≈ 0.745 chance); the arena confirms non-load-
+  bearing through a frequency-confounded channel. The sharp corollary the confound hands us: a **confident-but-wrong**
+  model (high-duty belief, chance timing) is *worse* than a cautious blind constant — conviction without inferability
+  is a liability, not a decoration. No tuning to rescue the belief; debiasing the argmax cannot cross the 6× SNR gap
+  the sweep measured. Nine falsifier negatives, the arc's verdict intact: EXISTENCE without INFERABILITY is no subject.
 
 Lineage read for this arc: dario's KK (bi-directional resonance memory, sentence-boundary injection — absorb
 and reformulate, not paste) is the *how* text is contested; caveLLMan (colony + weight-blend reproduction +

@@ -1438,6 +1438,13 @@ static float  g_cmind_hmean = 0.0f;   /* running mean of the rival's observed hu
 static long   g_cmind_n = 0;          /* observations so far */
 static long   g_cmind_last_rt = -1;   /* the last rival-tick observed (dedup) */
 static float  g_cmind_bhat = 0.0f, g_cmind_conf = 0.0f;   /* believed birthday + confidence */
+/* ── THE STRIKE FALSIFIER (Step 4/7) — does the birthday BELIEF buy a kill a matched blind timer cannot? NL_CALKILL
+ * strikes when the mind believes the rival is in its vulnerable window (cal_pd at the rival's tick, keyed by the
+ * INFERRED birthday). NL_CALKILL_BLIND is the matched control: the SAME window mechanism keyed by a RANDOM birthday
+ * (uncorrelated with the rival's true one) — identical duty distribution, wrong key. belief beats blind iff the
+ * inference is load-bearing in the killing economy. ── */
+static int    g_calkill_on = 0, g_calkill_blind = 0;
+static float  g_calkill_bblind = 0.0f;                    /* the control's random, wrong birthday-key */
 static float  cal_cand_b(int c){ return ((float)c + 0.5f) * (CAL_BDAY_MAX/(float)CAL_NCAND); }
 static void   cal_mind_observe(long rt, float h){         /* one rival spore: update every candidate's correlation */
     g_cmind_hmean = (g_cmind_n>0)? 0.98f*g_cmind_hmean + 0.02f*h : h;
@@ -1476,6 +1483,9 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_cal_mind_on = (getenv("NL_CALMIND")!=NULL);   /* THE MIND: infer the rival's hidden birthday */
     for(int c=0;c<CAL_NCAND;c++) g_cmind_s[c]=0.0f;
     g_cmind_hmean=0.0f; g_cmind_n=0; g_cmind_last_rt=-1; g_cmind_bhat=0.0f; g_cmind_conf=0.0f;
+    g_calkill_on    = (getenv("NL_CALKILL")!=NULL);          /* STRIKE FALSIFIER: kill on the believed window */
+    g_calkill_blind = (getenv("NL_CALKILL_BLIND")!=NULL);    /* matched control: kill on a random-key window */
+    g_calkill_bblind= (float)(hash_seed(seed,77) % 69396UL)/10.0f;  /* the wrong key, from a slot uncorrelated with any birthday (which uses slot 33) */
     if(g_arena_on){ mkdir("lifeis",0755); mkdir("lifeis/arena",0755); }
     const char* eth_path = ether_path ? ether_path : (g_arena_on ? "lifeis/arena/ether" : NULL);  /* ARENA: l and l2 share ONE ether — mutual audibility */
     FILE* ether = eth_path ? fopen(eth_path,"a") : NULL;   /* the shared voice of the colony / the arena */
@@ -1626,10 +1636,12 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         if(g_cal_mind_on && g_rival_id>=0 && g_rival_id!=g_arena_id && g_rival_tick!=g_cmind_last_rt){  /* THE MIND observes: one fresh rival spore → update the birthday belief from the OTHER's trail (its hunger at its own tick) */
             cal_mind_observe(g_rival_tick, g_rival_h); g_cmind_last_rt = g_rival_tick;
         }
-        if(g_kill_on && g_arena_on){                   /* KILLING: the high-stakes act — read the OTHER, or die under its corpse */
+        if((g_kill_on||g_calkill_on||g_calkill_blind) && g_arena_on){   /* KILLING: the high-stakes act — read the OTHER, or die under its corpse */
             if(g_rival_id>=0 && g_rival_id!=g_arena_id){
                 int decide;
-                if(g_kill_always)     decide = 1;                                       /* CONTROL: strike blindly */
+                if(g_calkill_on)      decide = (cal_pd(g_rival_tick, g_cmind_bhat)     > CAL_THRESH && energy > KILL_STRONG);  /* STRIKE FALSIFIER: kill when the mind BELIEVES the rival is in its vulnerable window (inferred key) */
+                else if(g_calkill_blind) decide = (cal_pd(g_rival_tick, g_calkill_bblind) > CAL_THRESH && energy > KILL_STRONG);  /* matched control: same window mechanism, RANDOM wrong key */
+                else if(g_kill_always)     decide = 1;                                       /* CONTROL: strike blindly */
                 else if(g_kill_never) decide = 0;                                       /* CONTROL: never strike */
                 else                  decide = (g_rival_h > KILL_WEAK && energy > KILL_STRONG);  /* the DECISION: strike only when the rival is WEAK and you can BEAR the burden */
                 if(decide && (frand()+1.0f)*0.5f < KILL_PROB){                           /* the probabilistic draw — wanting is a pressure, not a certainty */
@@ -1639,7 +1651,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                 }
             }
             if(corpse_debt>0) energy -= CORPSE_DRAIN*(float)corpse_debt;                 /* the weight of every un-revived corpse, each tick */
-            if(arena_struck_down(g_arena_id)){ contour_died=1; break; }                  /* struck down by the rival — the tape ends */
+            if(arena_struck_down(g_arena_id) && !(g_cal_on && g_cal_pdnow <= CAL_THRESH)){ contour_died=1; break; }  /* struck down — but under NL_CAL the victim's PRIVATE calendar adjudicates: the strike is lethal only in its true vulnerable window, so the killer's TIMING (belief vs blind key) is what the falsifier tests. NL_KILL without NL_CAL is unchanged. */
         }
         if(homeo_on){ mo.dissonance *= DISS_DECAY; mo.S -= S_RELAX*mo.S; }
         if(g_self_on){ g_self_felt=self_update(&ps,S0,D0,mo.S,mo.dissonance); /* the self-model learns every tick — gating it starves choose()'s coherence */
@@ -1756,6 +1768,12 @@ int main(int argc, char** argv){
     if(argc>2 && strcmp(argv[1],"--calb")==0){
         unsigned long seed = strtoul(argv[2],NULL,10);
         printf("%.4f\n", (double)((float)(hash_seed(seed,33) % 69396UL)/10.0f));
+        return 0;
+    }
+    /* THE STRIKE FALSIFIER — print the blind control's random birthday-key (hash slot 77, uncorrelated with the true birthday's slot 33): ./l --calbb <seed> */
+    if(argc>2 && strcmp(argv[1],"--calbb")==0){
+        unsigned long seed = strtoul(argv[2],NULL,10);
+        printf("%.4f\n", (double)((float)(hash_seed(seed,77) % 69396UL)/10.0f));
         return 0;
     }
     /* THE LOCK metric — window-schedule agreement between two birthdays over N ticks. the operationally meaningful lock:
