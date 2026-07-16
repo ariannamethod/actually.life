@@ -848,6 +848,43 @@ spec lowered to the code. See "Step 8".)
   and B-2b (the voice — `interior_glyph` stress into the ether, needs the ether line to carry the speaker's tick).
   Those two dials are the only untried width left before the corollary stands final. No tuning was applied to move a number.
 
+## THE POROSITY WALL, AND THE TURN TO GUILT (2026-07-16, in flight)
+
+**B-3 — uncensoring the channel did not rescue inferability, and the failure named the real wall.** Pre-registered
+with Oleg (expected r_diss 0.3–0.6; gate = lock Jaccard ≥0.5 in ≥20/30). The blood-spore gained a 6th field — the
+forager's UNCENSORED dissonance (`|mo.dissonance|`, unclamped where hunger was clamped to [0,1]); `NL_CALDISS`
+switches the estimator to read it. Result: **r_diss = 0.19** (≈ r_hunger 0.21, BELOW the pre-registered 0.3), lock
+mean **Jaccard 0.35, 5/12** (a hair over hunger's 0.28, 3/12 — far under the gate). The clamp was not the bottleneck.
+
+**Why, from the numbers:** dissonance swings 0→3.6 (mean 1.29) while the fever adds only `CAL_GAIN·cal_pd` ≈ 0.04 —
+**~1% of the dynamic range.** The birthday is a TINY cause among large ones; it is hidden not by censorship but by its
+own small MAGNITUDE, and no channel width recovers a small cause (CAL_GAIN not tuned — that would be rigging). This
+converges with the whole arc's law from a new side: **MAGNITUDE is what is both INFERABLE and LOAD-BEARING.** And the
+organism self-seals: every LARGE cause it has (energy, arousal, regulation) is PUBLIC; the one hidden cause we bolted
+on (the birthday) is deliberately SMALL.
+
+**The turn (Oleg): the hidden cause is weak because it is not SHAMEFUL.** A neutral fact drives nothing; a hidden
+cause becomes a large driver only when the organism must CONCEAL it and is PAINED by it — guilt. And in THIS organism
+the existential-vs-consequential guilt-binary COLLAPSES: to exist here IS the act — the arena is a struggle for
+resources, the raid is envy of the rival's plate, the kill is malice. Adam and Eve expelled into a world where to
+live is to compete and covet. **Original sin is not *before* the act — it is the act of being-through-struggle
+itself.** So guilt is not a new hidden variable — it is the **subjective face of what the
+organism already does**: large (its core acts of taking and killing), hidden (shame is interior), inferable (the
+ashamed hesitate, mis-time, withdraw — the return of the repressed). The mechanism is at hand: the AML `PAIN`
+operator compresses the logit distribution toward the mean (×(1−0.5·pain)) — contracted, conservative, withdrawn,
+suffering-gated generation; `SCAR` deposits a gravitational scar.
+
+**Method-note (Oleg — and it IS the method):** we work by building a dichotomy inside the anti-dichotomy, pushing it
+until it COLLAPSES, and harvesting the new questions from the collapse — a VM spun up inside the host, run to a
+halt-state, the halt being the new question. Existential-vs-consequential was such a VM; the Eden insight collapsed
+it; the collapse opened the guilt-design question. The dichotomies are not errors — they are the scaffold whose
+collapse is the product. Same physics as the organism: no fixed outcome chosen, a field that moves and condenses.
+
+**Next:** design a load-bearing GUILT — large (drives via PAIN/contraction), hidden (interior shame), inferable
+(concealment's tells), falsifiable (beat a guilt-blind matched constant per-seed ≥20/30, able to return "no subject").
+A Freud-in-the-AI-age design consultation is running (read-only). B-3 code kept behind `NL_CALDISS`; gate `a17cfd05`
+held, suite unaffected. This may become a continuation of the WILL DESIGN preprint.
+
 Lineage read for this arc: dario's KK (bi-directional resonance memory, sentence-boundary injection — absorb
 and reformulate, not paste) is the *how* text is contested; caveLLMan (colony + weight-blend reproduction +
 pressure-death of the weakest) is the competitive engine `l.c` had simplified away, now made direct.

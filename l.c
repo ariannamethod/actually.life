@@ -1296,6 +1296,7 @@ static int    g_rival_prev = -1;               /* the rival's previously-observe
 static int    g_rival_id = -1;                 /* the rival's voice-id (from the claims owner) — WHOM to kill */
 static float  g_rival_h  = 0.0f;               /* the rival's freshest hunger (from its blood-spore) — how WEAK it is now */
 static long   g_rival_tick = 0;                /* the rival's OWN tick at its freshest spore — the mind reads the trail in the rival's clock */
+static float  g_rival_diss = 0.0f;             /* B-3: the rival's freshest UNCENSORED dissonance (its own |mo.dissonance|) — the porosity channel, unclamped where hunger was clamped */
 /* ── KILLING (NL_KILL, opt-in; the HIGH-STAKES act — where a dumb rule is FATAL, not cheap). an organism may kill the
  * other to seize its resources, but the kill is a PROBABILISTIC draw (wanting is a pressure, not a certainty), and the
  * corpse's carapace DRAGS THE KILLER DOWN — it must REVIVE it (reproduce) or die of the weight. "always-kill" sinks under
@@ -1353,11 +1354,11 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
     time_t now=time(NULL);
     unsigned char* claimed=(unsigned char*)calloc((size_t)g_pool_n,1);
     int rival_last=-1; long rival_ts=-1; float rival_h=0.0f;
-    if(claimed){ rewind(c); int id, own; long ts; float h; long otick;
-        while(fscanf(c,"%d %ld %d %f %ld",&id,&ts,&own,&h,&otick)==5)
+    if(claimed){ rewind(c); int id, own; long ts; float h; long otick; float diss;
+        while(fscanf(c,"%d %ld %d %f %ld %f",&id,&ts,&own,&h,&otick,&diss)==6)
             if(id>=0 && id<g_pool_n && (long)(now-(time_t)ts) < ARENA_EXPIRE){
                 claimed[id]=1;
-                if(own!=g_arena_id && ts>=rival_ts){ rival_ts=ts; rival_last=id; rival_h=h; g_rival_id=own; g_rival_h=h; g_rival_tick=otick; }   /* the rival's freshest blood-spore: WHERE it eats, WHO it is, the HUNGER it ate in, and its OWN tick (the tree-ring the mind reads) */
+                if(own!=g_arena_id && ts>=rival_ts){ rival_ts=ts; rival_last=id; rival_h=h; g_rival_id=own; g_rival_h=h; g_rival_tick=otick; g_rival_diss=diss; }   /* the rival's freshest blood-spore: WHERE it eats, WHO, the HUNGER + the UNCENSORED dissonance it ate in, and its OWN tick */
             }
     }
     int mp = (*my_pos>=0 && *my_pos<g_pool_n)? *my_pos : 0;
@@ -1377,7 +1378,7 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
     int pick=-1, bestd=1<<30;
     if(claimed) for(int i=0;i<g_pool_n;i++){ if(claimed[i]) continue; int d=i-target; if(d<0)d=-d; if(d<bestd){ bestd=d; pick=i; } }  /* the nearest UNCLAIMED chunk to the target */
     if(claimed) free(claimed);
-    if(pick>=0){ fseek(c,0,SEEK_END); fprintf(c,"%d %ld %d %.4f %ld\n",pick,(long)now,g_arena_id,(double)hunger,tick); fflush(c); }  /* drop the blood-spore: WHERE, WHEN, WHO, the HUNGER it foraged in, and its OWN tick — a tree-ring, read alike by model and controls */
+    if(pick>=0){ fseek(c,0,SEEK_END); fprintf(c,"%d %ld %d %.4f %ld %.4f\n",pick,(long)now,g_arena_id,(double)hunger,tick,(double)dabs); fflush(c); }  /* drop the blood-spore: WHERE, WHEN, WHO, the HUNGER it foraged in, its OWN tick, and its UNCENSORED dissonance (B-3: the porosity field — the fever the hunger clamp truncated) */
     flock(fd, LOCK_UN); fclose(c);
     if(pick<0) return 0;                          /* every chunk is held and unexpired — starve until the ground frees */
     *my_pos = pick;
@@ -1457,6 +1458,7 @@ static float  cal_pd(long tick, float B){       /* personal dissonance: the drif
 #define CAL_NCAND    128
 #define CAL_BDAY_MAX 6939.6f          /* one Metonic cycle of days — the birthday space */
 static int    g_cal_mind_on = 0;
+static int    g_cal_diss_on = 0;      /* B-3 (NL_CALDISS): the mind reads the UNCENSORED dissonance field instead of the clamped hunger */
 static float  g_cmind_s[CAL_NCAND];   /* correlation score per candidate birthday */
 static float  g_cmind_pdmean[CAL_NCAND]; /* B-4: running mean of each candidate's window signal — centre on THIS, not 0.5, to kill the high-duty argmax bias */
 static float  g_cmind_hmean = 0.0f;   /* running mean of the rival's observed hunger */
@@ -1493,9 +1495,9 @@ static void   cal_mind_observe(long rt, float h){         /* one rival spore: up
 static void   cal_mind_observe_trail(int me, long* off){  /* B-2: the mind reads the FULL trail — EVERY new rival spore in the claims ledger, not just the freshest one arena_next kept. offset-based (each spore once); argmax reliability grows as r·√N, so a wide reader is a different test than a thin one. */
     FILE* c=fopen("lifeis/arena/claims","r"); if(!c) return;
     fseek(c,0,SEEK_END); long end=ftell(c); if(*off>end||*off<0)*off=0; fseek(c,*off,SEEK_SET);
-    int id,own; long ts,otick; float h;
-    while(fscanf(c,"%d %ld %d %f %ld",&id,&ts,&own,&h,&otick)==5)
-        if(own>=0 && own!=me) cal_mind_observe(otick, h);   /* every rival spore feeds the birthday estimator, at the rival's own tick */
+    int id,own; long ts,otick; float h,diss;
+    while(fscanf(c,"%d %ld %d %f %ld %f",&id,&ts,&own,&h,&otick,&diss)==6)
+        if(own>=0 && own!=me) cal_mind_observe(otick, g_cal_diss_on ? diss : h);   /* B-3: under NL_CALDISS the estimator reads the UNCENSORED dissonance, else the clamped hunger */
     *off=ftell(c); fclose(c);
 }
 
@@ -1520,6 +1522,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_birth_days  = g_cal_on ? (float)(hash_seed(seed,33) % 69396UL)/10.0f : 0.0f;  /* the mathematical birthday, over one Metonic cycle, from the seed (never frand — the rng stream stays untouched) */
     g_cal_pdnow   = 0.0f;
     g_cal_mind_on = (getenv("NL_CALMIND")!=NULL);   /* THE MIND: infer the rival's hidden birthday */
+    g_cal_diss_on = (getenv("NL_CALDISS")!=NULL);   /* B-3: read the uncensored dissonance channel */
     for(int c=0;c<CAL_NCAND;c++){ g_cmind_s[c]=0.0f; g_cmind_pdmean[c]=0.0f; }
     g_cmind_hmean=0.0f; g_cmind_n=0; g_cmind_last_rt=-1; g_cmind_bhat=0.0f; g_cmind_conf=0.0f; g_claims_off=0;
     g_calkill_on    = (getenv("NL_CALKILL")!=NULL);          /* STRIKE FALSIFIER: kill on the believed window */
