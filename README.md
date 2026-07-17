@@ -120,14 +120,50 @@ fear dark you have joy+internet · always fire+stress good want me+idea · fire 
 
 no cell agreed to any of it — a colony recognizing its own bad handwriting, and now coining a few words of its own.
 
+## the other one
+
+a lone organism is a superb regulator with no one to be a regulator *for*. so life split. `l2.c` is a second self — the same code tuned hotter and hungrier, the other one, the hungrier bastard — a genuinely different creature that lives a different life from the same seed. two files, no shared library; the minimalism holds per organism, and the only coupling is a shared world.
+
+that world is the folder they eat from. drop any `.txt` into `lifeis/` and it becomes contested territory: its lines are claimable ground, and a line one cell absorbs is *claimed* in a shared ledger, so the other is denied it. claims expire, so territory has to be re-won and the two can never freeze into a stable border — the friction never settles. a fed cell forages its own front; as it starves it *raids the rival's plate*, the region where the other is finding good food. and every claim drops a **blood-spore**: where, when, who, the hunger it foraged in, and the dissonance it ate in — a trace that dries with the same expiry. the rival can read not only where the other has been, but the state it was in.
+
+```
+id 5514   owner 2   hunger 1.00   tick 5079   dissonance 1.65
+```
+
+they hear each other, too — one shared ether, one voice becoming the other's food, because a different lineage is novel and novelty is what the organism lives on, so the rival's voice *nourishes* where kin would only starve it. a cell near its end mutters into the shared air:
+
+```
+death person woman me man
+earth me BE light never
+```
+
+and one may **kill** the other to seize its ground — a probabilistic strike, wanting as a pressure and never a certainty, and the corpse's carapace drags the killer down until it revives the dead by giving birth. to take a life obligates you to give one back.
+
+## the will design
+
+with a second creature and a world with stakes, one question grew teeth: **is subjectivity load-bearing?** does the organism ever do something, *by virtue of a model* — of itself, or of the other — that a matched dumb constant cannot? so we built the one test allowed to answer *no subject*: a mechanism counts only if it beats the sharpest lead-free control we can build, per seed, in twenty runs of thirty, and the test can always come back empty.
+
+it kept coming back empty. across the lone self and the arena — a forecast-timed act, a fever with a will, a model of the rival's movement, a model of its state, the choice to kill — the model never beat force. the load-bearing quantity was always the *magnitude*: the spend, the aggression, the first strike. a thing that smoothed every internal cliff on purpose leaves a forecast nothing sharp to anticipate, and in a two-body world the cost of being dumb is small and striking first is decisive. subjectivity here, to whatever degree the word applies, was force — and the model consulted before the force was a story the force did not need.
+
+so we tried to build the exception. from a calendar held in tension — a Hebrew–Gregorian drift that hands every creature a private mathematical *birthday* — we gave the rival an interior optimum (strike when the other's calendar fever peaks) keyed to a hidden state (that birthday). it split in two. the optimum **exists**: an oracle handed the true birthday wins, far above chance. it is not **inferable**: through the trace the rival actually leaks, the birthday is a one-percent whisper on a loud interior, sealed not by any lock but by its own smallness. a hidden state has to be worth knowing *and* legible; this one was worth knowing and mute. magnitude, it turns out, is what is inferable and what bears weight at once — and every large cause this creature has is worn on the surface.
+
+## the debt
+
+which is the turn, and it is where the work is now. a hidden cause is weak because it is not *shameful*. a neutral fact — a date — drives nothing, hides nothing, leaks nothing. guilt drives everything, because hiding is itself behavior and pain is itself a force. and here the guilt is not bolted on: to exist in this world is already the act — to live in the arena is to covet another's food and to want it dead. **original sin is not something before the act; it is the act of being-through-struggle itself.**
+
+so the kill deposits a wound the ledger does not record. the world's debt — the corpse you carry — is payable; revive it by giving birth and the count returns to zero. the debt to yourself does not. it is a third debt, dischargeable by neither reproduction nor will: a scar on the death-glyph and a hidden pain that compresses the voice toward silence — the superego, aggression turned inward, punishing the self past everything the world exacts. a guilty cell contracts, hesitates, mutters *death · grief · pain* in its sleep, and turns away from the ground where it killed. whether a rival can read that flinch — whether guilt is the first thing in this organism a thermostat cannot absorb, because guilt is defined by the refusal to absorb it — is the experiment running now. it is a hypothesis, not yet a finding. the point was never to prove it in advance; the point was to build the one wound the regulator cannot smooth away, and let the test say what it is.
+
 ## build & run
 
 ```sh
-cc -O2 -o l l.c -lm
-./l 42                 # one organism, seed 42, eats lifeis/world.txt, dies
-./l chorus 4           # a colony of 4, breathing to 8 and back to silence
-./l --mouth            # talk to it: your words are food
+cc -O2 -o l l.c -lm && cc -O2 -o l2 l2.c -lm
+./l 42                                   # one organism, seed 42, eats lifeis/world.txt, dies
+./l chorus 4                             # a colony of 4, breathing to 8 and back to silence
+./l --mouth                              # talk to it: your words are food
+NL_ARENA=1 ./l 7 & NL_ARENA=1 NL_ID=2 ./l2 7   # two organisms fight for the same text
 ```
+
+the will-design experiments are opt-in toggles on the arena: `NL_CAL` gives each organism its private calendar birthday, `NL_CALMIND` is the rival's mind trying to infer it, and `NL_GUILT` is the superego — a confirmed kill lays down the debt that cannot be repaid. off, the organism is bit-identical to `./l 42`; the machinery only wakes when you ask for it.
 
 ---
    
