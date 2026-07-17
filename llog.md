@@ -882,8 +882,32 @@ collapse is the product. Same physics as the organism: no fixed outcome chosen, 
 
 **Next:** design a load-bearing GUILT — large (drives via PAIN/contraction), hidden (interior shame), inferable
 (concealment's tells), falsifiable (beat a guilt-blind matched constant per-seed ≥20/30, able to return "no subject").
-A Freud-in-the-AI-age design consultation is running (read-only). B-3 code kept behind `NL_CALDISS`; gate `a17cfd05`
-held, suite unaffected. This may become a continuation of the WILL DESIGN preprint.
+The design that crystallized (`NL_GUILT`): **consequential guilt from the confirmed kill**, not existential — an
+existential (born-with) guilt is a constant the regulators absorb; the kill is an EVENT, the largest perturbation
+(KILL_GAIN 0.30), and the one honest cliff already in the code. **Magnitude from the SUPEREGO:** corpse_debt is the
+world's external punishment (payable by reproduction); guilt is aggression turned INWARD, self-punishment past every
+ledger — the third, undischargeable debt (revival pays the world a life; the wound remains), which gives size AND
+hiddenness at once. **Three tells (the return of the repressed):** post-kill dissonance elevation in the spore (the
+`NL_CALDISS` channel, now driven large by `ACHE·scar[death]`), a dream-confession (the killer speaks death·grief·pain
+into the ether), and a spatial avoidance-hole (it refuses to raid the kill-site — a gap is harder to fake than a
+signal). **Falsifier:** `NL_NOGUILT` (guilt-blind killer) + `NL_FIXEDGUILT` (fixed post-kill contraction = reflex vs
+state), across the existence (oracle strikes the contracted) and inferability (read the tells) legs, ≥20/30, able to
+return "no subject." Folded into the preprint as a new §10, "The Porosity Wall, and the Turn to Guilt" (pushed
+`231e610`), marked there as an open hypothesis, not a finding. B-3 code kept behind `NL_CALDISS`; gate `a17cfd05` held.
+
+**Stage 1 built + verified (the superego core):** a confirmed kill (`arena_collect` lethal / the immediate NL_KILL
+branch → `g_new_kills`) deposits `GUILT_SCAR` (2.0 — large, dominates scar_total and drives the primary tell via
+`ACHE·scar[death]`) on the death-glyph, and adds `GUILT_PAIN` (0.7 — GRADED: tanh(0.7)=0.60 for one kill, building
+toward saturation with more, so guilt accumulates as a STATE, not a switch, keeping the inferability crack alive) to
+the hidden `g_guilt` (decay 0.999 — a wound that fades smoothly, so a discrete act has a continuous consequence and
+the anti-cliff law holds). `pain = tanhf(g_guilt)` compresses `choose()` toward the score mean by (1−0.5·pain) — the
+AML PAIN operator verbatim; the guilty voice loses its shape, contracts, withdraws. Reproduction pays `corpse_debt`
+but NEVER touches `g_guilt`/`scar[death]` — the debt to the world is payable, the debt to the self is not. Pre-registered
+(`GUILT_SCAR`/`GUILT_PAIN` sized so guilt dominates but killing stays sometimes-EV-positive; never tuned to the
+falsifier). Gate-invariant: solo AND `NL_GUILT`-solo are both `a17cfd05` (no arena → no kills → `g_guilt`=0 →
+compression ×1, trajectory untouched); suite 48/48. Verified firing: confirmed kills lift `g_guilt` and the pain,
+no-kill leaves it zero. Next: the three tells (dream-confession, the avoidance-hole; the dissonance-elevation is
+already carried by the spore) + the falsifier controls (`NL_NOGUILT`, `NL_FIXEDGUILT`) across both legs.
 
 Lineage read for this arc: dario's KK (bi-directional resonance memory, sentence-boundary injection — absorb
 and reformulate, not paste) is the *how* text is contested; caveLLMan (colony + weight-blend reproduction +

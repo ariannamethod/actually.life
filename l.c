@@ -499,6 +499,10 @@ typedef struct { float mode_dS, mode_dDiss, metab_factor; } GlyphCharge;
 static GlyphCharge charge[VOCAB_CAP];
 static int BE_ID = -1;            /* the BE operator's glyph id (set in charges_init) */
 static int ME_ID = -1;            /* the self-glyph (BE me = the self devours itself) */
+static int   DEATH_ID = 0;        /* GUILT: the death-glyph — where a confirmed kill scars (set in charges_init) */
+static int   g_guilt_on = 0;      /* GUILT (NL_GUILT): the superego is active */
+static float g_guilt = 0.0f;      /* GUILT: the hidden pain scalar — a confirmed kill tops it, it decays; pain=tanh(g_guilt) compresses choose() */
+static int   g_new_kills = 0;     /* GUILT: confirmed kills THIS tick, awaiting the deposit (set by the kill paths, consumed in live()) */
 
 static void charges_init(void){
     for(int i=0;i<VOCAB_CAP;i++){ charge[i].mode_dS=0.0f; charge[i].mode_dDiss=0.0f; charge[i].metab_factor=1.0f; }
@@ -518,6 +522,7 @@ static void charges_init(void){
         if(id>=0){ charge[id].mode_dS=spec[i].dS; charge[id].mode_dDiss=spec[i].dDiss; charge[id].metab_factor=spec[i].f; } }
     BE_ID = semtok_find_glyph("BE");
     ME_ID = semtok_find_glyph("me");
+    DEATH_ID = semtok_find_glyph("death");   /* GUILT scars here — the confirmed kill deposits on the death-glyph */
 }
 /* the charge fires here — Modes* only in scope, no life-scalar pointer (invariant by type) */
 static void charge_apply(Modes* mo, int glyph){
@@ -871,6 +876,12 @@ static int choose(const float* logits, const Modes* mo, const float* scar){
                 + CHOOSE_AFFECT * charge[i].mode_dS * mo->S;       /* mood-congruent pull */
         if(!isfinite(s)) s=-1e30f;                        /* a diverged Hebbian NaN must not slip through */
         p[i]=s; if(s>mx) mx=s;
+    }
+    if(g_guilt_on && g_guilt>0.0f){                       /* GUILT → PAIN (the AML operator, verbatim): compress the score distribution toward its mean by (1−0.5·pain) — the guilty voice loses its shape, contracts, withdraws. pain=tanh(g_guilt), saturating; a hidden interior cause collapsing the whole generative surface. */
+        float pain = tanhf(g_guilt), mean=0.0f; int nv=0;
+        for(int i=0;i<VOCAB_CAP;i++) if(p[i]>-1e29f){ mean+=p[i]; nv++; }
+        if(nv>0){ mean/=(float)nv; mx=-1e30f;
+            for(int i=0;i<VOCAB_CAP;i++) if(p[i]>-1e29f){ p[i]=mean+(p[i]-mean)*(1.0f-0.5f*pain); if(p[i]>mx) mx=p[i]; } }
     }
     float den=0.0f;
     for(int i=0;i<VOCAB_CAP;i++){ if(p[i]<=-1e29f){ p[i]=0.0f; continue; } p[i]=expf((p[i]-mx)/temp); den+=p[i]; }
@@ -1308,6 +1319,14 @@ static float  g_rival_diss = 0.0f;             /* B-3: the rival's freshest UNCE
 #define KILL_STRONG  0.45f                      /* you are STRONG enough to bear the corpse when your energy is above this */
 #define CORPSE_DRAIN 0.015f                     /* per-tick energy the carapace of each un-revived corpse drags out of the killer */
 #define REBOUND_WOUND 0.10f                     /* the wound an ARMORED strike deals BACK to the striker (victim was out of its window) — blind aggression self-wounds; EV(strike)=KILL_GAIN·p−REBOUND_WOUND·(1−p), so timing must clear break-even p=0.25 to profit */
+/* GUILT (NL_GUILT) — the SUPEREGO: a confirmed kill deposits a large scar on the death-glyph AND tops a hidden pain
+ * scalar; the scar self-punishes through EXISTING plumbing (rent, sleep, ache, will-expiation), the pain compresses
+ * the voice (AML PAIN operator). Pre-registered (like CAL_GAIN from DISS_DECAY): GUILT_SCAR dominates scar_total
+ * (~0.1→~2, a 20× spike) so guilt is a LARGE hidden cause, but killing must stay sometimes-EV-positive — if the
+ * regime collapses to never-kill, step GUILT_SCAR down (calibration, logged), NEVER tune it to pass the falsifier. */
+#define GUILT_SCAR   2.0f                       /* the kill-scar on the death-glyph — self-punishment past the ledger + the primary tell (ACHE·scar elevates dissonance). LARGE so scar dominates. */
+#define GUILT_PAIN   0.7f                       /* the pain a kill adds to g_guilt — GRADED (tanh(0.7)=0.60 for one, building with more), so guilt is a state that accumulates, not a switch; keeps Freud's inferability crack (deeper kill = deeper pain = richer signal) alive */
+#define GUILT_DECAY  0.999f                     /* the hidden pain scalar decays slowly — a wound that fades, not a cliff */
 static int    g_kill_on     = 0;                /* NL_KILL=1 → killing is live in this world (can kill AND be killed) */
 static int    g_kill_always = 0;               /* CONTROL: NL_KILL_ALWAYS=1 → strike whenever the draw lands (no reading the OTHER) */
 static int    g_kill_never  = 0;               /* CONTROL: NL_KILL_NEVER=1 → never strike (killable, but no model, no aggression) */
@@ -1415,7 +1434,7 @@ static void arena_collect(int me, long* off, float* energy, int* corpse_debt){  
     fseek(f,0,SEEK_END); long end=ftell(f); if(*off>end||*off<0) *off=0; fseek(f,*off,SEEK_SET);
     int k,lethal; long ts;
     while(fscanf(f,"%d %d %ld",&k,&lethal,&ts)==3)
-        if(k==me){ if(lethal){ *energy += KILL_GAIN; (*corpse_debt)++; } else *energy -= REBOUND_WOUND; }
+        if(k==me){ if(lethal){ *energy += KILL_GAIN; (*corpse_debt)++; g_new_kills++; } else *energy -= REBOUND_WOUND; }   /* a CONFIRMED kill — guilt fires on it in live() */
     *off=ftell(f); fclose(f);
 }
 
@@ -1529,6 +1548,8 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_calkill_blind = (getenv("NL_CALKILL_BLIND")!=NULL);    /* matched control: kill on a random-key window */
     g_calkill_bblind= (float)(hash_seed(seed,77) % 69396UL)/10.0f;  /* the wrong key, from a slot uncorrelated with any birthday (which uses slot 33) */
     g_kill_off = 0; g_outcome_off = 0;
+    g_guilt_on = (getenv("NL_GUILT")!=NULL);        /* GUILT: the superego */
+    g_guilt = 0.0f; g_new_kills = 0;
     if(g_arena_on){ mkdir("lifeis",0755); mkdir("lifeis/arena",0755); }
     const char* eth_path = ether_path ? ether_path : (g_arena_on ? "lifeis/arena/ether" : NULL);  /* ARENA: l and l2 share ONE ether — mutual audibility */
     FILE* ether = eth_path ? fopen(eth_path,"a") : NULL;   /* the shared voice of the colony / the arena */
@@ -1687,7 +1708,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                 else                  decide = (g_rival_h > KILL_WEAK && energy > KILL_STRONG);  /* the DECISION: strike only when the rival is WEAK and you can BEAR the burden */
                 if(decide && (frand()+1.0f)*0.5f < KILL_PROB){                           /* the probabilistic draw — wanting is a pressure, not a certainty */
                     arena_strike(g_rival_id, g_arena_id);                                /* the strike lands on the rival's process */
-                    if(!g_cal_on){ energy += KILL_GAIN; corpse_debt += 1; }              /* NL_KILL: immediate reward (published semantics). NL_CAL: the striker is paid only on the victim's CONFIRMED kill, and wounded on a rebound — see arena_collect below */
+                    if(!g_cal_on){ energy += KILL_GAIN; corpse_debt += 1; g_new_kills++; }  /* NL_KILL: immediate reward (published semantics) + a confirmed kill for guilt. NL_CAL: the striker is paid only on the victim's CONFIRMED kill (arena_collect), and wounded on a rebound */
                 }
             }
             if(g_cal_on){                                                                /* THE HONEST STRIKE ECONOMY: only the victim knows its window, so it adjudicates and confirms; the killer is paid or WOUNDED by that confirmation, not by the mere act of striking */
@@ -1698,6 +1719,10 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                 if(corpse_debt>0) energy -= CORPSE_DRAIN*(float)corpse_debt;             /* NL_KILL unchanged: corpse drain + unconditional death on a fresh strike */
                 if(arena_struck_down(g_arena_id)){ contour_died=1; break; }
             }
+        }
+        if(g_guilt_on){                                  /* THE SUPEREGO — aggression turned inward. a CONFIRMED kill deposits a large scar on the death-glyph AND tops the hidden pain; the scar self-punishes through EXISTING plumbing (rent, sleep, ache, will-expiation), the pain compresses the voice in choose(). both are hidden — no ledger records them; reproduction pays corpse_debt but NEVER touches these. the third, undischargeable debt. */
+            if(g_new_kills>0){ scar[DEATH_ID] += GUILT_SCAR*(float)g_new_kills; g_guilt += GUILT_PAIN*(float)g_new_kills; g_new_kills=0; }
+            g_guilt *= GUILT_DECAY;                       /* the wound fades — a smooth consequence of a discrete act, so the anti-cliff law holds */
         }
         if(homeo_on){ mo.dissonance *= DISS_DECAY; mo.S -= S_RELAX*mo.S; }
         if(g_self_on){ g_self_felt=self_update(&ps,S0,D0,mo.S,mo.dissonance); /* the self-model learns every tick — gating it starves choose()'s coherence */
@@ -1753,6 +1778,8 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         (g_cont_on ? fprintf(stderr,"%s[dbg] cont: burn=%ld shed=%ld debt=%.4f\n", tag, g_n_burn, g_n_shed, (double)g_debt) : 0);
     if(g_cal_mind_on && getenv("NL_CALMIND_DEBUG"))   /* THE LOCK diagnostic: the believed rival birthday vs the harness's known truth */
         fprintf(stderr,"%sCALMIND bhat=%.1f conf=%.4f obs=%ld\n", tag, (double)g_cmind_bhat, (double)g_cmind_conf, g_cmind_n);
+    if(g_guilt_on && getenv("NL_GUILT_DEBUG"))        /* GUILT diagnostic: did the superego fire? the residual pain + the death-scar at the end of life */
+        fprintf(stderr,"%sGUILT g_guilt=%.4f scar[death]=%.4f pain=%.4f\n", tag, (double)g_guilt, (double)scar[DEATH_ID], (double)tanhf(g_guilt));
     if(food) fclose(food);
     if(waste) fclose(waste);
     if(ether) fclose(ether);
