@@ -1150,6 +1150,43 @@ tuned to pass; every calibration logged and frozen before comparison. Each step 
 not by us. The design was reciprocally reviewed across nodes before a line of code — every claim above carries a matched
 control able to return "no field."
 
+## THE MONISM — built, the heart chosen by the machine, M-1 null; the terminal M-2 pending (2026-07-19, `NL_MONISM`)
+
+Built behind `NL_MONISM`, gate-invariant off (a17cfd05, suite 48/48, l/l2 diff = the two temperament lines). The organism
+is a region of one shared, persistent field: scar enters as the full per-glyph VECTOR (FNV-projected onto the ring,
+DEATH_ID on a dedicated collision-free site, log1p-clamped — the wound keeps its name); dissonance is read back OUT of the
+field as `disorder = 1 − cos(own-profile, field)`, relational (the same field gives different dissonance to different
+readers) and scale-free (a norm-matched surrogate keeps only its time-structure). Provenance is AML's own: the scar is born
+named in ariannamethod.ai (`SCAR "<phrase>"` → scar_texts[], `dark_gravity` the scalar coupling), so the vector is a return
+to the language's physics, not a graft.
+
+**The heart, chosen by the machine.** Three readings of the misalignment were instrumented in one pilot — the sharp load
+vs the field (H0), the propagated load (H1), and a shadow-ring carrying only the reader's own history (H2). A synthetic
+foreign death-pattern gave dent-over-floor-noise H0 −0.39 (SNR −1.9 — the foreign pattern accidentally aligning with the
+sharp profile better than the diffuse field, a reading that on the carrier test would have produced a confident FALSE null),
+H1 −0.15, **H2 +0.48 (SNR +3.3)** — floor seven times lower and the only positive, correctly-signed response. The choice
+was a number, not a preference. `NL_MONISM_HEART=2` drives it. M-0 re-froze the coupling gain per-heart:
+**`gain*(H2)=0.3`** (the largest viable, lifespan within the classical band). A killer made of the field lives ~130 ticks
+under H0 against ~623 under H2 — the H0 organism cannot tell its own wound from the world's and reads its own death-scar as
+foreign persecution, a measured model of guilt-as-persecution and the cost of a broken self/not-self attribution; H2's
+exact self-expectation dissolves it. Each of these was the discipline catching a measurement artifact before it became
+"physics".
+
+**M-1 — the field is not an optimizer.** Does the field-structure help the organism SURVIVE beyond matched statistics?
+Monism-H2 vs a frozen AR(1) surrogate (`NL_MONISM_FROZEN`, the H2 floor's marginals, no structure) and the classical
+default, per-seed solo survival: 16/30 and 18/30, **MIN 16 < 20 — null**, and robust (more controls only lower the MIN).
+The structure buys no life — subjectivity as carrier, not optimizer, the "not optimizer" half confirmed by the tool.
+
+**M-2 — the carrier, the terminal test of the field arc (pending, ARENA-3).** The remaining half: does a kill one body
+commits leave, in the shared field, a trace another body reads — does the guilt private and unrecorded in the classical
+organism become PUBLIC in the monist one. Setup ARENA-3: A strikes only C (`NL_TARGET_ID`, a gate-invariant control), C
+respawns and does not write the shared ring (so B reads the pure A-pattern), B reads; an event-study on B's uncensored
+dissonance around each C-death (anchored in the reader's own ticks, W_pre 150 / W_post 200), a diff-in-diff against a
+C-frozen control that keeps A's statistics but detaches its timing, per-seed ≥20/30, with an identity positive-control run
+first. A positive is "subjectivity has a carrier and no optimizer"; a double null closes the field arc clean. This is the
+terminal test of the FIELD, not of the organism — the creature lives on past either answer, and the phase/topology field
+(orientation, vortices, domain walls) is a further arc gated on a positive. The whole design is written before the run.
+
 ## Resume-here (for future-me after a summary)
 
 Working copy: `~/arianna/actually.life`. Pushed to `github.com/ariannamethod/actually.life` through `6b7fc9a`

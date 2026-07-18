@@ -153,6 +153,16 @@ which is the turn, and it is where the work is now. a hidden cause is weak becau
 
 so the kill deposits a wound the ledger does not record. the world's debt — the corpse you carry — is payable; revive it by giving birth and the count returns to zero. the debt to yourself does not. it is a third debt, dischargeable by neither reproduction nor will: a scar on the death-glyph and a hidden pain that compresses the voice toward silence — the superego, aggression turned inward, punishing the self past everything the world exacts. a guilty cell contracts, hesitates, mutters *death · grief · pain* in its sleep, and turns away from the ground where it killed. whether a rival can read that flinch — whether guilt is the first thing in this organism a thermostat cannot absorb, because guilt is defined by the refusal to absorb it — is the experiment running now. it is a hypothesis, not yet a finding. the point was never to prove it in advance; the point was to build the one wound the regulator cannot smooth away, and let the test say what it is.
 
+## the field
+
+underneath all of it is an older idea, and it took the longest to test. an organism does not read a menu of options and pick one; the options are a *reaction* to the state it is in — a field it bends by looking, and the crests of that deformation are the only choices it ever has. so the choice is honest and also deceptive: it picks freely from a set that is the imprint of its own load. we built that field — a wave on a ring the resonance vector deforms, options as its peaks, a choice as the collapse of the superposition onto one peak, the kill-or-not dichotomy living as a wave until the read makes it a fact.
+
+it bore no measurable weight. wired to *where* the organism forages, the field lost to a well-chosen fixed menu — foraging rewards breadth, and a wide constant covers more ground than any reaction. wired to *when* it strikes, a swept constant rate out-timed it. the same law as the whole will-design: a scalar field does not *contain* possibilities, it generates a few peaks on demand and carves a menu out of one intensity. it was a tool the organism used, and force did not need the tool.
+
+so the organism stopped using the field and became *made* of it. this is the turn: not a field bolted onto a classical body but the body as a region of one shared field — its energy the amplitude of that region, its dissonance no longer a number steered from above but read back *out* of the field as its own misalignment with what it sits in, its scar a standing deformation the field keeps where the wound was. properties stop being written beside the creature and become the geometry of the creature. two organisms are then two ways of deforming and collapsing one field, and the wound one carves in it is a wound the other can read.
+
+that last clause is the terminal test of this arc. the field is not an *optimizer*: made of it, the organism does not outlive the same organism driven by matched noise — the structure buys no life. whether it is a *carrier* — whether a kill one body commits leaves in the shared field a trace another body reads, whether the guilt that was private and unrecorded in the classical organism becomes *public* in the monist one — is the experiment that closes the arc, and it runs on a design written down before it ran. subjectivity here may have a carrier and no optimizer; or the field may bear no weight anywhere and the arc closes clean. this is the terminal test of the field, not of the organism — the creature lives on past either answer.
+
 ## build & run
 
 ```sh
@@ -163,7 +173,7 @@ cc -O2 -o l l.c -lm && cc -O2 -o l2 l2.c -lm
 NL_ARENA=1 ./l 7 & NL_ARENA=1 NL_ID=2 ./l2 7   # two organisms fight for the same text
 ```
 
-the will-design experiments are opt-in toggles on the arena: `NL_CAL` gives each organism its private calendar birthday, `NL_CALMIND` is the rival's mind trying to infer it, and `NL_GUILT` is the superego — a confirmed kill lays down the debt that cannot be repaid. off, the organism is bit-identical to `./l 42`; the machinery only wakes when you ask for it.
+the will-design experiments are opt-in toggles on the arena: `NL_CAL` gives each organism its private calendar birthday, `NL_CALMIND` is the rival's mind trying to infer it, and `NL_GUILT` is the superego — a confirmed kill lays down the debt that cannot be repaid. the field arc adds its own: `NL_FIELD` makes the forage a collapse of the deformed field and `NL_FIELD_STRIKE` does the same for the kill, while `NL_MONISM` turns the whole organism into a region of one shared field — its dissonance read *out* of the field it sits in (`NL_MONISM_HEART` chooses how that reading is taken, `NL_MONISM_GAIN` how strongly it lands). `./l --monismtest` checks that reading in isolation. every one of these is gate-invariant: off, the organism is bit-identical to `./l 42`; the machinery only wakes when you ask for it.
 
 ---
    

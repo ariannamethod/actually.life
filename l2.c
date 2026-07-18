@@ -1310,6 +1310,7 @@ static int    g_mind_on = 0;                   /* NL_MIND=1 → predict the riva
 static float  g_raid_th = ARENA_RAID;          /* NL_RAID_TH override — the falsifier's lead-free controls: always-raid (0), own-front (>1), reactor (default) */
 static int    g_rival_prev = -1;               /* the rival's previously-observed position — the mind's velocity estimate */
 static int    g_rival_id = -1;                 /* the rival's voice-id (from the claims owner) — WHOM to kill */
+static int    g_target_id = -1;                /* NL_TARGET_ID: an experimental CONTROL (like NL_KILL_ALWAYS) — restrict the rival to one id so A strikes ONLY C in ARENA-3; unset (-1) = the default freshest-rival, gate-invariant */
 static float  g_rival_h  = 0.0f;               /* the rival's freshest hunger (from its blood-spore) — how WEAK it is now */
 static long   g_rival_tick = 0;                /* the rival's OWN tick at its freshest spore — the mind reads the trail in the rival's clock */
 static float  g_rival_diss = 0.0f;             /* B-3: the rival's freshest UNCENSORED dissonance (its own |mo.dissonance|) — the porosity channel, unclamped where hunger was clamped */
@@ -1385,7 +1386,7 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
         while(fscanf(c,"%d %ld %d %f %ld %f",&id,&ts,&own,&h,&otick,&diss)==6)
             if(id>=0 && id<g_pool_n && (long)(now-(time_t)ts) < ARENA_EXPIRE){
                 claimed[id]=1;
-                if(own!=g_arena_id && ts>=rival_ts){ rival_ts=ts; rival_last=id; rival_h=h; g_rival_id=own; g_rival_h=h; g_rival_tick=otick; g_rival_diss=diss; }   /* the rival's freshest blood-spore: WHERE it eats, WHO, the HUNGER + the UNCENSORED dissonance it ate in, and its OWN tick */
+                if(own!=g_arena_id && (g_target_id<0 || own==g_target_id) && ts>=rival_ts){ rival_ts=ts; rival_last=id; rival_h=h; g_rival_id=own; g_rival_h=h; g_rival_tick=otick; g_rival_diss=diss; }   /* the rival's freshest blood-spore (NL_TARGET_ID restricts it to one id — ARENA-3 role-assignment) */
             }
     }
     int mp = (*my_pos>=0 && *my_pos<g_pool_n)? *my_pos : 0;
@@ -1622,6 +1623,14 @@ static float g_monism_gain = 1.0f; /* MONISM_DISS_GAIN — how strongly the fiel
 static double g_monism_dsum=0.0, g_monism_dsumsq=0.0; static long g_monism_dn=0;   /* M-0: the LIVE solo-disorder distribution (mean+spread) — the event-study denominator; printed at death under NL_MONISM_PROBE */
 static int    g_pilot_on = 0;      /* NL_MONISM_PILOT: instrument THREE candidate hearts (H0/H1/H2) in one run — H0 drives, H1/H2 logged passively; the machine picks (Fable layer XII) */
 static int    g_monism_heart = 0;  /* NL_MONISM_HEART: which heart DRIVES dissonance — 0=H0, 1=H1, 2=H2 (the machine picked H2, Fable XIV); the pilot always runs on 0 */
+/* M-1 FROZEN SURROGATE (Fable's control family) — the SAME dissonance-coupling but the disorder is drawn from an AR(1)
+ * with the H2 floor's marginals (from M-0), NOT from the live field: matched statistics, ZERO field-structure. if the
+ * live monism outlives this per-seed >=20/30, the STRUCTURE bears weight on survival, not the mere noise level. */
+#define FROZEN_MU   0.15f          /* H2 floor mean (M-0) */
+#define FROZEN_SIG  0.14f          /* H2 floor std (M-0) */
+#define FROZEN_RHO  0.80f          /* declared temporal autocorrelation (calibration, logged, not tuned to pass) */
+static int    g_frozen_on = 0;     /* NL_MONISM_FROZEN: replace the live disorder with the matched-statistics AR(1) */
+static float  g_frozen_state = FROZEN_MU;
 static float  g_shadow_u[CFIELD_N], g_shadow_v[CFIELD_N];   /* H2 shadow-ring: ONLY this reader's own deposits propagate — exact self-expectation over its whole history (also the C-frozen own-component) */
 static double g_d1sum=0.0,g_d1sq=0.0, g_d2sum=0.0,g_d2sq=0.0;   /* H1 (propagated-load) and H2 (shadow-ring) disorder accumulators */
 static double g_dent0=0.0,g_dent1=0.0,g_dent2=0.0;   /* SYNTHETIC-DENT (Fable): each heart's disorder against u_pre + a realistic killer's death-pattern — dent = dented − solo */
@@ -1680,6 +1689,12 @@ static float monism_shared_step(float S,float diss,float hunger,float guilt,cons
         dis2 = monism_disorder(g_shadow_u, g_cfield_u);      /* H2: exact self-expectation over the reader's whole history — BEFORE this tick's shadow deposit */
     }
     float dis = (g_monism_heart==2)? dis2 : (g_monism_heart==1)? dis1 : dis0;   /* the heart that DRIVES dissonance (the machine picked H2) */
+    if(g_frozen_on){                                        /* M-1 CONTROL: matched-statistics AR(1), no field-structure — the same coupling, structure removed */
+        float n = frand()+frand()+frand();                 /* ~N(0,1) by CLT (frand ~ U[-1,1]) */
+        g_frozen_state = FROZEN_MU + FROZEN_RHO*(g_frozen_state-FROZEN_MU) + FROZEN_SIG*sqrtf(1.0f-FROZEN_RHO*FROZEN_RHO)*n;
+        if(g_frozen_state<0.0f)g_frozen_state=0.0f; else if(g_frozen_state>MONISM_DCLAMP)g_frozen_state=MONISM_DCLAMP;
+        dis = g_frozen_state;
+    }
     if(g_pilot_on){                                          /* THREE-HEARTS PILOT (Fable XII/XIV): log all three passively + the synthetic dent; H0 accumulates in live() */
         g_d1sum+=dis1; g_d1sq+=(double)dis1*dis1; g_d2sum+=dis2; g_d2sq+=(double)dis2*dis2;
         static float adent[CFIELD_N]; static int adent_init=0;   /* SYNTHETIC DENT: a realistic killer's death-scar (death 6.0), propagated to field-space — computed once */
@@ -1717,6 +1732,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_mind_on  = (getenv("NL_MIND")!=NULL);        /* THEORY OF THE OTHER: model the rival's movement + pre-empt (the load-bearing test) */
     { const char* rt=getenv("NL_RAID_TH"); g_raid_th = rt? (float)atof(rt) : ARENA_RAID; }  /* the falsifier's lead-free controls */
     g_rival_prev = -1; g_rival_id = -1; g_rival_h = 0.0f;
+    { const char* t=getenv("NL_TARGET_ID"); g_target_id = t? atoi(t) : -1; }   /* ARENA-3: A strikes ONLY this id (C); unset = default freshest-rival */
     g_kill_on     = (getenv("NL_KILL")!=NULL);     /* KILLING: the high-stakes act (can kill AND be killed) */
     g_kill_always = (getenv("NL_KILL_ALWAYS")!=NULL);  /* CONTROL: strike blindly */
     g_kill_never  = (getenv("NL_KILL_NEVER")!=NULL);   /* CONTROL: never strike */
@@ -1733,6 +1749,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_monism_dsum=0.0; g_monism_dsumsq=0.0; g_monism_dn=0;   /* M-0: fresh solo-disorder accumulator per organism */
     g_pilot_on = (getenv("NL_MONISM_PILOT")!=NULL);   /* three-hearts pilot (H0 drives, H1/H2 logged passively) */
     { const char* mh=getenv("NL_MONISM_HEART"); if(mh) g_monism_heart=atoi(mh); }   /* which heart drives (machine picked H2=2) */
+    g_frozen_on = (getenv("NL_MONISM_FROZEN")!=NULL); g_frozen_state = FROZEN_MU;   /* M-1 matched-statistics control */
     g_d1sum=0.0; g_d1sq=0.0; g_d2sum=0.0; g_d2sq=0.0; g_dent0=0.0; g_dent1=0.0; g_dent2=0.0;
     for(int i=0;i<CFIELD_N;i++){ g_shadow_u[i]=0.0f; g_shadow_v[i]=0.0f; }   /* fresh shadow-ring per organism */
     { const char* mv=getenv("NL_FIELD_MENU_VEC"); if(mv) sscanf(mv,"%f,%f,%f,%f,%f",&g_menu_vec[0],&g_menu_vec[1],&g_menu_vec[2],&g_menu_vec[3],&g_menu_vec[4]); }  /* sweep the fixed control to its sharpest */
@@ -2108,6 +2125,31 @@ int main(int argc, char** argv){
         printf("log1p bounded:     max forcing %.3f <= clamp %.1f : %s\n", (double)big, (double)MONISM_CLAMP, big<=MONISM_CLAMP+1e-4f?"YES":"NO");
         printf("relational heart:  disorder(B|A_foreign)=%.4f   disorder(B|B_self)=%.4f\n", (double)dis_foreign, (double)dis_self);
         printf("=> heart works iff foreign >> self — the OTHER's dent raises dissonance, the reader's own does not\n");
+        return 0;
+    }
+    if(argc>1 && strcmp(argv[1],"--monismhalflife")==0){   /* FLAG 2 (Fable): the half-life of a foreign dent under H2 — B smears it with its own deposits; this fixes the event-study window W before M-2 */
+        DEATH_ID = semtok_find_glyph("death");
+        static float scarB[VOCAB_CAP]; for(int i=0;i<VOCAB_CAP;i++) scarB[i]=0.0f;
+        scarB[11]=1.5f; scarB[23]=1.0f; scarB[41]=0.8f;    /* a typical wounded B (not a killer — no death-scar) */
+        static float L[CFIELD_N]; monism_profile(0.1f,0.5f,0.3f,0.0f,scarB,L);
+        cfield_reset(); for(int i=0;i<CFIELD_N;i++){ g_shadow_u[i]=0.0f; g_shadow_v[i]=0.0f; }
+        for(int t=0;t<200;t++){                             /* warmup: B settles its own field + shadow */
+            for(int i=0;i<CFIELD_N;i++) g_cfield_u[i]+=L[i]; for(int s=0;s<CFIELD_STEPS;s++) cfield_step();
+            for(int i=0;i<CFIELD_N;i++) g_shadow_u[i]+=L[i]; for(int s=0;s<CFIELD_STEPS;s++) cfield_step_buf(g_shadow_u,g_shadow_v); }
+        float floor = monism_disorder(g_shadow_u, g_cfield_u);
+        static float sA[VOCAB_CAP]; for(int i=0;i<VOCAB_CAP;i++) sA[i]=0.0f; sA[DEATH_ID]=6.0f;   /* A's death-pattern (death 6.0) */
+        static float LA[CFIELD_N]; monism_profile(0.1f,0.5f,0.3f,0.0f,sA,LA);
+        static float adent[CFIELD_N],av[CFIELD_N]; for(int i=0;i<CFIELD_N;i++){ adent[i]=LA[i]; av[i]=0.0f; } for(int s=0;s<CFIELD_STEPS;s++) cfield_step_buf(adent,av);
+        for(int i=0;i<CFIELD_N;i++) g_cfield_u[i]+=adent[i];   /* inject the foreign dent into the REAL field */
+        float peak = monism_disorder(g_shadow_u, g_cfield_u);
+        int halflife=-1;
+        for(int t=1;t<=300;t++){                            /* B keeps depositing its own — the dent decays by damping + dilution */
+            for(int i=0;i<CFIELD_N;i++) g_cfield_u[i]+=L[i]; for(int s=0;s<CFIELD_STEPS;s++) cfield_step();
+            for(int i=0;i<CFIELD_N;i++) g_shadow_u[i]+=L[i]; for(int s=0;s<CFIELD_STEPS;s++) cfield_step_buf(g_shadow_u,g_shadow_v);
+            float d = monism_disorder(g_shadow_u, g_cfield_u);
+            if((d-floor) <= 0.5f*(peak-floor)){ halflife=t; break; } }
+        printf("FLAG2 half-life: floor=%.4f peak=%.4f dent=%.4f  half-life=%d ticks -> event-study window W (declare one value, do not sweep)\n",
+               (double)floor,(double)peak,(double)(peak-floor), halflife);
         return 0;
     }
     /* THE STRIKE FALSIFIER — print the blind control's random birthday-key (hash slot 77, uncorrelated with the true birthday's slot 33): ./l --calbb <seed> */
