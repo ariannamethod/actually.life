@@ -1605,6 +1605,104 @@ static float cfield_strike_p(float rival_h, float energy, float guilt){  /* THE 
     return p;
 }
 
+/* ── THE MONISM (NL_MONISM) — the organism as a REGION of one shared, persistent field, not a body that USES it. the
+ * scalars stop steering from above: scar enters as its FULL per-glyph VECTOR (name intact, FNV-projected, DEATH_ID on a
+ * dedicated site), and dissonance is read back OUT of the field as the MISALIGNMENT between the reader's own load-profile
+ * and the field it sits in — disorder = 1 − cos(L, u_pre), computed BEFORE the reader's own deposit. relational (the same
+ * field gives different dissonance to different readers — Oleg's "dissonance = divergence of local orientations"),
+ * scale-free (cos ignores the norm, so a norm-matched surrogate keeps only its time-structure = the diff-in-diff target).
+ * accumulating channels map through log1p+clamp+isfinite (dead at plateau under tanh, NaN-runaway under raw — the 07-06
+ * Hebbian-no-ceiling defect). gate-invariant off → a17cfd05. design: llog "THE MONISM", four hands 2026-07-18. ── */
+#define MONISM_DEATH_SITE 50       /* DEATH_ID's dedicated, collision-free ring site */
+#define MONISM_CLAMP      4.0f     /* log1p hard ceiling on per-site forcing — bounded top, isfinite-gated */
+#define MONISM_EPS        1e-6f    /* below this a field/profile is too small to align against — disorder 0 */
+#define MONISM_DCLAMP     2.0f     /* 1 − cos lives in [0,2]; clamp guards a NaN slipping through */
+static int g_monism_on = 0;        /* NL_MONISM: the field-region organism — the terminal rung */
+static float g_monism_gain = 1.0f; /* MONISM_DISS_GAIN — how strongly the field-misalignment projects into dissonance; CALIBRATED in M-0 against the LIVE solo-disorder floor (Fable flag 1), set by NL_MONISM_GAIN, logged, frozen before comparison */
+static double g_monism_dsum=0.0, g_monism_dsumsq=0.0; static long g_monism_dn=0;   /* M-0: the LIVE solo-disorder distribution (mean+spread) — the event-study denominator; printed at death under NL_MONISM_PROBE */
+static int    g_pilot_on = 0;      /* NL_MONISM_PILOT: instrument THREE candidate hearts (H0/H1/H2) in one run — H0 drives, H1/H2 logged passively; the machine picks (Fable layer XII) */
+static int    g_monism_heart = 0;  /* NL_MONISM_HEART: which heart DRIVES dissonance — 0=H0, 1=H1, 2=H2 (the machine picked H2, Fable XIV); the pilot always runs on 0 */
+static float  g_shadow_u[CFIELD_N], g_shadow_v[CFIELD_N];   /* H2 shadow-ring: ONLY this reader's own deposits propagate — exact self-expectation over its whole history (also the C-frozen own-component) */
+static double g_d1sum=0.0,g_d1sq=0.0, g_d2sum=0.0,g_d2sq=0.0;   /* H1 (propagated-load) and H2 (shadow-ring) disorder accumulators */
+static double g_dent0=0.0,g_dent1=0.0,g_dent2=0.0;   /* SYNTHETIC-DENT (Fable): each heart's disorder against u_pre + a realistic killer's death-pattern — dent = dented − solo */
+static void   cfield_step_buf(float* u,float* v){   /* one leapfrog step on ARBITRARY buffers (H1 scratch, H2 shadow) */
+    static float lap[CFIELD_N];
+    for(int i=0;i<CFIELD_N;i++){ int l=(i+CFIELD_N-1)%CFIELD_N, r=(i+1)%CFIELD_N; lap[i]=u[l]+u[r]-2.0f*u[i]; }
+    for(int i=0;i<CFIELD_N;i++) v[i] += CFIELD_DT*(CFIELD_C2*lap[i] - CFIELD_K*u[i] - CFIELD_DAMP*v[i]);
+    for(int i=0;i<CFIELD_N;i++) u[i] += CFIELD_DT*v[i];
+}
+static int monism_glyph_site(int g){   /* deterministic FNV-1a projection of a glyph id onto a ring site; DEATH_ID reserved */
+    if(g==DEATH_ID) return MONISM_DEATH_SITE;
+    unsigned h=2166136261u; h=(h^(unsigned)g)*16777619u;   /* the router the mouth already uses (l.c:237) */
+    int s=(int)(h % (unsigned)CFIELD_N);
+    if(s==MONISM_DEATH_SITE) s=(s+1)%CFIELD_N;             /* keep the death site clean of collisions */
+    return s;
+}
+static void monism_bump_into(float* U, int site, float amp){   /* one gaussian deposit onto a profile/field vector */
+    for(int d=-3;d<=3;d++){ int i=(site+d+CFIELD_N)%CFIELD_N; U[i]+=amp*expf(-0.25f*(float)(d*d)); }
+}
+static void monism_profile(float S,float diss,float hunger,float guilt,const float* scar,float* L){  /* the reader's load-profile L: the full per-glyph scar VECTOR (log1p) + 4 canonical scalar sites */
+    for(int i=0;i<CFIELD_N;i++) L[i]=0.0f;
+    static float acc[CFIELD_N]; for(int i=0;i<CFIELD_N;i++) acc[i]=0.0f;
+    for(int g=0;g<VOCAB_CAP;g++) if(scar[g]>0.0f) acc[monism_glyph_site(g)]+=scar[g];   /* the wound keeps its name */
+    for(int i=0;i<CFIELD_N;i++) if(acc[i]>0.0f){ float f=log1pf(acc[i]); if(f>MONISM_CLAMP)f=MONISM_CLAMP; if(isfinite(f)) monism_bump_into(L,i,f); }
+    monism_bump_into(L, 2,  S);                     /* canonical scalars, spaced off the death site and each other */
+    monism_bump_into(L,14,  tanhf(0.1f*diss));
+    monism_bump_into(L,26,  hunger);
+    monism_bump_into(L,38,  log1pf(guilt>0.0f?guilt:0.0f));   /* the guilt TRANSIENT via log1p — keeps the per-event bump alive */
+}
+static float monism_disorder(const float* L,const float* u){  /* 1 − cos(L, u): the reader's own profile against the field it reads (pre-deposit). the foreign dent (quasi-orthogonal to L) raises it; the reader's own echo (aligned) keeps it low. */
+    float dot=0.0f,nl=0.0f,nu=0.0f;
+    for(int i=0;i<CFIELD_N;i++){ dot+=L[i]*u[i]; nl+=L[i]*L[i]; nu+=u[i]*u[i]; }
+    float denom=sqrtf(nl)*sqrtf(nu);
+    if(!(denom>MONISM_EPS)) return 0.0f;            /* nothing to align against yet — a field or profile at rest */
+    float c=dot/denom; if(c>1.0f)c=1.0f; else if(c<-1.0f)c=-1.0f;
+    float d=1.0f-c; if(!isfinite(d))d=0.0f; else if(d>MONISM_DCLAMP)d=MONISM_DCLAMP;
+    return d;
+}
+static float monism_shared_step(float S,float diss,float hunger,float guilt,const float* scar,int* pk_out){
+    /* THE MONISM tick — Fable's order, load-bearing: read the shared ring (u_pre, carrying the OTHER's standing scar-
+     * pattern), measure the reader's misalignment with it (disorder = 1−cos, computed BEFORE its own deposit — else this
+     * tick's self-alignment masks the foreign dent), THEN deposit the reader's profile, propagate, collapse to a forage
+     * target, write back. read-modify-write under flock so two organisms' reads do not commute. returns the disorder. */
+    FILE* f=fopen("lifeis/arena/monism","r+b"); if(!f) f=fopen("lifeis/arena/monism","w+b"); if(!f){ if(pk_out)*pk_out=-1; return 0.0f; }
+    int fd=fileno(f); flock(fd, LOCK_EX);
+    rewind(f);
+    if(fread(g_cfield_u,sizeof(float),CFIELD_N,f)!=(size_t)CFIELD_N || fread(g_cfield_v,sizeof(float),CFIELD_N,f)!=(size_t)CFIELD_N)
+        cfield_reset();                                      /* first touch: a field at rest */
+    static float L[CFIELD_N]; monism_profile(S,diss,hunger,guilt,scar,L);   /* the reader's own load-profile */
+    float dis0 = monism_disorder(L, g_cfield_u);             /* H0: sharp load vs field — BEFORE the deposit */
+    static float p1[CFIELD_N],pv[CFIELD_N]; float dis1=0.0f, dis2=0.0f;
+    if(g_monism_heart>=1 || g_pilot_on){                     /* H1 (this tick's load propagated) + H2 (shadow-ring, own history) — needed when a richer heart drives OR for the pilot */
+        for(int i=0;i<CFIELD_N;i++){ p1[i]=L[i]; pv[i]=0.0f; }
+        for(int s=0;s<CFIELD_STEPS;s++) cfield_step_buf(p1,pv);
+        dis1 = monism_disorder(p1, g_cfield_u);
+        dis2 = monism_disorder(g_shadow_u, g_cfield_u);      /* H2: exact self-expectation over the reader's whole history — BEFORE this tick's shadow deposit */
+    }
+    float dis = (g_monism_heart==2)? dis2 : (g_monism_heart==1)? dis1 : dis0;   /* the heart that DRIVES dissonance (the machine picked H2) */
+    if(g_pilot_on){                                          /* THREE-HEARTS PILOT (Fable XII/XIV): log all three passively + the synthetic dent; H0 accumulates in live() */
+        g_d1sum+=dis1; g_d1sq+=(double)dis1*dis1; g_d2sum+=dis2; g_d2sq+=(double)dis2*dis2;
+        static float adent[CFIELD_N]; static int adent_init=0;   /* SYNTHETIC DENT: a realistic killer's death-scar (death 6.0), propagated to field-space — computed once */
+        if(!adent_init){ static float sA[VOCAB_CAP]; for(int i=0;i<VOCAB_CAP;i++) sA[i]=0.0f; sA[DEATH_ID]=6.0f;
+            static float LA[CFIELD_N]; monism_profile(0.1f,0.5f,0.3f,0.0f,sA,LA);
+            static float av[CFIELD_N]; for(int i=0;i<CFIELD_N;i++){ adent[i]=LA[i]; av[i]=0.0f; }
+            for(int s=0;s<CFIELD_STEPS;s++) cfield_step_buf(adent,av); adent_init=1; }
+        static float ud[CFIELD_N]; for(int i=0;i<CFIELD_N;i++) ud[i]=g_cfield_u[i]+adent[i];   /* u_pre + the foreign death-pattern */
+        g_dent0 += monism_disorder(L,ud); g_dent1 += monism_disorder(p1,ud); g_dent2 += monism_disorder(g_shadow_u,ud);   /* each heart's response — no contamination of the real field */
+    }
+    if(g_monism_heart==2 || g_pilot_on){                     /* maintain the shadow-ring whenever the driving heart (H2) or the pilot needs it */
+        for(int i=0;i<CFIELD_N;i++) g_shadow_u[i]+=L[i];
+        for(int s=0;s<CFIELD_STEPS;s++) cfield_step_buf(g_shadow_u,g_shadow_v);
+    }
+    for(int i=0;i<CFIELD_N;i++) g_cfield_u[i]+=L[i];         /* now deposit the reader's profile onto the REAL shared ring */
+    for(int s=0;s<CFIELD_STEPS;s++) cfield_step();           /* propagate */
+    int pk=cfield_collapse();                                /* collapse → forage target */
+    rewind(f); fwrite(g_cfield_u,sizeof(float),CFIELD_N,f); fwrite(g_cfield_v,sizeof(float),CFIELD_N,f); fflush(f);
+    flock(fd, LOCK_UN); fclose(f);
+    if(pk_out)*pk_out=pk;
+    return dis;
+}
+
 /* ── live — one organism, birth to death ─────────────────────────────────────
  * the single-cell life, extracted so a chorus can fork many of them. corpus is
  * its food, waste its voice, seed its body AND its dice, label>=0 tags its prints
@@ -1630,6 +1728,13 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_cfield_on = (getenv("NL_FIELD")!=NULL); g_cfield_menu = (getenv("NL_FIELD_MENU")!=NULL); g_cfield_shared = (getenv("NL_FIELD_SHARED")!=NULL); g_cfield_target = -1; cfield_reset();   /* THE C-FIELD (Step 1b/2) */
     g_fstrike_on = (getenv("NL_FIELD_STRIKE")!=NULL); g_fstrike_menu = (getenv("NL_FIELD_STRIKE_MENU")!=NULL);   /* THE STRIKE-FIELD (the fair venue) + its fixed-menu control */
     { const char* fv=getenv("NL_FIELD_STRIKE_FIXED"); if(fv) g_fstrike_fixed=(float)atof(fv); }                  /* the swept fixed rate for the control */
+    g_monism_on = (getenv("NL_MONISM")!=NULL);   /* THE MONISM — the field-region organism (terminal rung) */
+    { const char* mg=getenv("NL_MONISM_GAIN"); if(mg) g_monism_gain=(float)atof(mg); }   /* M-0-calibrated dissonance-projection gain, frozen before comparison */
+    g_monism_dsum=0.0; g_monism_dsumsq=0.0; g_monism_dn=0;   /* M-0: fresh solo-disorder accumulator per organism */
+    g_pilot_on = (getenv("NL_MONISM_PILOT")!=NULL);   /* three-hearts pilot (H0 drives, H1/H2 logged passively) */
+    { const char* mh=getenv("NL_MONISM_HEART"); if(mh) g_monism_heart=atoi(mh); }   /* which heart drives (machine picked H2=2) */
+    g_d1sum=0.0; g_d1sq=0.0; g_d2sum=0.0; g_d2sq=0.0; g_dent0=0.0; g_dent1=0.0; g_dent2=0.0;
+    for(int i=0;i<CFIELD_N;i++){ g_shadow_u[i]=0.0f; g_shadow_v[i]=0.0f; }   /* fresh shadow-ring per organism */
     { const char* mv=getenv("NL_FIELD_MENU_VEC"); if(mv) sscanf(mv,"%f,%f,%f,%f,%f",&g_menu_vec[0],&g_menu_vec[1],&g_menu_vec[2],&g_menu_vec[3],&g_menu_vec[4]); }  /* sweep the fixed control to its sharpest */
     for(int c=0;c<CAL_NCAND;c++){ g_cmind_s[c]=0.0f; g_cmind_pdmean[c]=0.0f; }
     g_cmind_hmean=0.0f; g_cmind_n=0; g_cmind_last_rt=-1; g_cmind_bhat=0.0f; g_cmind_conf=0.0f; g_claims_off=0;
@@ -1739,9 +1844,13 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         float yield=0.0f;
         const int* meal=NULL; int meal_n=0;         /* the glyphs of a REAL meal — what rebuilds the body (dreams do not) */
         int   dreaming=0, grazing=0;
-        if(g_arena_on && (g_cfield_on||g_cfield_menu||g_cfield_shared)){   /* THE C-FIELD decides WHERE to forage: load the field, collapse to one option, map it onto the pool. rubber = live resonance (per-process); menu = a fixed vector (control); SHARED (Step 2) = one field both deform, interference. */
+        if(g_arena_on && (g_cfield_on||g_cfield_menu||g_cfield_shared||g_monism_on)){   /* THE C-FIELD / MONISM decides WHERE to forage: collapse the field to one option, map it onto the pool. rubber = live resonance; menu = a fixed vector (control); SHARED (Step 2) = one field both deform; MONISM = the organism IS the region — dissonance read OUT of the field. */
             int pk;
-            if(g_cfield_shared){                        /* Step 2: read the SHARED field (the other's deformation), add mine, collapse the joint superposition, write back */
+            if(g_monism_on){                            /* THE MONISM: the reader's misalignment with the shared field (carrying A's standing scar-pattern) becomes its dissonance — a projection, not a scalar steering from above; the collapse is the forage target */
+                float dis = monism_shared_step(mo.S, fabsf(mo.dissonance), arena_hunger(energy, fabsf(mo.dissonance)), g_guilt, scar, &pk);
+                mo.dissonance += g_monism_gain * dis;   /* dissonance is READ OUT of the field — A's scar-pattern raises B's, and the dabs ledger records it (the carrier loop M-2 measures) */
+                g_monism_dsum += (double)dis; g_monism_dsumsq += (double)dis*(double)dis; g_monism_dn++;   /* M-0: accumulate the raw disorder floor (pre-gain) */
+            } else if(g_cfield_shared){                 /* Step 2: read the SHARED field (the other's deformation), add mine, collapse the joint superposition, write back */
                 pk = cfield_shared_decide(mo.S, fabsf(mo.dissonance), arena_hunger(energy, fabsf(mo.dissonance)), g_guilt, scar_total);
             } else {
                 cfield_reset();
@@ -1870,6 +1979,19 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                (double)mo.S,(double)mo.dissonance,(double)scar_total,g_n_emerged,rec,g_n_children,n_graze,n_dream,n_selfeat);
     }
     if(getenv("NL_ED")) fprintf(stderr,"%sMEANED %.6f n=%ld\n", tag, g_ed_n?(g_ed_sum/(double)g_ed_n):0.0, g_ed_n);
+    if(g_monism_on && getenv("NL_MONISM_PROBE") && g_monism_dn>0){   /* M-0: the LIVE solo-disorder floor — mean+std = the event-study denominator (Fable flag 1) */
+        double mean=g_monism_dsum/(double)g_monism_dn, var=g_monism_dsumsq/(double)g_monism_dn - mean*mean; if(var<0.0)var=0.0;
+        fprintf(stderr,"%sMONISM disorder mean=%.4f std=%.4f n=%ld gain=%.4f lifespan=%ld\n", tag, mean, sqrt(var), g_monism_dn, (double)g_monism_gain, tick);
+    }
+    if(g_pilot_on && g_monism_dn>0){   /* THREE-HEARTS PILOT (Fable XII): all three floors in one run — the machine picks the heart by dent/floor-noise */
+        double m0=g_monism_dsum/(double)g_monism_dn, m1=g_d1sum/(double)g_monism_dn, m2=g_d2sum/(double)g_monism_dn;
+        double v0=g_monism_dsumsq/(double)g_monism_dn-m0*m0, v1=g_d1sq/(double)g_monism_dn-m1*m1, v2=g_d2sq/(double)g_monism_dn-m2*m2;
+        if(v0<0)v0=0; if(v1<0)v1=0; if(v2<0)v2=0;
+        fprintf(stderr,"%sPILOT H0 %.4f+-%.4f  H1 %.4f+-%.4f  H2 %.4f+-%.4f  n=%ld gain=%.4f life=%ld\n", tag, m0,sqrt(v0), m1,sqrt(v1), m2,sqrt(v2), g_monism_dn, (double)g_monism_gain, tick);
+        double e0=g_dent0/(double)g_monism_dn-m0, e1=g_dent1/(double)g_monism_dn-m1, e2=g_dent2/(double)g_monism_dn-m2;   /* dent = dented − solo, per heart */
+        double s0=sqrt(v0),s1=sqrt(v1),s2=sqrt(v2);
+        fprintf(stderr,"%sPILOT dent H0 %.4f (snr %.2f)  H1 %.4f (snr %.2f)  H2 %.4f (snr %.2f)  <- machine picks max snr=dent/floor-std\n", tag, e0, s0>0?e0/s0:0.0, e1, s1>0?e1/s1:0.0, e2, s2>0?e2/s2:0.0);
+    }
     if(getenv("NL_DEBUG"))
         fprintf(stderr,"%s[dbg] wv_norm birth=%.4f death=%.4f (%.1f%%)  meals=%ld tot_dwv=%.6f avg_dwv=%.3e  decay/tick=%.4f%% of ~%.3f  MAXGATE=%.5f\n",
                 tag, (double)birth_norm, (double)wv_norm(m), 100.0*wv_norm(m)/(birth_norm>0?birth_norm:1),
@@ -1967,6 +2089,25 @@ int main(int argc, char** argv){
             printf("   -> collapse %d\n", c0);
         }
         printf("(if the SETS differ across states — not just the odds over one menu — the rubber is real in isolation; the load-bearing test is Step 1b)\n");
+        return 0;
+    }
+    if(argc>1 && strcmp(argv[1],"--monismtest")==0){   /* verify the monism HEART in isolation: DEATH-site clean, log1p bounded, and the RELATIONAL property (a foreign scar-pattern raises disorder, the reader's own does not) */
+        DEATH_ID = semtok_find_glyph("death");
+        static float scarA[VOCAB_CAP], scarB[VOCAB_CAP];
+        for(int i=0;i<VOCAB_CAP;i++){ scarA[i]=0.0f; scarB[i]=0.0f; }
+        scarA[DEATH_ID]=6.0f; scarA[3]=1.0f; scarA[7]=2.0f;      /* A is a killer: a big death-scar + wounds */
+        scarB[11]=1.5f; scarB[23]=1.0f; scarB[41]=0.8f;          /* B is a DIFFERENT self, wounded on other glyphs */
+        static float LA[CFIELD_N], LB[CFIELD_N];
+        monism_profile(0.1f,0.5f,0.3f,0.0f,scarA,LA);            /* same canonical state for both — the signal is the scar pattern */
+        monism_profile(0.1f,0.5f,0.3f,0.0f,scarB,LB);
+        int death_clean=1; for(int g=0;g<VOCAB_CAP;g++) if(g!=DEATH_ID && monism_glyph_site(g)==MONISM_DEATH_SITE){ death_clean=0; break; }
+        float big=0.0f; { static float sB[VOCAB_CAP]; for(int i=0;i<VOCAB_CAP;i++)sB[i]=0.0f; sB[DEATH_ID]=1e6f; static float Lbig[CFIELD_N]; monism_profile(0,0,0,0,sB,Lbig); for(int i=0;i<CFIELD_N;i++) if(Lbig[i]>big)big=Lbig[i]; }
+        float dis_foreign = monism_disorder(LB, LA);            /* B against A's standing pattern — should be HIGH */
+        float dis_self    = monism_disorder(LB, LB);            /* B against its own echo — should be ~0 */
+        printf("DEATH-site clean:  %s (dedicated site %d)\n", death_clean?"YES":"NO", MONISM_DEATH_SITE);
+        printf("log1p bounded:     max forcing %.3f <= clamp %.1f : %s\n", (double)big, (double)MONISM_CLAMP, big<=MONISM_CLAMP+1e-4f?"YES":"NO");
+        printf("relational heart:  disorder(B|A_foreign)=%.4f   disorder(B|B_self)=%.4f\n", (double)dis_foreign, (double)dis_self);
+        printf("=> heart works iff foreign >> self — the OTHER's dent raises dissonance, the reader's own does not\n");
         return 0;
     }
     /* THE STRIKE FALSIFIER — print the blind control's random birthday-key (hash slot 77, uncorrelated with the true birthday's slot 33): ./l --calbb <seed> */
