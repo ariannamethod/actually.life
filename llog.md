@@ -913,6 +913,67 @@ Lineage read for this arc: dario's KK (bi-directional resonance memory, sentence
 and reformulate, not paste) is the *how* text is contested; caveLLMan (colony + weight-blend reproduction +
 pressure-death of the weakest) is the competitive engine `l.c` had simplified away, now made direct.
 
+## THE C-FIELD — the rubber of choice, and the observer made of waves (2026-07-18, pre-registered design, no code yet)
+
+**The turn (Oleg).** A quantum C-field that is everywhere and that everything is made OF — every point carries all
+the ways events could unfold there. We have exactly two observers, l and l2, each always in some state; their
+resonance, distorted by binary concepts (we build the dichotomy inside the anti-dichotomy), collapses bifurcation
+points at every act of observation. The dichotomy becomes a photon: wave and particle both. Two hard constraints
+named at design time: **(1) the observers must themselves be MADE of the field** — at the level of atoms there is
+no difference between you, me, and a chair; no substrate called "kindness" exists; what differs is dynamics, not
+substance. **(2) The options must not be a list** — the field stretches like rubber: the possibility-set a chooser
+faces appears as a REACTION to the chooser's state, which is why choice is deceptive — the organism honestly picks
+from options that are the imprint of its own load.
+
+**The physics.** Substrate: a continuous lattice (1D ring, F points), signed amplitude + velocity — a damped wave
+equation (leapfrog, three lines); at rest the field holds NO options, only waves. **Observation begins as LOAD, not
+reading:** the observer's resonance vector (S, dissonance, hunger, tanh(g_guilt), the scar profile — existing
+metrics ONLY) is projected through its glyph lens (each glyph a fixed shape on the lattice; the state weights their
+sum) as a tension over the observation window; the field deforms under it — rubber under fingers. **Options are
+PEAKS of the deformed field:** the local extrema of |u| after deformation. Their NUMBER and PLACE are functions of
+who looks and in what state — the hungry and the sated see different option-SETS at the same point, not different
+probabilities over one menu. **Collapse:** sample a peak ∝ u²; the collapsed peak lands as a FACT in the existing
+ledgers (the spores and claims ARE the classical layer — traces of collapses; the plumbing already exists); the
+remaining energy redistributes (the rubber's recoil) and the point re-superposes from its neighbours. **Two
+observers, one field:** both contributions interfere (signed amplitudes — constructive in phase, destructive in
+antiphase); the order of reads does not commute — the world where l collapsed a point first is not the world where
+l2 did. The lenses already differ in code: CHOOSE_TEMP0 0.7 vs 0.85 (l.c:326 / l2.c:326). **The photon:** before a
+read the dichotomy (kill/not, eat/not) lives as a wave — both branches interfering; in the read it is a particle —
+a ledger fact. Duality as a mode of existence, not a decision made once.
+
+**Falsifiers (pre-registered NOW, before any code; both mandatory; able to return "no field").**
+(1) **NL_FIELD_MENU — the rubber test:** a matched control with a FIXED option-set carrying the same probabilities
+but with the set independent of the observer. The rubber is real iff the distribution of AVAILABLE options
+correlates with the observer's state BEFORE the choice (peak count / placement vs dissonance, hunger, guilt) —
+per-seed, ≥20/30. No constant is ever tuned to pass this gate; calibration is logged. (2) **The double-slit — the
+interference test:** the two-observer world vs the SUM of two solo worlds (NL_SOLO runs of each). If the
+interference terms bear weight, the two-observer world is statistically distinguishable from the sum of loners,
+≥20/30; if not — no field, said plainly. (3) **Gate-invariant:** with NL_FIELD off, hash a17cfd05 holds and the
+suite stays green — the classical organism is untouched.
+
+**The ladder (each step carries its own falsifier; no leap).** **Step 1 — the field as the medium of ONE large
+decision:** where argmax/draw now decides the forage target or the strike, the load→deform→peaks→collapse pipeline
+decides instead; observers stay classical; magnitude by construction — the arc's law (MAGNITUDE is what is both
+inferable and load-bearing) is honoured from the first line: the collapse decides big things, never a
+birthday-sized garnish. **Step 2 — two observers, one field:** interference live, the double-slit falsifier run.
+**Step 3 — monism: the organism as a coherent region of the field (a soliton).** A vortex is not made of
+"vortexness" — it is made of water, and it is real because it sustains itself. energy = the region's total
+amplitude; dissonance = its internal phase spread; scar = a standing deformation of its shape; death = decoherence
+— the region loses phase-lock and dissolves; a kill = FORCED decoherence of the other's region, which makes guilt
+physics with no new concept: the scar is the deformation your own shape keeps from dissolving another. Phase-locking
+has a native mechanism in the Method already — the Kuramoto chambers (dario.c, neoleo). Honest cost: step 3
+rewrites the organism; steps 1–2 are ~200–300 lines into BOTH files under the diff-gate. Unplanned prediction worth
+logging now: if scars are shape-deformations, the scars of two organisms in one field can INTERFERE — recursive
+culture (Δ1/Δ2) would acquire a physical carrier we did not design for it.
+
+**Pre-flight note (applies to EVERY future pre-registered run, field or not):** the blood-spore grew 5→6 fields
+(B-3) and both readers now parse strictly `fscanf(...)==6` — a 5-field line from an OLD run makes the while-loop
+stop silently, blinding the forager and the estimator to everything after it, with zero stderr. Start every run
+with a fresh `lifeis/arena` (or bump the ledger filename on any format change).
+
+**Discipline:** design pre-registered before code (B-3's lesson); every edit lands in both l.c and l2.c under the
+diff-gate; gates never tuned to pass; the epigraph-per-commit ritual holds.
+
 ## Resume-here (for future-me after a summary)
 
 Working copy: `~/arianna/actually.life`. Pushed to `github.com/ariannamethod/actually.life` through `6b7fc9a`
