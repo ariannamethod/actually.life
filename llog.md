@@ -974,23 +974,29 @@ with a fresh `lifeis/arena` (or bump the ledger filename on any format change).
 **Discipline:** design pre-registered before code (B-3's lesson); every edit lands in both l.c and l2.c under the
 diff-gate; gates never tuned to pass; the epigraph-per-commit ritual holds.
 
-**Step 1 built + the first LOAD-BEARING positive of the whole arc (2026-07-18, `NL_FIELD`).** The C-field core: a
-damped-wave lattice on a ring (`cfield_*`, leapfrog, `CFIELD_N` 64) that the observer's resonance (S, dissonance,
-hunger, tanh(g_guilt), scar) DEFORMS through gaussian bumps; the OPTIONS are the peaks of the propagated field, and
-a choice is a collapse sampled ∝ u². **The rubber is genuine (verified in isolation, `./l --fieldtest`):** with
-enough propagation (`CFIELD_STEPS` 48, `CFIELD_C2` 1.0) the peak POSITIONS emerge from interference of the signed
-load — the hungry and the sated (same active metrics, different amplitudes) face DIFFERENT option-sets, not different
-odds over one menu; at rest the field holds zero options, only waves. **Step 1b — wired to the forage target** (the
-collapse maps onto the pool region; behind `NL_FIELD`, gate-invariant off — solo AND `NL_FIELD`-solo are `a17cfd05`,
-the field only runs under `NL_ARENA`). **The sharpened falsifier (mine, over Fable's):** not "do options correlate
-with state" (true by construction) but does the observer-DEPENDENT menu bear WEIGHT — `NL_FIELD` (rubber) vs
-`NL_FIELD_MENU` (a FIXED, observer-independent vector through the same collapse machinery), solo-arena survival, 30
-seeds. **Result: rubber > menu 23/30** (7 the other way, 0 ties), often 2–4× the lifespan. The rubber is
-load-bearing: reacting to your own state when you choose WHERE to eat beats a fixed menu — the FIRST mechanism in
-this arc that beats a matched dumb constant ≥20/30, exactly where the dichotomy dissolved into a spectrum.
-**Honest caveat (not swept):** the control is ONE reasonable fixed vector (0.1,0.5,0.5,0,0.1), not the sharpest —
-swept-to-best; the margins are large, but the falsifier discipline wants the sweep, which is the next rigor step
-(then Step 2: two observers, interference, the double-slit falsifier). No number tuned to pass.
+**Step 1 built; the rubber is NOT load-bearing against the sharpest control — the discipline caught the artifact
+(2026-07-18, `NL_FIELD`).** The C-field core: a damped-wave lattice on a ring (`cfield_*`, leapfrog, `CFIELD_N` 64)
+that the observer's resonance (S, dissonance, hunger, tanh(g_guilt), scar) DEFORMS through gaussian bumps; the OPTIONS
+are the peaks of the propagated field, a choice is a collapse sampled ∝ u². **The rubber is genuine as a MECHANISM
+(verified in isolation, `./l --fieldtest`):** with enough propagation (`CFIELD_STEPS` 48, `CFIELD_C2` 1.0) the peak
+POSITIONS emerge from interference of the signed load — the hungry and the sated (same active metrics, different
+amplitudes) face DIFFERENT option-sets, not different odds over one menu; at rest, zero options, only waves. **Step 1b
+— wired to the forage target** (the collapse maps onto the pool region; behind `NL_FIELD`, gate-invariant off — solo
+AND `NL_FIELD`-solo are `a17cfd05`, the field only runs under `NL_ARENA`). **The sharpened falsifier (mine, over
+Fable's):** not "do options correlate with state" (true by construction) but does the observer-DEPENDENT menu bear
+WEIGHT — `NL_FIELD` (rubber) vs `NL_FIELD_MENU` (a FIXED vector through the same collapse), solo-arena survival, 30
+seeds. **First reading, rubber > menu 23/30 — but the control was NOT swept, and it bit.** The sweep
+(`NL_FIELD_MENU_VEC`, six fixed vectors, mean lifespan/12): the original control (0.1,0.5,0.5,0,0.1) was the WEAKEST
+(1582); the SHARPEST fixed vector — agitated (0.8,3,0.5,0,0.2), which spreads MANY peaks = broad pool coverage — scored
+4400, above the rubber's 3706. **Definitive, rubber vs the sharpest fixed menu, per-seed 30 seeds: 15/30 — a dead tie.**
+So the observer-DEPENDENCE adds nothing over a well-chosen FIXED menu; the 23/30 measured "the rubber beats a bad menu,"
+not "state-reactivity is load-bearing." The rubber is NOT load-bearing on the forage decision. **Same law as the whole
+arc, from the field's own side: breadth/magnitude (a wide fixed menu) beats reactivity/the-model.** No number was tuned
+— the sweep was demanded by the discipline BEFORE we trusted the positive, and it overturned it in the same session.
+**Scope (honest, not a full refutation of the field):** this is Step-1b only — the forage decision, with an ARBITRARY
+peak→pool mapping, solo-arena, one observer. Untested: the STRIKE decision (where reacting to your OWN bearable-guilt
+state may matter where foraging-coverage does not), the swept mapping, and Step 2 (two observers, interference, the
+double-slit) — a different question from the rubber. The field ontology is not refuted; the rubber-on-forage is.
 
 ## Resume-here (for future-me after a summary)
 

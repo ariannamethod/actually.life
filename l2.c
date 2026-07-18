@@ -506,6 +506,7 @@ static int   g_new_kills = 0;     /* GUILT: confirmed kills THIS tick, awaiting 
 static int   g_cfield_on = 0;     /* THE C-FIELD (NL_FIELD): the field's collapse decides the forage target (Step 1b) */
 static int   g_cfield_menu = 0;   /* NL_FIELD_MENU: the falsifier control — a FIXED, observer-INDEPENDENT menu (same collapse structure, no rubber) */
 static int   g_cfield_target = -1;/* the field's collapsed forage target this tick — computed in live(), read by arena_next */
+static float g_menu_vec[5] = {0.10f,0.50f,0.50f,0.0f,0.10f};  /* the FIXED control menu's load vector (S,diss,hunger,guilt,scar) — swept via NL_FIELD_MENU_VEC to find the SHARPEST fixed control */
 
 static void charges_init(void){
     for(int i=0;i<VOCAB_CAP;i++){ charge[i].mode_dS=0.0f; charge[i].mode_dDiss=0.0f; charge[i].metab_factor=1.0f; }
@@ -1593,6 +1594,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_cal_mind_on = (getenv("NL_CALMIND")!=NULL);   /* THE MIND: infer the rival's hidden birthday */
     g_cal_diss_on = (getenv("NL_CALDISS")!=NULL);   /* B-3: read the uncensored dissonance channel */
     g_cfield_on = (getenv("NL_FIELD")!=NULL); g_cfield_menu = (getenv("NL_FIELD_MENU")!=NULL); g_cfield_target = -1; cfield_reset();   /* THE C-FIELD (Step 1b) */
+    { const char* mv=getenv("NL_FIELD_MENU_VEC"); if(mv) sscanf(mv,"%f,%f,%f,%f,%f",&g_menu_vec[0],&g_menu_vec[1],&g_menu_vec[2],&g_menu_vec[3],&g_menu_vec[4]); }  /* sweep the fixed control to its sharpest */
     for(int c=0;c<CAL_NCAND;c++){ g_cmind_s[c]=0.0f; g_cmind_pdmean[c]=0.0f; }
     g_cmind_hmean=0.0f; g_cmind_n=0; g_cmind_last_rt=-1; g_cmind_bhat=0.0f; g_cmind_conf=0.0f; g_claims_off=0;
     g_calkill_on    = (getenv("NL_CALKILL")!=NULL);          /* STRIKE FALSIFIER: kill on the believed window */
@@ -1703,7 +1705,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         int   dreaming=0, grazing=0;
         if(g_arena_on && (g_cfield_on||g_cfield_menu)){   /* THE C-FIELD decides WHERE to forage: load the field, collapse the superposition to one option, map it onto the pool. rubber = the observer's live resonance; the control menu = a fixed vector (same machinery, no reaction to state). */
             cfield_reset();
-            if(g_cfield_menu) cfield_load(0.10f, 0.50f, 0.50f, 0.0f, 0.10f);   /* FIXED, observer-independent menu */
+            if(g_cfield_menu) cfield_load(g_menu_vec[0],g_menu_vec[1],g_menu_vec[2],g_menu_vec[3],g_menu_vec[4]);   /* FIXED, observer-independent menu (swept to its sharpest via NL_FIELD_MENU_VEC) */
             else              cfield_load(mo.S, fabsf(mo.dissonance), arena_hunger(energy, fabsf(mo.dissonance)), g_guilt, scar_total);
             int pk = cfield_collapse();
             g_cfield_target = (pk>=0 && g_pool_n>0) ? (int)((long)pk*(long)g_pool_n/CFIELD_N) : -1;
