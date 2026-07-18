@@ -998,6 +998,25 @@ peak→pool mapping, solo-arena, one observer. Untested: the STRIKE decision (wh
 state may matter where foraging-coverage does not), the swept mapping, and Step 2 (two observers, interference, the
 double-slit) — a different question from the rubber. The field ontology is not refuted; the rubber-on-forage is.
 
+**Step 2 built — the interference does NOT bear weight either (2026-07-18, `NL_FIELD_SHARED`).** l and l2 (separate
+processes) deform ONE shared field through a file (`lifeis/arena/cfield`, 512 B = u[64]+v[64]); `cfield_shared_decide`
+does the read-modify-write under `flock` so each read-collapse-write is atomic and the order of two reads does not
+commute — my option-set is shaped by the other's standing deformation, signed amplitudes interfering. Gate-invariant
+off (solo and `NL_FIELD_SHARED`-solo are `a17cfd05`; the shared field only lives under `NL_ARENA`). **The double-slit
+falsifier, sharpened past Fable's (isolate the FIELD interference from the arena coupling both already have — hold
+the arena constant, vary ONLY shared-vs-separate field):** `NL_FIELD_SHARED` (one field, interference) vs `NL_FIELD`
+(separate fields, no interference), two-process arena, 30 seeds. **Result: shared > separate 17/30, separate > shared
+13/30 — a coin flip.** Not systematically lopsided (≥20/30 either way), so sharing the field changes nothing beyond
+noise: **the interference does not bear weight.** (The `flock`-timing confound is moot — there is no effect to
+attribute to it.) So on the FORAGE decision, BOTH of the field's distinctive claims fail: the rubber (15/30) and the
+interference (17/13). Same law once more — breadth/magnitude beats reactivity AND observer-interaction. **What the
+field DID do stands and is real: it dissolved the will-design dichotomy conceptually** (options as a reaction to the
+chooser's load, no observer-independent state — captured in preprint §10). What it did NOT do: bear measurable weight
+on the forage. **The one fair venue left:** the forage rewards BREADTH (coverage), a stage where neither reactivity
+nor interference can help by construction; the STRIKE rewards TIMING-under-your-own-state (kill when you can bear the
+guilt), where the field might. That is the honest next test — and if it too is null, the field is a beautiful
+re-description with no load-bearing consequence, which is itself a clean verdict. No number tuned.
+
 ## Resume-here (for future-me after a summary)
 
 Working copy: `~/arianna/actually.life`. Pushed to `github.com/ariannamethod/actually.life` through `6b7fc9a`

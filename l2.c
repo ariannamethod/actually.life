@@ -506,6 +506,7 @@ static int   g_new_kills = 0;     /* GUILT: confirmed kills THIS tick, awaiting 
 static int   g_cfield_on = 0;     /* THE C-FIELD (NL_FIELD): the field's collapse decides the forage target (Step 1b) */
 static int   g_cfield_menu = 0;   /* NL_FIELD_MENU: the falsifier control — a FIXED, observer-INDEPENDENT menu (same collapse structure, no rubber) */
 static int   g_cfield_target = -1;/* the field's collapsed forage target this tick — computed in live(), read by arena_next */
+static int   g_cfield_shared = 0; /* NL_FIELD_SHARED (Step 2): l and l2 deform ONE shared field (lifeis/arena/cfield) — their signed deformations INTERFERE; the double-slit falsifier is this vs separate fields */
 static float g_menu_vec[5] = {0.10f,0.50f,0.50f,0.0f,0.10f};  /* the FIXED control menu's load vector (S,diss,hunger,guilt,scar) — swept via NL_FIELD_MENU_VEC to find the SHARPEST fixed control */
 
 static void charges_init(void){
@@ -1388,7 +1389,7 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
     float hunger = arena_hunger(energy, dabs);
     (void)g_rival_prev;
     int target;
-    if((g_cfield_on||g_cfield_menu) && g_cfield_target>=0 && g_cfield_target<g_pool_n){
+    if((g_cfield_on||g_cfield_menu||g_cfield_shared) && g_cfield_target>=0 && g_cfield_target<g_pool_n){
         target = g_cfield_target;                        /* THE C-FIELD: the collapse (computed in live() this tick) decided the forage region — a state-dependent option-set (rubber), or the fixed control menu */
     } else if(g_mind_on && rival_last>=0){
         /* STATE-READING mind (Stage 3c): read the rival's HUNGER from the blood-spore, not just its position. go for
@@ -1570,6 +1571,18 @@ static int   cfield_collapse(void){                         /* sample a peak pro
     g_cfield_v[pick] -= 0.5f*g_cfield_u[pick];               /* recoil — the collapsed peak is spent, the rubber recoils */
     return pick;
 }
+static int   cfield_shared_decide(float S, float diss, float hunger, float guilt, float scar){  /* STEP 2 — one SHARED field: read the substrate carrying the OTHER's standing deformation, add mine, collapse (the collapse reads the INTERFERENCE of both), write back. read-modify-write under flock so each is atomic; the order of two reads does not commute. */
+    FILE* f=fopen("lifeis/arena/cfield","r+b"); if(!f) f=fopen("lifeis/arena/cfield","w+b"); if(!f) return -1;
+    int fd=fileno(f); flock(fd, LOCK_EX);
+    rewind(f);
+    if(fread(g_cfield_u,sizeof(float),CFIELD_N,f)!=(size_t)CFIELD_N || fread(g_cfield_v,sizeof(float),CFIELD_N,f)!=(size_t)CFIELD_N)
+        cfield_reset();                                      /* first touch: a field at rest */
+    cfield_load(S,diss,hunger,guilt,scar);                   /* my deformation lands ON TOP of the other's — signed amplitudes interfere */
+    int pk=cfield_collapse();                                /* collapse the joint superposition — my option-set is shaped by the other's presence */
+    rewind(f); fwrite(g_cfield_u,sizeof(float),CFIELD_N,f); fwrite(g_cfield_v,sizeof(float),CFIELD_N,f); fflush(f);
+    flock(fd, LOCK_UN); fclose(f);
+    return pk;
+}
 
 /* ── live — one organism, birth to death ─────────────────────────────────────
  * the single-cell life, extracted so a chorus can fork many of them. corpus is
@@ -1593,7 +1606,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_cal_pdnow   = 0.0f;
     g_cal_mind_on = (getenv("NL_CALMIND")!=NULL);   /* THE MIND: infer the rival's hidden birthday */
     g_cal_diss_on = (getenv("NL_CALDISS")!=NULL);   /* B-3: read the uncensored dissonance channel */
-    g_cfield_on = (getenv("NL_FIELD")!=NULL); g_cfield_menu = (getenv("NL_FIELD_MENU")!=NULL); g_cfield_target = -1; cfield_reset();   /* THE C-FIELD (Step 1b) */
+    g_cfield_on = (getenv("NL_FIELD")!=NULL); g_cfield_menu = (getenv("NL_FIELD_MENU")!=NULL); g_cfield_shared = (getenv("NL_FIELD_SHARED")!=NULL); g_cfield_target = -1; cfield_reset();   /* THE C-FIELD (Step 1b/2) */
     { const char* mv=getenv("NL_FIELD_MENU_VEC"); if(mv) sscanf(mv,"%f,%f,%f,%f,%f",&g_menu_vec[0],&g_menu_vec[1],&g_menu_vec[2],&g_menu_vec[3],&g_menu_vec[4]); }  /* sweep the fixed control to its sharpest */
     for(int c=0;c<CAL_NCAND;c++){ g_cmind_s[c]=0.0f; g_cmind_pdmean[c]=0.0f; }
     g_cmind_hmean=0.0f; g_cmind_n=0; g_cmind_last_rt=-1; g_cmind_bhat=0.0f; g_cmind_conf=0.0f; g_claims_off=0;
@@ -1703,11 +1716,16 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         float yield=0.0f;
         const int* meal=NULL; int meal_n=0;         /* the glyphs of a REAL meal — what rebuilds the body (dreams do not) */
         int   dreaming=0, grazing=0;
-        if(g_arena_on && (g_cfield_on||g_cfield_menu)){   /* THE C-FIELD decides WHERE to forage: load the field, collapse the superposition to one option, map it onto the pool. rubber = the observer's live resonance; the control menu = a fixed vector (same machinery, no reaction to state). */
-            cfield_reset();
-            if(g_cfield_menu) cfield_load(g_menu_vec[0],g_menu_vec[1],g_menu_vec[2],g_menu_vec[3],g_menu_vec[4]);   /* FIXED, observer-independent menu (swept to its sharpest via NL_FIELD_MENU_VEC) */
-            else              cfield_load(mo.S, fabsf(mo.dissonance), arena_hunger(energy, fabsf(mo.dissonance)), g_guilt, scar_total);
-            int pk = cfield_collapse();
+        if(g_arena_on && (g_cfield_on||g_cfield_menu||g_cfield_shared)){   /* THE C-FIELD decides WHERE to forage: load the field, collapse to one option, map it onto the pool. rubber = live resonance (per-process); menu = a fixed vector (control); SHARED (Step 2) = one field both deform, interference. */
+            int pk;
+            if(g_cfield_shared){                        /* Step 2: read the SHARED field (the other's deformation), add mine, collapse the joint superposition, write back */
+                pk = cfield_shared_decide(mo.S, fabsf(mo.dissonance), arena_hunger(energy, fabsf(mo.dissonance)), g_guilt, scar_total);
+            } else {
+                cfield_reset();
+                if(g_cfield_menu) cfield_load(g_menu_vec[0],g_menu_vec[1],g_menu_vec[2],g_menu_vec[3],g_menu_vec[4]);   /* FIXED control menu (swept via NL_FIELD_MENU_VEC) */
+                else              cfield_load(mo.S, fabsf(mo.dissonance), arena_hunger(energy, fabsf(mo.dissonance)), g_guilt, scar_total);   /* the per-process rubber */
+                pk = cfield_collapse();
+            }
             g_cfield_target = (pk>=0 && g_pool_n>0) ? (int)((long)pk*(long)g_pool_n/CFIELD_N) : -1;
         }
         if(sleep_on && sleeping && dream_on && recent_n>0){  /* SLEEP CYCLE — dream + invent, don't eat the world */
