@@ -1335,6 +1335,9 @@ static float  g_rival_diss = 0.0f;             /* B-3: the rival's freshest UNCE
 static int    g_kill_on     = 0;                /* NL_KILL=1 → killing is live in this world (can kill AND be killed) */
 static int    g_kill_always = 0;               /* CONTROL: NL_KILL_ALWAYS=1 → strike whenever the draw lands (no reading the OTHER) */
 static int    g_kill_never  = 0;               /* CONTROL: NL_KILL_NEVER=1 → never strike (killable, but no model, no aggression) */
+static int    g_fstrike_on   = 0;              /* NL_FIELD_STRIKE: the strike RATE emerges from a field-collapse of opportunity+bearing vs the burden of guilt — timing under your own state */
+static int    g_fstrike_menu = 0;              /* CONTROL: NL_FIELD_STRIKE_MENU — a FIXED strike rate (the matched dumb menu), swept to its sharpest */
+static float  g_fstrike_fixed = KILL_PROB;     /* the fixed control rate, set by NL_FIELD_STRIKE_FIXED (default = the classical base) */
 static int  arena_namecmp(const void* a, const void* b){ return strcmp(*(const char* const*)a, *(const char* const*)b); }
 static void arena_addfile(const char* path){  /* index every non-empty line of one file into the pool */
     FILE* f=fopen(path,"r"); if(!f) return;
@@ -1539,6 +1542,7 @@ static void   cal_mind_observe_trail(int me, long* off){  /* B-2: the mind reads
 #define CFIELD_DAMP  0.01f         /* light damping — waves fade slowly enough to interfere before they die */
 #define CFIELD_K     0.01f         /* restoring stiffness — at rest, u -> 0, no options, only waves */
 #define CFIELD_STEPS 48            /* relaxation steps — enough propagation that the OPTION POSITIONS emerge from interference of the signed load, not the fingers' places (genuine rubber, not a state-sized menu) */
+#define FSTRIKE_CEIL 0.06f         /* STRIKE-FIELD (NL_FIELD_STRIKE): the field's strike rate spans [0, 2×KILL_PROB] — full range around the fixed base, so state-timing has room to beat a swept constant */
 static float g_cfield_u[CFIELD_N], g_cfield_v[CFIELD_N];
 static void  cfield_reset(void){ for(int i=0;i<CFIELD_N;i++){ g_cfield_u[i]=0.0f; g_cfield_v[i]=0.0f; } }
 static void  cfield_step(void){    /* one leapfrog step of the damped wave equation on the ring */
@@ -1583,6 +1587,23 @@ static int   cfield_shared_decide(float S, float diss, float hunger, float guilt
     flock(fd, LOCK_UN); fclose(f);
     return pk;
 }
+static float cfield_strike_p(float rival_h, float energy, float guilt){  /* THE STRIKE-FIELD (NL_FIELD_STRIKE) — the kill/hold dichotomy as a photon: a KILL wave (opportunity·bearing) and a HOLD wave (the burden of guilt, opposite sign) enter the lattice, interfere, and the collapse reads the strike RATE off the Born weight of the kill half-ring. state-timing under your own bearing, not a fixed menu. */
+    cfield_reset();
+    float kill_amp = rival_h + energy;                       /* the rival's weakness (opportunity) + my strength to bear the corpse RAISE the urge */
+    float hold_amp = tanhf(guilt);                           /* the superego's weight RAISES the hold — I strike less when I cannot carry another death */
+    const int ksite=16, hsite=48;                            /* kill and hold half a ring apart, so their waves travel and interfere across the lattice */
+    for(int d=-3;d<=3;d++){ float g=expf(-0.25f*(float)(d*d));
+        g_cfield_u[(ksite+d+CFIELD_N)%CFIELD_N] += kill_amp*g;
+        g_cfield_u[(hsite+d+CFIELD_N)%CFIELD_N] -= hold_amp*g; }   /* opposite signs: the burden destructively fights the urge across the ring */
+    for(int s=0;s<CFIELD_STEPS;s++) cfield_step();           /* let the deformation propagate — the rate is a consequence of interference, not of the load's raw size */
+    float kw=0.0f, tot=0.0f;                                 /* Born weight of the kill half-ring vs the whole */
+    for(int i=0;i<CFIELD_N;i++){ float u2=g_cfield_u[i]*g_cfield_u[i]; tot+=u2;
+        int dk=i-ksite; if(dk<-CFIELD_N/2)dk+=CFIELD_N; if(dk>CFIELD_N/2)dk-=CFIELD_N; if(dk<0)dk=-dk;
+        if(dk < CFIELD_N/4) kw+=u2; }                        /* the quarter-ring around the kill site = the "strike" branch */
+    if(!(tot>0.0f)) return 0.0f;
+    float p=(kw/tot)*FSTRIKE_CEIL; if(p<0.0f)p=0.0f; if(p>FSTRIKE_CEIL)p=FSTRIKE_CEIL;  /* the Born fraction scaled into a strike rate */
+    return p;
+}
 
 /* ── live — one organism, birth to death ─────────────────────────────────────
  * the single-cell life, extracted so a chorus can fork many of them. corpus is
@@ -1607,6 +1628,8 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_cal_mind_on = (getenv("NL_CALMIND")!=NULL);   /* THE MIND: infer the rival's hidden birthday */
     g_cal_diss_on = (getenv("NL_CALDISS")!=NULL);   /* B-3: read the uncensored dissonance channel */
     g_cfield_on = (getenv("NL_FIELD")!=NULL); g_cfield_menu = (getenv("NL_FIELD_MENU")!=NULL); g_cfield_shared = (getenv("NL_FIELD_SHARED")!=NULL); g_cfield_target = -1; cfield_reset();   /* THE C-FIELD (Step 1b/2) */
+    g_fstrike_on = (getenv("NL_FIELD_STRIKE")!=NULL); g_fstrike_menu = (getenv("NL_FIELD_STRIKE_MENU")!=NULL);   /* THE STRIKE-FIELD (the fair venue) + its fixed-menu control */
+    { const char* fv=getenv("NL_FIELD_STRIKE_FIXED"); if(fv) g_fstrike_fixed=(float)atof(fv); }                  /* the swept fixed rate for the control */
     { const char* mv=getenv("NL_FIELD_MENU_VEC"); if(mv) sscanf(mv,"%f,%f,%f,%f,%f",&g_menu_vec[0],&g_menu_vec[1],&g_menu_vec[2],&g_menu_vec[3],&g_menu_vec[4]); }  /* sweep the fixed control to its sharpest */
     for(int c=0;c<CAL_NCAND;c++){ g_cmind_s[c]=0.0f; g_cmind_pdmean[c]=0.0f; }
     g_cmind_hmean=0.0f; g_cmind_n=0; g_cmind_last_rt=-1; g_cmind_bhat=0.0f; g_cmind_conf=0.0f; g_claims_off=0;
@@ -1784,7 +1807,10 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                 else if(g_kill_always)     decide = 1;                                       /* CONTROL: strike blindly */
                 else if(g_kill_never) decide = 0;                                       /* CONTROL: never strike */
                 else                  decide = (g_rival_h > KILL_WEAK && energy > KILL_STRONG);  /* the DECISION: strike only when the rival is WEAK and you can BEAR the burden */
-                if(decide && (frand()+1.0f)*0.5f < KILL_PROB){                           /* the probabilistic draw — wanting is a pressure, not a certainty */
+                float kprob = KILL_PROB;                                                 /* the strike rate — fixed by default */
+                if(g_fstrike_on)        kprob = cfield_strike_p(g_rival_h, energy, g_guilt);  /* STRIKE-FIELD: the rate is a collapse of opportunity+bearing vs the burden of guilt */
+                else if(g_fstrike_menu) kprob = g_fstrike_fixed;                         /* CONTROL: the swept fixed rate — the matched dumb menu */
+                if(decide && (frand()+1.0f)*0.5f < kprob){                               /* the probabilistic draw — wanting is a pressure, not a certainty */
                     arena_strike(g_rival_id, g_arena_id);                                /* the strike lands on the rival's process */
                     if(!g_cal_on){ energy += KILL_GAIN; corpse_debt += 1; g_new_kills++; }  /* NL_KILL: immediate reward (published semantics) + a confirmed kill for guilt. NL_CAL: the striker is paid only on the victim's CONFIRMED kill (arena_collect), and wounded on a rebound */
                 }

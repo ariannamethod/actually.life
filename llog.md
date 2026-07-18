@@ -1017,6 +1017,139 @@ nor interference can help by construction; the STRIKE rewards TIMING-under-your-
 guilt), where the field might. That is the honest next test — and if it too is null, the field is a beautiful
 re-description with no load-bearing consequence, which is itself a clean verdict. No number tuned.
 
+**THE STRIKE-FIELD — built + falsified, NOT load-bearing (2026-07-18, `NL_FIELD_STRIKE`).** The one fair venue: the forage
+rewards breadth, but the STRIKE has EV in timing — `EV = KILL_GAIN·p − REBOUND_WOUND·(1−p)`, break-even p=0.25
+(l.c:1326); striking an armored victim (out of its window) wounds back. Design: at the kill decision (l.c:1786-1787) the
+fixed `KILL_PROB` (0.03) becomes a field-collapse rate. The kill/hold dichotomy as a photon — a KILL wave (amplitude =
+opportunity·bearing = `g_rival_h` + `energy`) and a HOLD wave (amplitude = `tanh(g_guilt)`, opposite sign) interfere on
+the lattice; the collapse reads the strike rate off the Born weight of the kill half-ring. Timing under your OWN
+bearing-state: strike harder when you can carry the corpse, hold when guilt cannot bear another death. The eligibility
+gate (rival weak, energy strong) stays; the field only shapes the RATE within it. **Control (`NL_FIELD_STRIKE_MENU`):**
+the same gate, a FIXED rate swept via `NL_FIELD_STRIKE_FIXED` over {0.01, 0.02, 0.03, 0.045, 0.06} — tested against the
+SHARPEST fixed rate (the Step-1b lesson), never a weak one. **Falsifier:** head-to-head, both assignments pooled to
+cancel the l/l2 temperament confound — 15 seeds field=l / fixed=l2, 15 seeds fixed=l / field=l2; metric = which of the
+pair outlives the other (net confirmed kills as tie-break); field-wins/30 ≥20 = the strike-field bears weight.
+Gate-invariant off → a17cfd05. **Pre-registered risk (logged before the run):** the field times on the KILLER's state,
+but the rebound depends on the VICTIM's window, unobserved in the NL_KILL path — so the field may null here too. If it
+does, the field is a beautiful re-description with no load-bearing consequence on ANY decision — a clean verdict, and the
+field arc rests there unless the monism (below) is run.
+
+**Result — NOT load-bearing; the adversarial control caught the same artifact as the forage rubber (2026-07-18).** Built
+behind `NL_FIELD_STRIKE`, gate-invariant off (a17cfd05 holds under strike-solo, suite 48/48). First pass: a world-viability
+sweep (fixed(r) vs fixed(r) twin, seeds 100-111) named r=0.01 "sharpest" (mean pair-lifespan 1287 vs 466-755 for higher
+rates — killing is net-negative in the symmetric world, so near-pacifism is the most viable constant). Field vs fixed(0.01),
+30 seeds, alternating ID (one binary `./l` for both roles → zero temperament confound): **20/30, exactly at the bar.** Two
+flags forced the adversarial check: (a) 0.01 was chosen by world-viability, NOT head-to-head hardness — the Step-1b trap
+(a weak control gave 23/30 there too); (b) several wins were 1-24 tick margins on 900-tick lives = process-race noise.
+**The adversarial control — field vs EVERY fixed rate, take the MIN:** field-wins = {18, 17, 13, 14, 16} vs r =
+{0.01, 0.02, 0.03, 0.045, 0.06}; **MIN = 13/30 vs r=0.03.** Against the sharpest fixed rate the field is BEHIND on both
+count (13/17) and mean margin (58 vs 72 ticks). And the first-pass 20 did not replicate (18 vs 0.01 this run, same seeds —
+the two-process race wobbles the estimate ±2). So the strike-field is NOT load-bearing: a well-chosen constant strike rate
+beats state-timing. The pre-registered risk fired exactly as logged — the field times on the KILLER's own state, but the
+rebound EV lives in the VICTIM's unobserved window. **The field now bears no measurable weight on ANY decision wired to it
+— forage (rubber 15/30, interference 17/13) and strike (MIN 13/30).** Same law across the whole arc: magnitude / a
+well-chosen constant beats reactivity, the model, interference, and now timing. No number tuned — the adversarial sweep ran
+BEFORE the 20/30 was trusted, and it overturned it, same session (the forage-rubber discipline, twice).
+
+**THE MONISM — deferred, TERMINAL rung, three binding conditions (Fable adversarial audit, 2026-07-18).** An independent
+Fable pass attacked the "we tested the negation of the vision" framing and REFUTED it: the built steps kept observers
+classical BY the ladder's design (this section, deferring constraint #1 to Step 3), not against it, and the rubber (half
+the vision) WAS fully present in Step 1b, so its null (15/30) is a venue-limited DEBIT against the vision, not a test of
+its negation. The "negation" framing is withdrawn; the two nulls stand as debits. The monism (organism as a coherent
+field-region, per-tick reality formation, scars interfering in one field) is legitimately pre-registered — it was on the
+ladder before the builds and carries the risky scar-interference prediction — but building it is legitimate ONLY under:
+(1) the two nulls stay on the books as debits; (2) the strike-field runs FIRST (above); (3) the monism is the TERMINAL
+rung — a null at M-1 closes the field arc, no Step 4, no "still not the right level." Falsifiers, each able to return "no
+field": **M-0** solo-viability (mortal AND lifespan within [0.5×, 2×] of classical); **M-1** the weight test — monism vs
+the BEST of {classical default; classical + the champion fixed menu (the 4400 vector); a FROZEN AR(1) surrogate whose
+marginals match the monism's measured phase-spread}, per-seed survival ≥20/30, loss or tie → arc closes; **M-2** the
+carrier test — shared ring vs separate rings, ether cut, arena constant, trailing-packet forage yield ≥20/30, parity → no
+carrier. The scar-interference "a classical organism structurally cannot pass it" is a demonstration, NOT a control — the
+named dumb controls above are what can make the monism lose. Design only; no monism code until Oleg rules on condition 3.
+
+## THE MONISM — pre-registered in full, four hands, NO code yet (2026-07-18, `NL_MONISM`)
+
+The field bore no measurable weight on any DECISION we wired it to — the forage (rubber 15/30, interference 17/13) and
+the strike (MIN 13/30 vs the sharpest swept control). Every one of those kept the observer CLASSICAL and bolted the field
+on as a decision-tool. The vision was always the other thing: the organism made OF the field, not using it. This is the
+terminal rung — written here in full BEFORE a line of code, because a pre-registration produced after the data is not one.
+
+**The turn to the vector.** A scalar field never CONTAINED possibilities — it collapsed the whole space of continuation to
+one intensity and carved a menu out of it on demand. A field whose state is a vector carries possibility as its primary
+structure; the organism's scalars (energy, dissonance, guilt, scar) stop steering the field from above and become
+PROJECTIONS of the region's form. `scar` is already a per-glyph vector (`float scar[VOCAB_CAP]`, l.c:1220) — a wound
+carries its name; only the boundary with the field strips it, summing the map into `scar_total` and choking it through
+`tanh`. The monism loads the field from the full vector, name intact.
+
+**Provenance — this is a return to the language's own physics, not a graft.** In ariannamethod.ai (origin/main e1b352b)
+the scar is born named: `SCAR "<phrase>"` deposits the phrase into `scar_texts[]`; only the coupling strength
+`dark_gravity` is scalar, and darkmatter is "invisible gravitational mass that bends semantic trajectories." Reading the
+other's trace has a direct ancestor: `ASK` with no argument "resonates with the existing darkmatter (SCAR) rather than
+reinventing it" — exactly what B does in M-2. Persistence lives in saved state (`.soma`), which argues for the re-imprint
+of the non-decaying scalar over pinned sites — the monism stays inside the native language.
+
+**Where the trace lives — the existing ledger is already the instrument, no new recording line.** `outcomes` (l.c:1438)
+dates the birth of each scar A; the blood-spore carries the `dabs` column (l.c:1410) — the uncensored dissonance, the B-3
+porosity fix that did not help decision-inference and now turns out to be the measuring device. Under NL_MONISM, A's
+standing deformation enters B's dissonance and the Born weights of B's collapses constitutively. **The scar-sharing trace
+is an event-study:** around each scar-birth timestamp of A, a short window; Δ = mean(dabs_B in-window) − mean(dabs_B in
+matched no-scar windows); per-event contrast aggregated at the SEED level (kills differ between arms, so contrasts pair at
+the seed, not one-to-one; a minimum event count per seed is declared now, seeds below it excluded symmetrically). A second
+component: the shift of B's pick-distribution in the same windows.
+
+**The magnitude physics.** The Born weight of a site at amplitude u+δ is (u+δ)² = u² + 2uδ + δ² — against a standing
+deformation u, each transient δ is amplified linearly by the 2uδ cross-term. But both scalar channels saturate:
+`tanh(scar_total)` with GUILT_SCAR=2.0 is at tanh(2)≈0.964 after the FIRST kill; guilt (`tanh(g_guilt)`, GUILT_PAIN=0.7,
+decays GUILT_DECAY=0.999) climbs to a plateau. So the field forcing maps the wound NOT through tanh (dead per-event bump
+≈3e-6 at plateau) and NOT raw (unbounded amplitude = the Hebbian-no-ceiling NaN bug from the 07-06 audit) but through
+**log1p with a hard clamp + isfinite gate** (per-event bump ≈δ/8, alive, derivative never zero, bounded top). The vector
+solves WHERE (the pattern, the name of death); log1p solves HOW MUCH (the per-event transient on the repeated DEATH_ID
+component) — both are needed, the vector alone re-saturates through the back door. The expected profile — a step at the
+first kill plus DECAYING transients, indexed by event number — is itself a shape-falsifier: a surrogate must fake not the
+magnitude alone but the decay envelope tied to A's kill-history.
+
+**The controls — matched families, verdict by MIN (the strike lesson verbatim).** A high-dimensional field cannot be swept
+by brute force, so "the sharpest swept constant" is honestly replaced by a matched FAMILY judged at its MIN member (the
+hardest to beat). C-frozen is the weapon: decompose the shared ring into B's own live deformation + the other's component,
+and freeze ONLY the other's component to a surrogate with matched per-site marginals and spectrum, causally detached from
+A's real scar timestamps — family {phase-shifted replay, AR(1), phase-shuffle}. The symmetry requirement is binding: B's
+own echo persists identically in both arms, only the other's component is manipulated. C-shuffle circularly shifts A's
+timestamps to catch a false time-lock from shared trends. **M-2 gate, declared before code:** per-seed
+(Δ_live − Δ_live,shuffled) − (Δ_frozen − Δ_frozen,shuffled) > 0 in ≥20/30, against the worst surrogate.
+
+**The three tests.**
+- **M-0 (viability, first).** The monist organism must be MORTAL (no immortality hole) AND viable (median lifespan within
+  [0.5×, 2×] of the classical default). This is where "made of the field" is first shown to be a way of being ALIVE at
+  all, before any question of weight. Fail → the monism is dead as a life-physics; report, stop, arc closes. Every constant
+  (projection, log1p clamp, persistence) is calibrated here, logged, and frozen before any comparison.
+- **M-1 (weight on survival).** Monism vs the control family {classical default; classical + the champion fixed menu;
+  frozen pattern-snapshots; norm-matched random patterns; the 5-scalar menu as a legacy anchor}, per-seed survival, MIN,
+  30 seeds, ≥20/30. A pass is a real finding — structure over matched statistics — but NOT the vision.
+- **M-2 (the carrier, the heart).** The event-study above. The only test whose control is structurally deficient, not
+  statistically — a surrogate fits any marginal but cannot share a carrier — so it asks the ontology question, not the
+  optimization one.
+
+**The terminality lattice — language fixed now, before the data.** M-2 pass → "the carrier" — the strongest, the vision
+confirmed, independent of M-1. M-1-only pass → "structure over matched-statistics on survival" — the words "the monism is
+confirmed" are NOT in it, and it opens no new rung. Both null → the field arc closes, cleanly, no Step 4 under any outcome.
+
+**The dimension-ladder — condition 3 against a Step 4 in richer clothes.** This arc runs on the ACTUAL per-glyph vector
+(amplitude + name). The phase/orientation field — each site carrying amplitude AND phase (S¹, the minimal nontrivial M),
+dissonance becoming the divergence of local directions, identity a phase-locked profile, scar a TOPOLOGICAL DEFECT whose
+winding number smooth relaxation cannot erase (so "scars never decay", l.c:305, becomes a theorem of the geometry, not a
+storage rule), death the loss of phase-coherence — is a FUTURE arc with its own pre-registration, and it opens ONLY on an
+M-2 pass. Deepening a positive is legitimate; rescuing a null is not. A null of both M-1 and M-2 on the vector closes the
+field arc EVEN GIVEN the proven existence of a richer M. Spoken before the run so that after a null no one — including us —
+opens the door "the level was just not right." (The infinite-dimensional form Ψ∈H_x, dim→∞, is the right ideal and
+unbuildable: it has no matched control, and a claim with no control is a manifesto, not a result. The finite orientation
+field is the honest discretization the ideal permits; the law that selects it is Oleg's own — the dimension and geometry
+of M are forced by the falsifiers, not chosen philosophically.)
+
+**Discipline.** Gate-invariant: NL_MONISM off → a17cfd05, suite 48/48. Both l.c and l2.c under the diff-gate. No constant
+tuned to pass; every calibration logged and frozen before comparison. Each step 30 seeds, the verdict given by the tool,
+not by us. The design was reciprocally reviewed across nodes before a line of code — every claim above carries a matched
+control able to return "no field."
+
 ## Resume-here (for future-me after a summary)
 
 Working copy: `~/arianna/actually.life`. Pushed to `github.com/ariannamethod/actually.life` through `6b7fc9a`
