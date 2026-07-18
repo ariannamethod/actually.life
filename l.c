@@ -503,6 +503,9 @@ static int   DEATH_ID = 0;        /* GUILT: the death-glyph — where a confirme
 static int   g_guilt_on = 0;      /* GUILT (NL_GUILT): the superego is active */
 static float g_guilt = 0.0f;      /* GUILT: the hidden pain scalar — a confirmed kill tops it, it decays; pain=tanh(g_guilt) compresses choose() */
 static int   g_new_kills = 0;     /* GUILT: confirmed kills THIS tick, awaiting the deposit (set by the kill paths, consumed in live()) */
+static int   g_cfield_on = 0;     /* THE C-FIELD (NL_FIELD): the field's collapse decides the forage target (Step 1b) */
+static int   g_cfield_menu = 0;   /* NL_FIELD_MENU: the falsifier control — a FIXED, observer-INDEPENDENT menu (same collapse structure, no rubber) */
+static int   g_cfield_target = -1;/* the field's collapsed forage target this tick — computed in live(), read by arena_next */
 
 static void charges_init(void){
     for(int i=0;i<VOCAB_CAP;i++){ charge[i].mode_dS=0.0f; charge[i].mode_dDiss=0.0f; charge[i].metab_factor=1.0f; }
@@ -1384,7 +1387,9 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
     float hunger = arena_hunger(energy, dabs);
     (void)g_rival_prev;
     int target;
-    if(g_mind_on && rival_last>=0){
+    if((g_cfield_on||g_cfield_menu) && g_cfield_target>=0 && g_cfield_target<g_pool_n){
+        target = g_cfield_target;                        /* THE C-FIELD: the collapse (computed in live() this tick) decided the forage region — a state-dependent option-set (rubber), or the fixed control menu */
+    } else if(g_mind_on && rival_last>=0){
         /* STATE-READING mind (Stage 3c): read the rival's HUNGER from the blood-spore, not just its position. go for
          * its plate when the states are ASYMMETRIC — I'm hungry and it is fed (raid a calm forager), or I'm fed and
          * it is hungry (it is leaving to come at me → I take its abandoned ground). when the states MATCH, stay home:
@@ -1520,6 +1525,51 @@ static void   cal_mind_observe_trail(int me, long* off){  /* B-2: the mind reads
     *off=ftell(c); fclose(c);
 }
 
+/* ── THE C-FIELD (NL_FIELD, Step 1) — a damped wave lattice the observer's state DEFORMS. the options a chooser
+ * faces are the PEAKS of the deformed field — a REACTION to its own load, not a fixed menu (the rubber); a choice is
+ * the COLLAPSE of that superposition to one peak, which lands as a fact in the existing ledgers. observers are made
+ * of EXISTING metrics only (S, dissonance, hunger, guilt, scar). pre-registered design (llog: THE C-FIELD); every
+ * organism's lens differs by CHOOSE_TEMP0 (l 0.7 / l2 0.85). gate-invariant off. Step 1 verifies the field physics
+ * and the rubber in isolation; the wiring to a real decision + the falsifiers is Step 1b. ── */
+#define CFIELD_N     64            /* lattice points on the ring */
+#define CFIELD_DT    0.2f          /* leapfrog step */
+#define CFIELD_C2    1.0f          /* wave speed^2 — waves must TRAVEL and interfere, or peaks just sit at the load sites */
+#define CFIELD_DAMP  0.01f         /* light damping — waves fade slowly enough to interfere before they die */
+#define CFIELD_K     0.01f         /* restoring stiffness — at rest, u -> 0, no options, only waves */
+#define CFIELD_STEPS 48            /* relaxation steps — enough propagation that the OPTION POSITIONS emerge from interference of the signed load, not the fingers' places (genuine rubber, not a state-sized menu) */
+static float g_cfield_u[CFIELD_N], g_cfield_v[CFIELD_N];
+static void  cfield_reset(void){ for(int i=0;i<CFIELD_N;i++){ g_cfield_u[i]=0.0f; g_cfield_v[i]=0.0f; } }
+static void  cfield_step(void){    /* one leapfrog step of the damped wave equation on the ring */
+    static float lap[CFIELD_N];
+    for(int i=0;i<CFIELD_N;i++){ int l=(i+CFIELD_N-1)%CFIELD_N, r=(i+1)%CFIELD_N; lap[i]=g_cfield_u[l]+g_cfield_u[r]-2.0f*g_cfield_u[i]; }
+    for(int i=0;i<CFIELD_N;i++) g_cfield_v[i] += CFIELD_DT*(CFIELD_C2*lap[i] - CFIELD_K*g_cfield_u[i] - CFIELD_DAMP*g_cfield_v[i]);
+    for(int i=0;i<CFIELD_N;i++) g_cfield_u[i] += CFIELD_DT*g_cfield_v[i];
+}
+static void  cfield_load(float S, float diss, float hunger, float guilt, float scar){  /* the resonance vector deforms the field — a tension of gaussian bumps at fixed sites, amplitude = the LIVE metric; the finger pressing the rubber */
+    const int  pos[5] = {4,16,28,40,52};
+    const float amp[5] = { S, tanhf(0.1f*diss), hunger, tanhf(guilt), tanhf(scar) };
+    for(int k=0;k<5;k++){ int c=pos[k]; float a=amp[k];
+        for(int d=-3;d<=3;d++){ int i=(c+d+CFIELD_N)%CFIELD_N; g_cfield_u[i] += a*expf(-0.25f*(float)(d*d)); } }
+    for(int s=0;s<CFIELD_STEPS;s++) cfield_step();           /* let the deformation propagate — the field reacts, options are not the load, they are its consequence */
+}
+static int   cfield_peaks(int* pos, int cap){               /* the OPTIONS: local maxima of |u| — their NUMBER and PLACE are functions of who loaded the field */
+    int n=0;
+    for(int i=0;i<CFIELD_N && n<cap;i++){ int l=(i+CFIELD_N-1)%CFIELD_N, r=(i+1)%CFIELD_N;
+        float a=fabsf(g_cfield_u[i]);
+        if(a>fabsf(g_cfield_u[l]) && a>=fabsf(g_cfield_u[r]) && a>1e-3f) pos[n++]=i; }
+    return n;
+}
+static int   cfield_collapse(void){                         /* sample a peak proportional to u^2 — the superposition collapses to one fact; the peak spends its energy back (recoil) so the point re-superposes from its neighbours */
+    static int pos[CFIELD_N]; int n=cfield_peaks(pos, CFIELD_N); if(n<=0) return -1;
+    static float w[CFIELD_N]; float tot=0.0f;
+    for(int k=0;k<n;k++){ w[k]=g_cfield_u[pos[k]]*g_cfield_u[pos[k]]; tot+=w[k]; }
+    if(!(tot>0.0f)) return pos[0];
+    float r=(frand()+1.0f)*0.5f*tot, acc=0.0f; int pick=pos[n-1];
+    for(int k=0;k<n;k++){ acc+=w[k]; if(acc>=r){ pick=pos[k]; break; } }
+    g_cfield_v[pick] -= 0.5f*g_cfield_u[pick];               /* recoil — the collapsed peak is spent, the rubber recoils */
+    return pick;
+}
+
 /* ── live — one organism, birth to death ─────────────────────────────────────
  * the single-cell life, extracted so a chorus can fork many of them. corpus is
  * its food, waste its voice, seed its body AND its dice, label>=0 tags its prints
@@ -1542,6 +1592,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_cal_pdnow   = 0.0f;
     g_cal_mind_on = (getenv("NL_CALMIND")!=NULL);   /* THE MIND: infer the rival's hidden birthday */
     g_cal_diss_on = (getenv("NL_CALDISS")!=NULL);   /* B-3: read the uncensored dissonance channel */
+    g_cfield_on = (getenv("NL_FIELD")!=NULL); g_cfield_menu = (getenv("NL_FIELD_MENU")!=NULL); g_cfield_target = -1; cfield_reset();   /* THE C-FIELD (Step 1b) */
     for(int c=0;c<CAL_NCAND;c++){ g_cmind_s[c]=0.0f; g_cmind_pdmean[c]=0.0f; }
     g_cmind_hmean=0.0f; g_cmind_n=0; g_cmind_last_rt=-1; g_cmind_bhat=0.0f; g_cmind_conf=0.0f; g_claims_off=0;
     g_calkill_on    = (getenv("NL_CALKILL")!=NULL);          /* STRIKE FALSIFIER: kill on the believed window */
@@ -1650,6 +1701,13 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         float yield=0.0f;
         const int* meal=NULL; int meal_n=0;         /* the glyphs of a REAL meal — what rebuilds the body (dreams do not) */
         int   dreaming=0, grazing=0;
+        if(g_arena_on && (g_cfield_on||g_cfield_menu)){   /* THE C-FIELD decides WHERE to forage: load the field, collapse the superposition to one option, map it onto the pool. rubber = the observer's live resonance; the control menu = a fixed vector (same machinery, no reaction to state). */
+            cfield_reset();
+            if(g_cfield_menu) cfield_load(0.10f, 0.50f, 0.50f, 0.0f, 0.10f);   /* FIXED, observer-independent menu */
+            else              cfield_load(mo.S, fabsf(mo.dissonance), arena_hunger(energy, fabsf(mo.dissonance)), g_guilt, scar_total);
+            int pk = cfield_collapse();
+            g_cfield_target = (pk>=0 && g_pool_n>0) ? (int)((long)pk*(long)g_pool_n/CFIELD_N) : -1;
+        }
         if(sleep_on && sleeping && dream_on && recent_n>0){  /* SLEEP CYCLE — dream + invent, don't eat the world */
             yield = dream_once(m,&mo,scar,recent,&recent_n,dream_streak);
             dream_streak++; dreaming=1; n_dream++;
@@ -1841,6 +1899,28 @@ int main(int argc, char** argv){
     if(argc>2 && strcmp(argv[1],"--calb")==0){
         unsigned long seed = strtoul(argv[2],NULL,10);
         printf("%.4f\n", (double)((float)(hash_seed(seed,33) % 69396UL)/10.0f));
+        return 0;
+    }
+    /* THE C-FIELD — the rubber test in isolation: load the field with different resonance vectors, print the OPTION-SET
+     * (peak count + positions) each state faces. same field, different observers → different menus. ./l --fieldtest */
+    if(argc>1 && strcmp(argv[1],"--fieldtest")==0){
+        struct { const char* who; float S,diss,hunger,guilt,scar; } obs[5] = {
+            {"at-rest ", 0.00f, 0.0f, 0.0f, 0.0f, 0.0f},
+            {"hungry  ", 0.10f, 0.5f, 1.0f, 0.0f, 0.0f},
+            {"sated   ", 0.10f, 0.5f, 0.1f, 0.0f, 0.0f},
+            {"guilty  ", 0.10f, 2.0f, 0.5f, 1.4f, 0.6f},
+            {"agitated", 0.80f, 3.0f, 0.5f, 0.0f, 0.2f},
+        };
+        printf("observer   | option-set (peaks of the deformed field: count @ positions)\n");
+        for(int k=0;k<5;k++){
+            cfield_reset(); cfield_load(obs[k].S,obs[k].diss,obs[k].hunger,obs[k].guilt,obs[k].scar);
+            int pos[CFIELD_N]; int n=cfield_peaks(pos,CFIELD_N);
+            printf("%s   | %2d @", obs[k].who, n);
+            for(int i=0;i<n;i++) printf(" %d", pos[i]);
+            int c0=cfield_collapse();                 /* collapse the superposition to one fact (∝ u²) — verifies the read */
+            printf("   -> collapse %d\n", c0);
+        }
+        printf("(if the SETS differ across states — not just the odds over one menu — the rubber is real in isolation; the load-bearing test is Step 1b)\n");
         return 0;
     }
     /* THE STRIKE FALSIFIER — print the blind control's random birthday-key (hash slot 77, uncorrelated with the true birthday's slot 33): ./l --calbb <seed> */
