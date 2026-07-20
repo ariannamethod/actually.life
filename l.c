@@ -15,6 +15,7 @@
 #include <unistd.h>      /* fork — the chorus is a colony of processes */
 #include <sys/wait.h>
 #include <time.h>        /* the arena's shared clock — claims expire so territory is re-won */
+#include <sys/time.h>    /* gettimeofday — a microsecond clock in the spore ledger, fine enough to resolve exposition epochs the wall-second collapses (M-2 measurement) */
 #include <dirent.h>      /* the arena indexes ANY .txt in lifeis/ — a dropped file is instantly in the fight */
 #include <sys/file.h>    /* flock — an atomic claim, so two organisms never double-claim the same ground */
 /* ── semantic membrane (inlined) — English → 88 cave-glyphs ──────────────
@@ -1382,8 +1383,8 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
     time_t now=time(NULL);
     unsigned char* claimed=(unsigned char*)calloc((size_t)g_pool_n,1);
     int rival_last=-1; long rival_ts=-1; float rival_h=0.0f;
-    if(claimed){ rewind(c); int id, own; long ts; float h; long otick; float diss;
-        while(fscanf(c,"%d %ld %d %f %ld %f",&id,&ts,&own,&h,&otick,&diss)==6)
+    if(claimed){ rewind(c); int id, own; long ts; float h; long otick; float diss; long long us;
+        while(fscanf(c,"%d %ld %d %f %ld %f %lld",&id,&ts,&own,&h,&otick,&diss,&us)==7)
             if(id>=0 && id<g_pool_n && (long)(now-(time_t)ts) < ARENA_EXPIRE){
                 claimed[id]=1;
                 if(own!=g_arena_id && (g_target_id<0 || own==g_target_id) && ts>=rival_ts){ rival_ts=ts; rival_last=id; rival_h=h; g_rival_id=own; g_rival_h=h; g_rival_tick=otick; g_rival_diss=diss; }   /* the rival's freshest blood-spore (NL_TARGET_ID restricts it to one id — ARENA-3 role-assignment) */
@@ -1408,7 +1409,8 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
     int pick=-1, bestd=1<<30;
     if(claimed) for(int i=0;i<g_pool_n;i++){ if(claimed[i]) continue; int d=i-target; if(d<0)d=-d; if(d<bestd){ bestd=d; pick=i; } }  /* the nearest UNCLAIMED chunk to the target */
     if(claimed) free(claimed);
-    if(pick>=0){ fseek(c,0,SEEK_END); fprintf(c,"%d %ld %d %.4f %ld %.4f\n",pick,(long)now,g_arena_id,(double)hunger,tick,(double)dabs); fflush(c); }  /* drop the blood-spore: WHERE, WHEN, WHO, the HUNGER it foraged in, its OWN tick, and its UNCENSORED dissonance (B-3: the porosity field — the fever the hunger clamp truncated) */
+    if(pick>=0){ struct timeval tv; gettimeofday(&tv,NULL); long long us=(long long)tv.tv_sec*1000000LL+tv.tv_usec;
+        fseek(c,0,SEEK_END); fprintf(c,"%d %ld %d %.4f %ld %.4f %lld\n",pick,(long)now,g_arena_id,(double)hunger,tick,(double)dabs,us); fflush(c); }  /* drop the blood-spore: WHERE, WHEN, WHO, the HUNGER it foraged in, its OWN tick, its UNCENSORED dissonance (B-3), and a MICROSECOND wall-clock (M-2: resolves exposition epochs the wall-second collapses) */
     flock(fd, LOCK_UN); fclose(c);
     if(pick<0) return 0;                          /* every chunk is held and unexpired — starve until the ground frees */
     *my_pos = pick;
@@ -1525,8 +1527,8 @@ static void   cal_mind_observe(long rt, float h){         /* one rival spore: up
 static void   cal_mind_observe_trail(int me, long* off){  /* B-2: the mind reads the FULL trail — EVERY new rival spore in the claims ledger, not just the freshest one arena_next kept. offset-based (each spore once); argmax reliability grows as r·√N, so a wide reader is a different test than a thin one. */
     FILE* c=fopen("lifeis/arena/claims","r"); if(!c) return;
     fseek(c,0,SEEK_END); long end=ftell(c); if(*off>end||*off<0)*off=0; fseek(c,*off,SEEK_SET);
-    int id,own; long ts,otick; float h,diss;
-    while(fscanf(c,"%d %ld %d %f %ld %f",&id,&ts,&own,&h,&otick,&diss)==6)
+    int id,own; long ts,otick; float h,diss; long long us;
+    while(fscanf(c,"%d %ld %d %f %ld %f %lld",&id,&ts,&own,&h,&otick,&diss,&us)==7)
         if(own>=0 && own!=me) cal_mind_observe(otick, g_cal_diss_on ? diss : h);   /* B-3: under NL_CALDISS the estimator reads the UNCENSORED dissonance, else the clamped hunger */
     *off=ftell(c); fclose(c);
 }
@@ -1631,9 +1633,16 @@ static int    g_monism_heart = 0;  /* NL_MONISM_HEART: which heart DRIVES disson
 #define FROZEN_RHO  0.80f          /* declared temporal autocorrelation (calibration, logged, not tuned to pass) */
 static int    g_frozen_on = 0;     /* NL_MONISM_FROZEN: replace the live disorder with the matched-statistics AR(1) */
 static float  g_frozen_state = FROZEN_MU;
+static const char* g_monism_ring = "lifeis/arena/monism";   /* NL_MONISM_RING: the shared-field file path — C-sep control gives A and B SEPARATE rings so A's field-pattern never reaches B while the arena competition stays identical (isolates the carrier from competition) */
+static FILE*  g_monism_rec  = NULL;         /* NL_MONISM_REC: A appends its per-tick deposit (the foreign component) + a µs stamp — the recording C-frozen's surrogate family replays / phase-shuffles / AR(1)-matches (the manipulated variable is ONLY the foreign component; own echo untouched) */
 static float  g_shadow_u[CFIELD_N], g_shadow_v[CFIELD_N];   /* H2 shadow-ring: ONLY this reader's own deposits propagate — exact self-expectation over its whole history (also the C-frozen own-component) */
 static double g_d1sum=0.0,g_d1sq=0.0, g_d2sum=0.0,g_d2sq=0.0;   /* H1 (propagated-load) and H2 (shadow-ring) disorder accumulators */
 static double g_dent0=0.0,g_dent1=0.0,g_dent2=0.0;   /* SYNTHETIC-DENT (Fable): each heart's disorder against u_pre + a realistic killer's death-pattern — dent = dented − solo */
+static int    g_surr_mode = 0;              /* NL_MONISM_SURR: C-frozen surrogate-at-source (Fable XX) — 0 off · 1 identity (≡live, tests the toggle) · 2 phase-shuffle · 3 phase-shift · 4 AR(1) matched-marginals. A deposits L_A' instead of L_A; shadow ALSO fed L_A' (nail 1); the manipulated variable is ONLY the foreign component */
+static float* g_surr_data = NULL;           /* NL_MONISM_REPLAY: A's recorded foreign-deposit stream (µs stripped), g_surr_n rows × CFIELD_N */
+static int    g_surr_n = 0, g_surr_tick = 0;
+static float  g_surr_mu[CFIELD_N], g_surr_sig[CFIELD_N], g_surr_rho[CFIELD_N], g_surr_prev[CFIELD_N];   /* per-site marginals + lag-1 rho for the AR(1) member */
+static int    g_depositor = 0;              /* NL_MONISM_DEPOSITOR (Fable XXI): A deposits but does not read the ring back — cut symmetrically both arms so A's trajectory is arm-invariant (directional carrier A→B) */
 static void   cfield_step_buf(float* u,float* v){   /* one leapfrog step on ARBITRARY buffers (H1 scratch, H2 shadow) */
     static float lap[CFIELD_N];
     for(int i=0;i<CFIELD_N;i++){ int l=(i+CFIELD_N-1)%CFIELD_N, r=(i+1)%CFIELD_N; lap[i]=u[l]+u[r]-2.0f*u[i]; }
@@ -1669,12 +1678,40 @@ static float monism_disorder(const float* L,const float* u){  /* 1 − cos(L, u)
     float d=1.0f-c; if(!isfinite(d))d=0.0f; else if(d>MONISM_DCLAMP)d=MONISM_DCLAMP;
     return d;
 }
+static void monism_load_replay(const char* path){   /* C-frozen: load A's recorded foreign-deposit stream and fit per-site marginals + lag-1 rho (the AR(1) member's declared statistics, from the recording — not tuned to pass) */
+    FILE* f=fopen(path,"r"); if(!f) return;
+    int cap=4096; g_surr_data=(float*)malloc(sizeof(float)*CFIELD_N*cap); g_surr_n=0;
+    for(;;){ long long us; if(fscanf(f,"%lld",&us)!=1) break;
+        if(g_surr_n>=cap){ cap*=2; g_surr_data=(float*)realloc(g_surr_data,sizeof(float)*CFIELD_N*cap); }
+        for(int i=0;i<CFIELD_N;i++){ double v=0.0; if(fscanf(f,"%lf",&v)!=1) v=0.0; g_surr_data[g_surr_n*CFIELD_N+i]=(float)v; }
+        g_surr_n++; }
+    fclose(f);
+    for(int i=0;i<CFIELD_N;i++){ double s=0,ss=0; for(int j=0;j<g_surr_n;j++){ double v=g_surr_data[j*CFIELD_N+i]; s+=v; ss+=v*v; }
+        double mu=g_surr_n? s/g_surr_n : 0.0, var=g_surr_n? ss/g_surr_n-mu*mu : 0.0; if(var<0)var=0;
+        g_surr_mu[i]=(float)mu; g_surr_sig[i]=(float)sqrt(var);
+        double c=0; for(int j=1;j<g_surr_n;j++) c+=(g_surr_data[j*CFIELD_N+i]-mu)*(g_surr_data[(j-1)*CFIELD_N+i]-mu);
+        float rho=(var>1e-12&&g_surr_n>1)?(float)(c/((g_surr_n-1)*var)):0.0f;
+        if(rho>0.99f)rho=0.99f; else if(rho<-0.99f)rho=-0.99f; g_surr_rho[i]=rho; g_surr_prev[i]=g_surr_mu[i]; }
+}
+static void monism_surrogate(float* L){   /* overwrite A's real deposit L with a matched surrogate (Fable XX) — decoupled from A's real scar-history, marginals preserved */
+    if(g_surr_mode==1) return;                                          /* identity: keep real L (frozen ≡ live) */
+    if(g_surr_mode==4){                                                 /* AR(1), per-site matched marginals — same coupling, temporal structure of the scar removed */
+        for(int i=0;i<CFIELD_N;i++){ float n=gauss(0.0f,1.0f);
+            g_surr_prev[i]=g_surr_mu[i]+g_surr_rho[i]*(g_surr_prev[i]-g_surr_mu[i])+g_surr_sig[i]*sqrtf(1.0f-g_surr_rho[i]*g_surr_rho[i])*n;
+            L[i]=g_surr_prev[i]; }
+        return; }
+    if(g_surr_n<=0) return;                                             /* replay members need the recording */
+    int idx;
+    if(g_surr_mode==2){ idx=(int)((frand()*0.5f+0.5f)*g_surr_n); if(idx>=g_surr_n)idx=g_surr_n-1; if(idx<0)idx=0; }   /* phase-shuffle: random recorded row → exact marginals, temporal order destroyed */
+    else { idx=(g_surr_tick + g_surr_n/2) % g_surr_n; g_surr_tick++; }  /* phase-shift: circular offset → autocorrelation kept, real scar-timing decoupled */
+    for(int i=0;i<CFIELD_N;i++) L[i]=g_surr_data[idx*CFIELD_N+i];
+}
 static float monism_shared_step(float S,float diss,float hunger,float guilt,const float* scar,int* pk_out){
     /* THE MONISM tick — Fable's order, load-bearing: read the shared ring (u_pre, carrying the OTHER's standing scar-
      * pattern), measure the reader's misalignment with it (disorder = 1−cos, computed BEFORE its own deposit — else this
      * tick's self-alignment masks the foreign dent), THEN deposit the reader's profile, propagate, collapse to a forage
      * target, write back. read-modify-write under flock so two organisms' reads do not commute. returns the disorder. */
-    FILE* f=fopen("lifeis/arena/monism","r+b"); if(!f) f=fopen("lifeis/arena/monism","w+b"); if(!f){ if(pk_out)*pk_out=-1; return 0.0f; }
+    FILE* f=fopen(g_monism_ring,"r+b"); if(!f) f=fopen(g_monism_ring,"w+b"); if(!f){ if(pk_out)*pk_out=-1; return 0.0f; }
     int fd=fileno(f); flock(fd, LOCK_EX);
     rewind(f);
     if(fread(g_cfield_u,sizeof(float),CFIELD_N,f)!=(size_t)CFIELD_N || fread(g_cfield_v,sizeof(float),CFIELD_N,f)!=(size_t)CFIELD_N)
@@ -1705,10 +1742,13 @@ static float monism_shared_step(float S,float diss,float hunger,float guilt,cons
         static float ud[CFIELD_N]; for(int i=0;i<CFIELD_N;i++) ud[i]=g_cfield_u[i]+adent[i];   /* u_pre + the foreign death-pattern */
         g_dent0 += monism_disorder(L,ud); g_dent1 += monism_disorder(p1,ud); g_dent2 += monism_disorder(g_shadow_u,ud);   /* each heart's response — no contamination of the real field */
     }
+    if(g_surr_mode) monism_surrogate(L);                     /* C-frozen (Fable XX): A deposits a matched surrogate — overwrite BEFORE shadow + ring so both are fed L_A' (nail 1: A's self-expectation stays consistent with what it deposits, A-side symmetric between arms) */
     if(g_monism_heart==2 || g_pilot_on){                     /* maintain the shadow-ring whenever the driving heart (H2) or the pilot needs it */
         for(int i=0;i<CFIELD_N;i++) g_shadow_u[i]+=L[i];
         for(int s=0;s<CFIELD_STEPS;s++) cfield_step_buf(g_shadow_u,g_shadow_v);
     }
+    if(g_monism_rec){ struct timeval tv; gettimeofday(&tv,NULL); long long us=(long long)tv.tv_sec*1000000LL+tv.tv_usec;   /* record the foreign deposit with a cross-process µs stamp (otick is per-process; µs is the only clock A and B share) */
+        fprintf(g_monism_rec,"%lld",us); for(int i=0;i<CFIELD_N;i++) fprintf(g_monism_rec," %.6g",(double)L[i]); fputc('\n',g_monism_rec); fflush(g_monism_rec); }
     for(int i=0;i<CFIELD_N;i++) g_cfield_u[i]+=L[i];         /* now deposit the reader's profile onto the REAL shared ring */
     for(int s=0;s<CFIELD_STEPS;s++) cfield_step();           /* propagate */
     int pk=cfield_collapse();                                /* collapse → forage target */
@@ -1750,6 +1790,12 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_pilot_on = (getenv("NL_MONISM_PILOT")!=NULL);   /* three-hearts pilot (H0 drives, H1/H2 logged passively) */
     { const char* mh=getenv("NL_MONISM_HEART"); if(mh) g_monism_heart=atoi(mh); }   /* which heart drives (machine picked H2=2) */
     g_frozen_on = (getenv("NL_MONISM_FROZEN")!=NULL); g_frozen_state = FROZEN_MU;   /* M-1 matched-statistics control */
+    { const char* r=getenv("NL_MONISM_RING"); if(r) g_monism_ring=r; }   /* C-sep: separate rings isolate the carrier from arena competition */
+    { const char* rc=getenv("NL_MONISM_REC"); if(rc) g_monism_rec=fopen(rc,"a"); }   /* C-frozen: A records its foreign-deposit stream (µs-stamped) for the surrogate family */
+    { const char* sm=getenv("NL_MONISM_SURR");   /* C-frozen (Fable XX): A deposits a matched surrogate instead of its real profile — identity|shuffle|shift|ar1 */
+      if(sm){ g_surr_mode = !strcmp(sm,"identity")?1 : !strcmp(sm,"shuffle")?2 : !strcmp(sm,"shift")?3 : !strcmp(sm,"ar1")?4 : 0;
+              const char* rp=getenv("NL_MONISM_REPLAY"); if(rp) monism_load_replay(rp); } }
+    g_depositor = (getenv("NL_MONISM_DEPOSITOR")!=NULL);   /* Fable XXI: A = clean depositor (no ring read-back), symmetric both arms */
     g_d1sum=0.0; g_d1sq=0.0; g_d2sum=0.0; g_d2sq=0.0; g_dent0=0.0; g_dent1=0.0; g_dent2=0.0;
     for(int i=0;i<CFIELD_N;i++){ g_shadow_u[i]=0.0f; g_shadow_v[i]=0.0f; }   /* fresh shadow-ring per organism */
     { const char* mv=getenv("NL_FIELD_MENU_VEC"); if(mv) sscanf(mv,"%f,%f,%f,%f,%f",&g_menu_vec[0],&g_menu_vec[1],&g_menu_vec[2],&g_menu_vec[3],&g_menu_vec[4]); }  /* sweep the fixed control to its sharpest */
@@ -1865,8 +1911,10 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
             int pk;
             if(g_monism_on){                            /* THE MONISM: the reader's misalignment with the shared field (carrying A's standing scar-pattern) becomes its dissonance — a projection, not a scalar steering from above; the collapse is the forage target */
                 float dis = monism_shared_step(mo.S, fabsf(mo.dissonance), arena_hunger(energy, fabsf(mo.dissonance)), g_guilt, scar, &pk);
-                mo.dissonance += g_monism_gain * dis;   /* dissonance is READ OUT of the field — A's scar-pattern raises B's, and the dabs ledger records it (the carrier loop M-2 measures) */
-                g_monism_dsum += (double)dis; g_monism_dsumsq += (double)dis*(double)dis; g_monism_dn++;   /* M-0: accumulate the raw disorder floor (pre-gain) */
+                if(!g_depositor){                       /* CLEAN DEPOSITOR (Fable XXI): A deposits its (real|surrogate) profile so B reads it, but does NOT read the ring back for its own dissonance/forage — cut symmetrically in BOTH arms so A's arena trajectory is arm-invariant (the directional carrier A→B; the mutual field belongs to the phase-arc IX) */
+                    mo.dissonance += g_monism_gain * dis;   /* dissonance is READ OUT of the field — A's scar-pattern raises B's, and the dabs ledger records it (the carrier loop M-2 measures) */
+                    g_monism_dsum += (double)dis; g_monism_dsumsq += (double)dis*(double)dis; g_monism_dn++;   /* M-0: accumulate the raw disorder floor (pre-gain) */
+                }
             } else if(g_cfield_shared){                 /* Step 2: read the SHARED field (the other's deformation), add mine, collapse the joint superposition, write back */
                 pk = cfield_shared_decide(mo.S, fabsf(mo.dissonance), arena_hunger(energy, fabsf(mo.dissonance)), g_guilt, scar_total);
             } else {
@@ -1875,7 +1923,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                 else              cfield_load(mo.S, fabsf(mo.dissonance), arena_hunger(energy, fabsf(mo.dissonance)), g_guilt, scar_total);   /* the per-process rubber */
                 pk = cfield_collapse();
             }
-            g_cfield_target = (pk>=0 && g_pool_n>0) ? (int)((long)pk*(long)g_pool_n/CFIELD_N) : -1;
+            g_cfield_target = (!g_depositor && pk>=0 && g_pool_n>0) ? (int)((long)pk*(long)g_pool_n/CFIELD_N) : -1;   /* clean depositor forages by base arena logic (ring-independent) — no field collapse steering A */
         }
         if(sleep_on && sleeping && dream_on && recent_n>0){  /* SLEEP CYCLE — dream + invent, don't eat the world */
             yield = dream_once(m,&mo,scar,recent,&recent_n,dream_streak);
