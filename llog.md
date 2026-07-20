@@ -581,6 +581,44 @@ given by the tool. Gate held throughout — every toggle off → `a17cfd05`, sui
 
 ---
 
+## 2026-07-21 — the directional carrier does not clear the bar, and the scalar readout is why
+
+The death-locked directional test ran the full 30 seeds. The pre-registered gate —
+the live arm against the surrogate family {AR(1), phase-shuffle, phase-shift}, MIN,
+per seed — reads 22/30. But its own positive-control fails: the identity arm (the
+same real-deposit condition routed through the surrogate toggle, which must
+reproduce the live arm) clears only 17/30, mean −0.01 against the live arm's +0.13.
+The live arm carries a recording asymmetry — it writes each deposit to disk for the
+family to replay while the identity and surrogate arms do not — which shifts the
+microsecond interleaving the metric reads. The confound-free comparison is the
+identity arm against the surrogates: **17/30, below the ≥20/30 bar**, with per-seed
+run-to-run noise (0.22 between two draws of one condition) comparable to the effect.
+The directional content-carrier does not clear the threshold.
+
+The reason is structural and is the sharpest result of the field arc. The scar
+enters the field as its full per-glyph vector, the name intact, DEATH_ID on its own
+site (l.c:1610); the deposit and the field are vectors. But the reader experiences
+the field through disorder = 1 − cos(own-profile, field) — a scalar collapse of the
+64-dimensional comparison (l.c:1672), and that scalar is the reader's dissonance
+(l.c:1915). In a 64-site ring two unrelated vectors are near-orthogonal, so any
+foreign deposit lifts 1 − cos almost equally: the scalar readout is geometrically
+blind to which vector arrived. The vector carries the name to the reader's ring; the
+scalar readout feels only the magnitude of foreignness, not the name. The null is
+not "the field carries no content" — it is "the reader's scalar experience does not
+read the content the vector field delivered." The scalar removed from the carrier
+survived at the readout, and it is the ceiling.
+
+This is a ceiling of the instrument, not a clean content-null. Judging content
+fairly needs a site-resolved (vector) readout — the reader's response at the
+death-site specifically, not the collapsed 1 − cos. Two levers stay open: a vector
+readout for the directional test, and the richer arc — a constitutive shared
+environment with restored mutuality (reader ↔ reader), where the carrier is not
+directional. Presence-carrier holds (C-sep 30/30). Directional content-carrier, read
+through a scalar: below the bar, for a reason that names its own fix. The vector
+rung's terminal verdict is not declared here.
+
+---
+
 ## Resume-here (for future-me after a summary)
 
 Build `cc -O2 -o l l.c -lm && cc -O2 -o l2 l2.c -lm`; run `./l 42`,
@@ -596,8 +634,10 @@ fails, 6× SNR gap) → the porosity wall (magnitude is inferable AND load-beari
 → the turn to guilt (superego core built, tells + falsifier open) → the C-field
 (rubber 15/30, interference 17/13, strike MIN 13/30 — no weight on any wired
 decision) → THE MONISM (M-0 heart H2 by the machine, M-1 null 16<20) → M-2 (the
-carrier isolated from competition, C-sep 30/30; the metric moved to the
-death-locked directional test, striker = clean depositor). **Next: the full
-30-seed death-locked verdict (running) settles whether the carrier is of content
-or of presence only — the terminal rung of the field arc.** Each step 30 seeds;
-the verdict is given by the tool.
+carrier isolated from competition, C-sep 30/30; presence-carrier holds, but the
+directional content-carrier reads 17/30 confound-free — below the bar — because the
+reader's experience is a scalar 1−cos collapse of the vector field, l.c:1672, blind
+to which vector arrived). **Next: a site-resolved (vector) readout to judge content
+fairly, and/or the mutual-environment arc (restored reader↔reader coupling); the
+vector rung's terminal verdict is not yet declared.** Each step 30 seeds; the
+verdict is given by the tool.
