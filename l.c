@@ -1,9 +1,5 @@
 /* l.c — digital life, zero dependencies.
  * the most atomic way to build digital life from scratch. no GPU required.
- *
- * Life is a TAPE, not a field — because life is
- * irreversibility in time, and a tape carries the arrow of time in its bone.
- * AR decoder over 88 cave-glyphs. libc + -lm. nothing else. accept it.
  * build: cc l.c -lm -O2 -o l
  * by Arianna Method.
  */
