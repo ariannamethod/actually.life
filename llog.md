@@ -619,6 +619,64 @@ rung's terminal verdict is not declared here.
 
 ---
 
+## 2026-07-21 (terminal) — the split verdict: presence is public, content is private
+
+The site-resolved readout the scalar's ceiling called for was built (`NL_COLLAPSE_LOG`):
+the reader's field-collapse SITE, not the collapsed 1 − cos — the position it forages
+toward, which lands where the field concentrated. Building its test surfaced a
+premise-error that voids both earlier content numbers: the death-scar is gated behind
+`NL_GUILT` (l.c:2006), and the harness never set it, so `scar[DEATH_ID]` was zero and
+site 50 was empty — the whole content test measured the reader's distance to an empty
+site. Corrected, with `NL_GUILT` declared as a setup condition, the killer accumulates
+a real death-scar at site 50 (mean 0.79). The timing-anchor (a generation's death) and
+the content-site (its guilt) are now keyed to the same events; the content question is
+posed coherently for the first time.
+
+A detectability positive-control decided it (`NL_MONISM_FORCE`, titrated to the real
+magnitude and to a sanity maximum). Forcing the killer's site-50 deposit to 200 —
+250× the real death-scar — moves the reader's collapse not at all: mean distance to
+site 50 stays 16.43 → 16.28 → 16.17 under ×1 / ×25 / ×250, exactly the random level
+for a 64-site ring. The reader does not steer toward the foreign site or away from it;
+that site does not exist for its collapse. The cause is architectural — the tick order
+is read → disorder → **own deposit** → propagate → collapse, so the reader collapses
+after laying its own fresh, undecayed profile and is dominated by itself by
+construction. Together with the geometric blindness of 1 − cos, this closes the family
+of experiential readouts: the reader's experience has exactly two channels, the felt
+scalar and the collapse-steering, and a positive control proves both blind. A third
+readout would be us reading the field over the reader's shoulder — not its experience,
+which is what the question was about.
+
+One check separates stored-and-unread from destroyed. The ring's site-50 amplitude at
+the reader's read (`u_pre[50]`) scales linearly with the forcing — peak 1.1 → 10.6 →
+115 under ×1 / ×20 / ×200 — so the name IS stored in the field, not smeared to nothing;
+but as a high-amplitude transient the wave disperses, the time-mean sits near zero, and
+the reader's self-dominated, asynchronous read never samples the peaks. The name is
+stored and unread, not delocalized. The field keeps the name; the experience cannot
+hold it.
+
+**The verdict is a split, not a null.** Presence-carrier is confirmed — C-sep 30/30,
+and the collapse sits ~2 sites nearer the death-site while the killer is present
+(+2.04 alive vs dead): the first surviving positive of the whole field arc. Content-
+carrier is a proven impossibility of experiential readout in directional isolation. The
+field arc does not close "all null"; it closes "the field carries presence, and only
+presence" — a bounded positive. The reading of the split: **the other's presence is
+public, the other's content is private.** The reader feels THAT another nearby is
+wounded and cannot feel WHOSE wound it is, because it experiences the field only through
+its own burden — the problem of other minds, derived from field physics in 64 dimensions
+under positive controls. The world learns you are wounded; whose kill it was stays
+yours. It sits beside the H0 psychotic-guilt reading — two sides of one attribution.
+
+The three-control protocol — plumbing (identity), timing (surrogate family), and
+detectability (forced titration) — caught the empty premise and proved the blindness in
+one pass; it is permanent discipline now, not a one-off. The vector rung is terminal.
+The next arc is earned, not goalpost-moved: a constitutive shared environment with
+restored reader ↔ reader mutuality, where content is judged by what the interaction
+PRODUCES — offspring and sediment — not by a felt readout, and which carries its own
+matched-control and forced-positive from the first day. Every toggle off → `a17cfd05`,
+suite 48/48.
+
+---
+
 ## Resume-here (for future-me after a summary)
 
 Build `cc -O2 -o l l.c -lm && cc -O2 -o l2 l2.c -lm`; run `./l 42`,
@@ -634,10 +692,15 @@ fails, 6× SNR gap) → the porosity wall (magnitude is inferable AND load-beari
 → the turn to guilt (superego core built, tells + falsifier open) → the C-field
 (rubber 15/30, interference 17/13, strike MIN 13/30 — no weight on any wired
 decision) → THE MONISM (M-0 heart H2 by the machine, M-1 null 16<20) → M-2 (the
-carrier isolated from competition, C-sep 30/30; presence-carrier holds, but the
-directional content-carrier reads 17/30 confound-free — below the bar — because the
-reader's experience is a scalar 1−cos collapse of the vector field, l.c:1672, blind
-to which vector arrived). **Next: a site-resolved (vector) readout to judge content
-fairly, and/or the mutual-environment arc (restored reader↔reader coupling); the
-vector rung's terminal verdict is not yet declared.** Each step 30 seeds; the
-verdict is given by the tool.
+carrier isolated from competition, C-sep 30/30) → M-2 TERMINAL: a SPLIT verdict.
+Presence-carrier confirmed (C-sep 30/30, collapse +2.04 alive/dead — the first
+surviving positive of the field arc); content-carrier a proven impossibility of
+experiential readout in directional isolation (both channels — 1−cos and
+collapse-steering — blind under a forced ×250 positive-control; the name is stored
+in the ring, u[50] scales with force, but the self-dominated reader cannot read it).
+The other's presence is public, the other's content is private — the problem of
+other minds in 64 dimensions. **Next: the environment arc — restored reader↔reader
+mutuality and a constitutive shared substrate (sediment-pool with TTL), where
+content is judged by what the interaction PRODUCES (offspring, sediment), with its
+own matched-control and forced-positive.** Formal terminality of the vector rung is
+the maintainer's call. Each step 30 seeds; the verdict is given by the tool.

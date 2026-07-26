@@ -1631,6 +1631,7 @@ static int    g_frozen_on = 0;     /* NL_MONISM_FROZEN: replace the live disorde
 static float  g_frozen_state = FROZEN_MU;
 static const char* g_monism_ring = "lifeis/arena/monism";   /* NL_MONISM_RING: the shared-field file path — C-sep control gives A and B SEPARATE rings so A's field-pattern never reaches B while the arena competition stays identical (isolates the carrier from competition) */
 static FILE*  g_monism_rec  = NULL;         /* NL_MONISM_REC: A appends its per-tick deposit (the foreign component) + a µs stamp — the recording C-frozen's surrogate family replays / phase-shuffles / AR(1)-matches (the manipulated variable is ONLY the foreign component; own echo untouched) */
+static FILE*  g_collapse_log = NULL;         /* NL_COLLAPSE_LOG (Fable XXII): the SITE-RESOLVED readout — the reader's field-collapse site (0..CFIELD_N), µs-stamped, logged OUTSIDE the ring flock (symmetric across arms, not a confound). the scalar 1−cos is blind to WHICH vector arrived; the collapse position is not — it lands where the field concentrated (site 50 = DEATH_ID) */
 static float  g_shadow_u[CFIELD_N], g_shadow_v[CFIELD_N];   /* H2 shadow-ring: ONLY this reader's own deposits propagate — exact self-expectation over its whole history (also the C-frozen own-component) */
 static double g_d1sum=0.0,g_d1sq=0.0, g_d2sum=0.0,g_d2sq=0.0;   /* H1 (propagated-load) and H2 (shadow-ring) disorder accumulators */
 static double g_dent0=0.0,g_dent1=0.0,g_dent2=0.0;   /* SYNTHETIC-DENT (Fable): each heart's disorder against u_pre + a realistic killer's death-pattern — dent = dented − solo */
@@ -1639,6 +1640,8 @@ static float* g_surr_data = NULL;           /* NL_MONISM_REPLAY: A's recorded fo
 static int    g_surr_n = 0, g_surr_tick = 0;
 static float  g_surr_mu[CFIELD_N], g_surr_sig[CFIELD_N], g_surr_rho[CFIELD_N], g_surr_prev[CFIELD_N];   /* per-site marginals + lag-1 rho for the AR(1) member */
 static int    g_depositor = 0;              /* NL_MONISM_DEPOSITOR (Fable XXI): A deposits but does not read the ring back — cut symmetrically both arms so A's trajectory is arm-invariant (directional carrier A→B) */
+static float  g_force_amp = 0.0f;           /* NL_MONISM_FORCE (Fable XXII, positive control on DETECTABILITY): A deposits a clean site-50 spike of this amplitude (present while alive → death-locked), overriding its profile — a GUARANTEED timed transfer. titrated {real≈0.8 matched to the real death-scar, max≈20 sanity}: if the site-resolved readout cannot detect the real-band forced signal, its null is unearned */
+static float  g_upre50 = 0.0f;              /* Fable XXII check: the ring's site-50 amplitude the reader sees at read-time (u_pre[50], before its own deposit) — is the forced name STORED in the field (elevated) or DELOCALIZED by the wave (smeared)? */
 static void   cfield_step_buf(float* u,float* v){   /* one leapfrog step on ARBITRARY buffers (H1 scratch, H2 shadow) */
     static float lap[CFIELD_N];
     for(int i=0;i<CFIELD_N;i++){ int l=(i+CFIELD_N-1)%CFIELD_N, r=(i+1)%CFIELD_N; lap[i]=u[l]+u[r]-2.0f*u[i]; }
@@ -1712,6 +1715,7 @@ static float monism_shared_step(float S,float diss,float hunger,float guilt,cons
     rewind(f);
     if(fread(g_cfield_u,sizeof(float),CFIELD_N,f)!=(size_t)CFIELD_N || fread(g_cfield_v,sizeof(float),CFIELD_N,f)!=(size_t)CFIELD_N)
         cfield_reset();                                      /* first touch: a field at rest */
+    g_upre50 = g_cfield_u[MONISM_DEATH_SITE];                 /* Fable XXII: the ring's site-50 the reader sees BEFORE its own deposit — stored-name vs smeared test */
     static float L[CFIELD_N]; monism_profile(S,diss,hunger,guilt,scar,L);   /* the reader's own load-profile */
     float dis0 = monism_disorder(L, g_cfield_u);             /* H0: sharp load vs field — BEFORE the deposit */
     static float p1[CFIELD_N],pv[CFIELD_N]; float dis1=0.0f, dis2=0.0f;
@@ -1739,6 +1743,7 @@ static float monism_shared_step(float S,float diss,float hunger,float guilt,cons
         g_dent0 += monism_disorder(L,ud); g_dent1 += monism_disorder(p1,ud); g_dent2 += monism_disorder(g_shadow_u,ud);   /* each heart's response — no contamination of the real field */
     }
     if(g_surr_mode) monism_surrogate(L);                     /* C-frozen (Fable XX): A deposits a matched surrogate — overwrite BEFORE shadow + ring so both are fed L_A' (nail 1: A's self-expectation stays consistent with what it deposits, A-side symmetric between arms) */
+    if(g_force_amp>0.0f){ for(int i=0;i<CFIELD_N;i++) L[i]=0.0f; L[MONISM_DEATH_SITE]=g_force_amp; }   /* Fable XXII detectability control: override to a clean site-50 spike (guaranteed timed transfer, present while alive → death-locked) */
     if(g_monism_heart==2 || g_pilot_on){                     /* maintain the shadow-ring whenever the driving heart (H2) or the pilot needs it */
         for(int i=0;i<CFIELD_N;i++) g_shadow_u[i]+=L[i];
         for(int s=0;s<CFIELD_STEPS;s++) cfield_step_buf(g_shadow_u,g_shadow_v);
@@ -1788,10 +1793,12 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_frozen_on = (getenv("NL_MONISM_FROZEN")!=NULL); g_frozen_state = FROZEN_MU;   /* M-1 matched-statistics control */
     { const char* r=getenv("NL_MONISM_RING"); if(r) g_monism_ring=r; }   /* C-sep: separate rings isolate the carrier from arena competition */
     { const char* rc=getenv("NL_MONISM_REC"); if(rc) g_monism_rec=fopen(rc,"a"); }   /* C-frozen: A records its foreign-deposit stream (µs-stamped) for the surrogate family */
+    { const char* cl=getenv("NL_COLLAPSE_LOG"); if(cl) g_collapse_log=fopen(cl,"a"); }   /* Fable XXII: the reader logs its field-collapse SITE (site-resolved readout, symmetric across judged arms) */
     { const char* sm=getenv("NL_MONISM_SURR");   /* C-frozen (Fable XX): A deposits a matched surrogate instead of its real profile — identity|shuffle|shift|ar1 */
       if(sm){ g_surr_mode = !strcmp(sm,"identity")?1 : !strcmp(sm,"shuffle")?2 : !strcmp(sm,"shift")?3 : !strcmp(sm,"ar1")?4 : 0;
               const char* rp=getenv("NL_MONISM_REPLAY"); if(rp) monism_load_replay(rp); } }
     g_depositor = (getenv("NL_MONISM_DEPOSITOR")!=NULL);   /* Fable XXI: A = clean depositor (no ring read-back), symmetric both arms */
+    { const char* fa=getenv("NL_MONISM_FORCE"); if(fa) g_force_amp=(float)atof(fa); }   /* Fable XXII: forced clean site-50 transfer (detectability positive control) */
     g_d1sum=0.0; g_d1sq=0.0; g_d2sum=0.0; g_d2sq=0.0; g_dent0=0.0; g_dent1=0.0; g_dent2=0.0;
     for(int i=0;i<CFIELD_N;i++){ g_shadow_u[i]=0.0f; g_shadow_v[i]=0.0f; }   /* fresh shadow-ring per organism */
     { const char* mv=getenv("NL_FIELD_MENU_VEC"); if(mv) sscanf(mv,"%f,%f,%f,%f,%f",&g_menu_vec[0],&g_menu_vec[1],&g_menu_vec[2],&g_menu_vec[3],&g_menu_vec[4]); }  /* sweep the fixed control to its sharpest */
@@ -1920,6 +1927,8 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                 pk = cfield_collapse();
             }
             g_cfield_target = (!g_depositor && pk>=0 && g_pool_n>0) ? (int)((long)pk*(long)g_pool_n/CFIELD_N) : -1;   /* clean depositor forages by base arena logic (ring-independent) — no field collapse steering A */
+            if(g_collapse_log && g_monism_on){ struct timeval tv; gettimeofday(&tv,NULL); long long us=(long long)tv.tv_sec*1000000LL+tv.tv_usec;   /* Fable XXII: log the collapse SITE (0..CFIELD_N) — outside monism_shared_step's ring flock, so symmetric I/O across arms */
+                fprintf(g_collapse_log,"%lld %d %d %.4f\n", us, g_arena_id, pk, (double)g_upre50); fflush(g_collapse_log); }   /* + u_pre[50]: is the forced name stored in the ring or smeared? */
         }
         if(sleep_on && sleeping && dream_on && recent_n>0){  /* SLEEP CYCLE — dream + invent, don't eat the world */
             yield = dream_once(m,&mo,scar,recent,&recent_n,dream_streak);
