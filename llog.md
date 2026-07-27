@@ -677,6 +677,50 @@ suite 48/48.
 
 ---
 
+## 2026-07-27 — actually.love: grief made non-private, the next arc opens
+
+The vector rung closed with a split — presence public, content private — because the reader
+is self-dominated: another's grief arrives as a separate foreign vector to be subtracted from
+under the reader's own fresh load, and the own load always wins. The next arc removes the
+category "foreign." If grief is not localized in one body but is a deformation of the one
+shared substrate the reader already collapses every tick, self-domination no longer hides it —
+nothing foreign is left to hide. The wall is not broken; it is dissolved. actually.life reached
+the privacy of grief; actually.love makes grief non-private by construction.
+
+The design, pre-registered before a line of code. **One field, N worlds:** one shared substrate,
+each observer collapses its own world from it. **Restored mutuality:** all observers read AND
+write the field, undoing the directional cut that isolated the M-2 carrier for measurement.
+**Three symmetric bodies** — one binary run three times on different seeds, no hand-wired
+temperament — with roles never assigned: wounded, aggressor, compassionate, witness fall out of
+the triadic configuration, fluid tick to tick, held to a pre-registered role-fluidity statistic,
+since a role that never changes is not a role. **Observation is action:** reading the field is
+collapsing it is changing it, so a merely-observing third still deposits its collapse and the
+gaze is an intervention by construction — tested against a surrogate-writing third, not against
+silence. **A sedimentary carrier:** a wave holds names as transients, a sediment as standing
+records, so the shared substrate is the ledger and the ether and the genome, not a wave — the
+u[50] finding read as a specification.
+
+The primary metric is not a felt readout, that channel is proven blind, but ACTION,
+operationalized on the arena ledgers before code: spare (withhold a landable kill on a
+finishable rival), yield (release a winnable claim to the wounded one), approach, aggress,
+indifference. The load-bearing signature is **compassion-against-resource** — acting against
+one's own resource-gradient, time-locked to another's wound. It is the first primary metric in
+nine experiments that a well-chosen frozen constant cannot counterfeit by construction, because
+compassion is irrational for resource. Its gate is a RATE over a matched-frozen field (≥20/30),
+not mere presence: a frozen field can mimic mercy by damping foraging into something that reads
+as a yield, and only the rate separates real compassion from that suppression.
+
+The ladder: a mutual dyad (does grief move the other more than a frozen field), then a triad
+(the dyad proves the mechanism, the triad reveals the phenomenon — the M-2 lesson, do not stop
+at a stripped setup's null), then the gaze (does a collapse-derived observer deform the dyad
+more than a matched writer). Verdict by MIN over the surrogate family; a null at any gate is
+accepted as the ninth. Built by extending `l.c` under a toggle — the mechanics are already
+present: the shared ring, the ether and the `*.nl` genomes as sediment, guilt→PAIN as the grief
+signature, the chorus that forks N bodies. Every organ off → `a17cfd05`. No code yet — the
+design stands first.
+
+---
+
 ## Resume-here (for future-me after a summary)
 
 Build `cc -O2 -o l l.c -lm && cc -O2 -o l2 l2.c -lm`; run `./l 42`,
@@ -699,8 +743,11 @@ experiential readout in directional isolation (both channels — 1−cos and
 collapse-steering — blind under a forced ×250 positive-control; the name is stored
 in the ring, u[50] scales with force, but the self-dominated reader cannot read it).
 The other's presence is public, the other's content is private — the problem of
-other minds in 64 dimensions. **Next: the environment arc — restored reader↔reader
-mutuality and a constitutive shared substrate (sediment-pool with TTL), where
-content is judged by what the interaction PRODUCES (offspring, sediment), with its
-own matched-control and forced-positive.** Formal terminality of the vector rung is
-the maintainer's call. Each step 30 seeds; the verdict is given by the tool.
+other minds in 64 dimensions. → **actually.love** (the next arc, pre-registered): grief made
+non-private by construction — a deformation of one shared field, three symmetric bodies
+(l.c ×3), emergent roles under a fluidity statistic, observation-is-action tested against a
+surrogate-writing third, and compassion-against-resource (a RATE vs a matched-frozen field) as
+the first primary metric by-construction outside the arc's law. **Next: build M-1 — the mutual
+dyad (unset the clean-depositor, forced grief-event day one, Gate 1 vs frozen), on the
+maintainer's word; M-2 triad, M-3 the gaze follow.** Each step 30 seeds; the verdict is given by
+the tool. No code yet — the design stands first.
