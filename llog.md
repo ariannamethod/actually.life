@@ -721,6 +721,27 @@ design stands first.
 
 ---
 
+## 2026-07-28 — actually.love M-1: the coupling built, distress dampens predation
+
+The arc's first code. Under `NL_LOVE` the observer's monism-read dissonance — raised by whatever
+the shared field carries — dampens its strike rate: `kprob = KILL_PROB · (1 − LOVE_DAMP ·
+tanh(0.1·|dissonance|))`. The `0.1` is not a knob but the profile's own site-14 compression
+(l.c:1668) taken verbatim, so the coupling has exactly one declared constant. This is distress
+dampening predation — a general physics that says nothing about grief; the grief-specificity is
+carried not by the wiring but by the controls: a matched-frozen field, a forced FOREIGN wound (a
+wound on the rival the observer did not author, so its own guilt is flat when it responds), a
+guilt-off observer arm, and a stratification by the observer's own guilt. Without those, the
+observer's own kill is collinear in time with its rival's wound and the two are inseparable — the
+reason the phenomenon needs a third body, which alone supplies a natural not-own wound. A
+love-ledger logs, next to each blood-spore, the action-class — spare (a finishable rival's kill
+declined, an act against the resource-gradient), finish-off, or none — and the decomposition
+(`dis`, `|dissonance|`, `u[50]`, `guilt`), measurement kept separate from mechanism. Every organ
+off → `a17cfd05`, suite 48/48. No verdict yet — the constant is calibrated and the gates run next.
+The question the arc puts to the tool: does a wound carried in the shared field bend the other's
+hand against its own advantage more than a frozen field can.
+
+---
+
 ## Resume-here (for future-me after a summary)
 
 Build `cc -O2 -o l l.c -lm && cc -O2 -o l2 l2.c -lm`; run `./l 42`,
@@ -747,7 +768,9 @@ other minds in 64 dimensions. → **actually.love** (the next arc, pre-registere
 non-private by construction — a deformation of one shared field, three symmetric bodies
 (l.c ×3), emergent roles under a fluidity statistic, observation-is-action tested against a
 surrogate-writing third, and compassion-against-resource (a RATE vs a matched-frozen field) as
-the first primary metric by-construction outside the arc's law. **Next: build M-1 — the mutual
-dyad (unset the clean-depositor, forced grief-event day one, Gate 1 vs frozen), on the
-maintainer's word; M-2 triad, M-3 the gaze follow.** Each step 30 seeds; the verdict is given by
-the tool. No code yet — the design stands first.
+the first primary metric by-construction outside the arc's law. M-1 built (`NL_LOVE`: dissonance
+dampens the strike rate, one constant, off → a17cfd05, suite 48/48; a love-ledger logs the
+action-class + decomposition). **Next: calibrate LOVE_DAMP (largest viable), then Gate 1/2 — does
+grief carried in the shared field bend the other's hand against its own advantage more than a
+frozen field, over foreign/forced wounds in the low-guilt stratum, ≥20/30; M-2 triad, M-3 the gaze
+follow.** Each step 30 seeds; the verdict is given by the tool.

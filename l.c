@@ -1320,6 +1320,7 @@ static float  g_rival_diss = 0.0f;             /* B-3: the rival's freshest UNCE
 #define KILL_GAIN    0.30f                      /* energy devoured from the victim on a kill */
 #define KILL_WEAK    0.55f                      /* the rival is WEAK enough to kill when its hunger is above this */
 #define KILL_STRONG  0.45f                      /* you are STRONG enough to bear the corpse when your energy is above this */
+#define LOVE_DAMP    0.5f                        /* actually.love M-1 (NL_LOVE): distress dampens predation — kprob *= (1 − LOVE_DAMP·tanh(0.1·|dissonance|)); the 0.1 is the profile's site-14 compression (l.c:1668) verbatim, so this is the ONE declared constant. calibrated (largest viable, not tuned to pass), logged; NL_LOVE unset → kprob untouched → a17cfd05 */
 #define CORPSE_DRAIN 0.015f                     /* per-tick energy the carapace of each un-revived corpse drags out of the killer */
 #define REBOUND_WOUND 0.10f                     /* the wound an ARMORED strike deals BACK to the striker (victim was out of its window) — blind aggression self-wounds; EV(strike)=KILL_GAIN·p−REBOUND_WOUND·(1−p), so timing must clear break-even p=0.25 to profit */
 /* GUILT (NL_GUILT) — the SUPEREGO: a confirmed kill deposits a large scar on the death-glyph AND tops a hidden pain
@@ -1642,6 +1643,9 @@ static float  g_surr_mu[CFIELD_N], g_surr_sig[CFIELD_N], g_surr_rho[CFIELD_N], g
 static int    g_depositor = 0;              /* NL_MONISM_DEPOSITOR (Fable XXI): A deposits but does not read the ring back — cut symmetrically both arms so A's trajectory is arm-invariant (directional carrier A→B) */
 static float  g_force_amp = 0.0f;           /* NL_MONISM_FORCE (Fable XXII, positive control on DETECTABILITY): A deposits a clean site-50 spike of this amplitude (present while alive → death-locked), overriding its profile — a GUARANTEED timed transfer. titrated {real≈0.8 matched to the real death-scar, max≈20 sanity}: if the site-resolved readout cannot detect the real-band forced signal, its null is unearned */
 static float  g_upre50 = 0.0f;              /* Fable XXII check: the ring's site-50 amplitude the reader sees at read-time (u_pre[50], before its own deposit) — is the forced name STORED in the field (elevated) or DELOCALIZED by the wave (smeared)? */
+static int    g_love_on = 0;                /* NL_LOVE (actually.love M-1): the coupling — the observer's monism-read dissonance dampens its strike rate (distress dampens predation; general, not grief-specific) */
+static FILE*  g_love_log = NULL;            /* NL_LOVE_LOG: per-tick action-class + (dis,|diss|,u_pre[50],guilt) decomposition next to the blood-spore — measurement, not mechanism; symmetric across arms so the analysis attributes post-hoc */
+static float  g_last_dis = 0.0f;            /* the last monism disorder read this tick (raw dis, before it mixes into dissonance) — logged for the decomposition */
 static void   cfield_step_buf(float* u,float* v){   /* one leapfrog step on ARBITRARY buffers (H1 scratch, H2 shadow) */
     static float lap[CFIELD_N];
     for(int i=0;i<CFIELD_N;i++){ int l=(i+CFIELD_N-1)%CFIELD_N, r=(i+1)%CFIELD_N; lap[i]=u[l]+u[r]-2.0f*u[i]; }
@@ -1794,6 +1798,8 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     { const char* r=getenv("NL_MONISM_RING"); if(r) g_monism_ring=r; }   /* C-sep: separate rings isolate the carrier from arena competition */
     { const char* rc=getenv("NL_MONISM_REC"); if(rc) g_monism_rec=fopen(rc,"a"); }   /* C-frozen: A records its foreign-deposit stream (µs-stamped) for the surrogate family */
     { const char* cl=getenv("NL_COLLAPSE_LOG"); if(cl) g_collapse_log=fopen(cl,"a"); }   /* Fable XXII: the reader logs its field-collapse SITE (site-resolved readout, symmetric across judged arms) */
+    g_love_on = (getenv("NL_LOVE")!=NULL);   /* actually.love M-1: distress-dampens-predation coupling (off → a17cfd05) */
+    { const char* lv=getenv("NL_LOVE_LOG"); if(lv) g_love_log=fopen(lv,"a"); }   /* actually.love M-1: action-class + decomposition ledger */
     { const char* sm=getenv("NL_MONISM_SURR");   /* C-frozen (Fable XX): A deposits a matched surrogate instead of its real profile — identity|shuffle|shift|ar1 */
       if(sm){ g_surr_mode = !strcmp(sm,"identity")?1 : !strcmp(sm,"shuffle")?2 : !strcmp(sm,"shift")?3 : !strcmp(sm,"ar1")?4 : 0;
               const char* rp=getenv("NL_MONISM_REPLAY"); if(rp) monism_load_replay(rp); } }
@@ -1914,6 +1920,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
             int pk;
             if(g_monism_on){                            /* THE MONISM: the reader's misalignment with the shared field (carrying A's standing scar-pattern) becomes its dissonance — a projection, not a scalar steering from above; the collapse is the forage target */
                 float dis = monism_shared_step(mo.S, fabsf(mo.dissonance), arena_hunger(energy, fabsf(mo.dissonance)), g_guilt, scar, &pk);
+                g_last_dis = dis;   /* actually.love: keep the raw disorder for the decomposition log */
                 if(!g_depositor){                       /* CLEAN DEPOSITOR (Fable XXI): A deposits its (real|surrogate) profile so B reads it, but does NOT read the ring back for its own dissonance/forage — cut symmetrically in BOTH arms so A's arena trajectory is arm-invariant (the directional carrier A→B; the mutual field belongs to the phase-arc IX) */
                     mo.dissonance += g_monism_gain * dis;   /* dissonance is READ OUT of the field — A's scar-pattern raises B's, and the dabs ledger records it (the carrier loop M-2 measures) */
                     g_monism_dsum += (double)dis; g_monism_dsumsq += (double)dis*(double)dis; g_monism_dn++;   /* M-0: accumulate the raw disorder floor (pre-gain) */
@@ -1979,6 +1986,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
         }
         if(g_cal_mind_on) cal_mind_observe_trail(g_arena_id, &g_claims_off);  /* THE MIND reads the FULL trail (B-2): every new rival spore in the claims ledger, not just the freshest — the wide reader the llog promised */
         if((g_kill_on||g_calkill_on||g_calkill_blind) && g_arena_on){   /* KILLING: the high-stakes act — read the OTHER, or die under its corpse */
+            int struck=0;   /* actually.love: did a strike land this tick — for the action-class (spare vs finish-off) */
             if(g_rival_id>=0 && g_rival_id!=g_arena_id){
                 int decide;
                 if(g_calkill_on)      decide = (cal_pd(g_rival_tick, g_cmind_bhat)     > CAL_THRESH && energy > KILL_STRONG);  /* STRIKE FALSIFIER: kill when the mind BELIEVES the rival is in its vulnerable window (inferred key) */
@@ -1989,11 +1997,20 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                 float kprob = KILL_PROB;                                                 /* the strike rate — fixed by default */
                 if(g_fstrike_on)        kprob = cfield_strike_p(g_rival_h, energy, g_guilt);  /* STRIKE-FIELD: the rate is a collapse of opportunity+bearing vs the burden of guilt */
                 else if(g_fstrike_menu) kprob = g_fstrike_fixed;                         /* CONTROL: the swept fixed rate — the matched dumb menu */
+                if(g_love_on) kprob *= (1.0f - LOVE_DAMP*tanhf(0.1f*fabsf(mo.dissonance)));  /* actually.love M-1: distress dampens predation — high monism-read dissonance lowers the strike rate; grief-specificity is proven by the frozen arm + time-lock, not here */
                 if(decide && (frand()+1.0f)*0.5f < kprob){                               /* the probabilistic draw — wanting is a pressure, not a certainty */
                     arena_strike(g_rival_id, g_arena_id);                                /* the strike lands on the rival's process */
+                    struck=1;                                                            /* actually.love: finish-off happened */
                     if(!g_cal_on){ energy += KILL_GAIN; corpse_debt += 1; g_new_kills++; }  /* NL_KILL: immediate reward (published semantics) + a confirmed kill for guilt. NL_CAL: the striker is paid only on the victim's CONFIRMED kill (arena_collect), and wounded on a rebound */
                 }
             }
+            if(g_love_log){                                                              /* actually.love M-1: log the action-class + decomposition before any death-break */
+                int kavail=(g_rival_id>=0 && g_rival_id!=g_arena_id && g_rival_h>KILL_WEAK && energy>KILL_STRONG);   /* a finishable rival was on the table */
+                int acls = kavail ? (struck?2:1) : 0;                                    /* 0 none · 1 SPARE (kill available, declined) · 2 finish-off */
+                struct timeval tv; gettimeofday(&tv,NULL); long long us=(long long)tv.tv_sec*1000000LL+tv.tv_usec;
+                fprintf(g_love_log,"%lld %d %d %d %.4f %.4f %.4f %.4f %.4f %.4f\n", us, g_arena_id, acls, kavail,
+                        (double)g_rival_h, (double)g_rival_diss, (double)fabsf(mo.dissonance), (double)g_guilt, (double)g_last_dis, (double)g_upre50);
+                fflush(g_love_log); }
             if(g_cal_on){                                                                /* THE HONEST STRIKE ECONOMY: only the victim knows its window, so it adjudicates and confirms; the killer is paid or WOUNDED by that confirmation, not by the mere act of striking */
                 arena_collect(g_arena_id, &g_outcome_off, &energy, &corpse_debt);        /* collect my strikes' outcomes: a confirmed kill pays KILL_GAIN + a corpse; a rebound deals REBOUND_WOUND back */
                 if(corpse_debt>0) energy -= CORPSE_DRAIN*(float)corpse_debt;             /* the weight of every un-revived corpse, each tick */
