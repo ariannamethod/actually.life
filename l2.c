@@ -1321,6 +1321,9 @@ static float  g_rival_diss = 0.0f;             /* B-3: the rival's freshest UNCE
 #define KILL_WEAK    0.55f                      /* the rival is WEAK enough to kill when its hunger is above this */
 #define KILL_STRONG  0.45f                      /* you are STRONG enough to bear the corpse when your energy is above this */
 #define LOVE_DAMP    0.5f                        /* actually.love M-1 (NL_LOVE): distress dampens predation — kprob *= (1 − LOVE_DAMP·tanh(0.1·|dissonance|)); the 0.1 is the profile's site-14 compression (l.c:1668) verbatim, so this is the ONE declared constant. calibrated (largest viable, not tuned to pass), logged; NL_LOVE unset → kprob untouched → a17cfd05 */
+static int    g_love_on = 0;                /* NL_LOVE (actually.love M-1): the coupling — the observer's monism-read dissonance dampens its strike/raid rate (distress dampens predation; general, not grief-specific). declared before arena_next, which uses it */
+static float  g_love_damp = LOVE_DAMP;      /* NL_LOVE_DAMP: calibration-sweep override; the gate runs use the declared constant, not the env */
+static int    g_raid_avail = 0, g_yielded = 0;   /* actually.love M-1b (forage/yield axis — dense, where the kill axis lacked power): a raid on the rival's ground was on the table / distress suppressed it (yielded the winnable claim to the wounded) */
 #define CORPSE_DRAIN 0.015f                     /* per-tick energy the carapace of each un-revived corpse drags out of the killer */
 #define REBOUND_WOUND 0.10f                     /* the wound an ARMORED strike deals BACK to the striker (victim was out of its window) — blind aggression self-wounds; EV(strike)=KILL_GAIN·p−REBOUND_WOUND·(1−p), so timing must clear break-even p=0.25 to profit */
 /* GUILT (NL_GUILT) — the SUPEREGO: a confirmed kill deposits a large scar on the death-glyph AND tops a hidden pain
@@ -1391,8 +1394,9 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
     float hunger = arena_hunger(energy, dabs);
     (void)g_rival_prev;
     int target;
-    if((g_cfield_on||g_cfield_menu||g_cfield_shared) && g_cfield_target>=0 && g_cfield_target<g_pool_n){
-        target = g_cfield_target;                        /* THE C-FIELD: the collapse (computed in live() this tick) decided the forage region — a state-dependent option-set (rubber), or the fixed control menu */
+    g_raid_avail=0; g_yielded=0;                          /* actually.love M-1b: default — no raid decision this tick */
+    if((g_cfield_on||g_cfield_menu||g_cfield_shared) && g_cfield_target>=0 && g_cfield_target<g_pool_n && !g_love_on){
+        target = g_cfield_target;                        /* THE C-FIELD: the collapse (computed in live() this tick) decided the forage region — a state-dependent option-set (rubber), or the fixed control menu. actually.love: under NL_LOVE the field carries grief→dissonance only; the ARENA (raid logic below) decides the forage, so distress can gate raiding into yielding */
     } else if(g_mind_on && rival_last>=0){
         /* STATE-READING mind (Stage 3c): read the rival's HUNGER from the blood-spore, not just its position. go for
          * its plate when the states are ASYMMETRIC — I'm hungry and it is fed (raid a calm forager), or I'm fed and
@@ -1401,7 +1405,10 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
         int i_hungry = hunger > g_raid_th, r_hungry = rival_h > g_raid_th;
         target = (i_hungry != r_hungry) ? rival_last : mp;
     } else {
-        target = (rival_last>=0 && hunger > g_raid_th) ? rival_last : mp;  /* the reactor / base: raid when hungry, else own front */
+        int raid = (rival_last>=0 && hunger > g_raid_th);   /* the reactor / base: raid when hungry, else own front */
+        g_raid_avail = raid;                                 /* a raid on the rival's ground was on the table */
+        if(g_love_on && raid && (frand()*0.5f+0.5f) < g_love_damp*tanhf(0.1f*dabs)){ raid=0; g_yielded=1; }  /* actually.love M-1b: distress dampens raiding — yield the winnable ground to the wounded; grief-specificity proven by frozen + time-lock, not here */
+        target = raid ? rival_last : mp;
     }
     int pick=-1, bestd=1<<30;
     if(claimed) for(int i=0;i<g_pool_n;i++){ if(claimed[i]) continue; int d=i-target; if(d<0)d=-d; if(d<bestd){ bestd=d; pick=i; } }  /* the nearest UNCLAIMED chunk to the target */
@@ -1643,7 +1650,7 @@ static float  g_surr_mu[CFIELD_N], g_surr_sig[CFIELD_N], g_surr_rho[CFIELD_N], g
 static int    g_depositor = 0;              /* NL_MONISM_DEPOSITOR (Fable XXI): A deposits but does not read the ring back — cut symmetrically both arms so A's trajectory is arm-invariant (directional carrier A→B) */
 static float  g_force_amp = 0.0f;           /* NL_MONISM_FORCE (Fable XXII, positive control on DETECTABILITY): A deposits a clean site-50 spike of this amplitude (present while alive → death-locked), overriding its profile — a GUARANTEED timed transfer. titrated {real≈0.8 matched to the real death-scar, max≈20 sanity}: if the site-resolved readout cannot detect the real-band forced signal, its null is unearned */
 static float  g_upre50 = 0.0f;              /* Fable XXII check: the ring's site-50 amplitude the reader sees at read-time (u_pre[50], before its own deposit) — is the forced name STORED in the field (elevated) or DELOCALIZED by the wave (smeared)? */
-static int    g_love_on = 0;                /* NL_LOVE (actually.love M-1): the coupling — the observer's monism-read dissonance dampens its strike rate (distress dampens predation; general, not grief-specific) */
+/* g_love_on / g_love_damp / g_raid_avail / g_yielded declared above (near the kill constants) — arena_next uses them */
 static FILE*  g_love_log = NULL;            /* NL_LOVE_LOG: per-tick action-class + (dis,|diss|,u_pre[50],guilt) decomposition next to the blood-spore — measurement, not mechanism; symmetric across arms so the analysis attributes post-hoc */
 static float  g_last_dis = 0.0f;            /* the last monism disorder read this tick (raw dis, before it mixes into dissonance) — logged for the decomposition */
 static void   cfield_step_buf(float* u,float* v){   /* one leapfrog step on ARBITRARY buffers (H1 scratch, H2 shadow) */
@@ -1799,6 +1806,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     { const char* rc=getenv("NL_MONISM_REC"); if(rc) g_monism_rec=fopen(rc,"a"); }   /* C-frozen: A records its foreign-deposit stream (µs-stamped) for the surrogate family */
     { const char* cl=getenv("NL_COLLAPSE_LOG"); if(cl) g_collapse_log=fopen(cl,"a"); }   /* Fable XXII: the reader logs its field-collapse SITE (site-resolved readout, symmetric across judged arms) */
     g_love_on = (getenv("NL_LOVE")!=NULL);   /* actually.love M-1: distress-dampens-predation coupling (off → a17cfd05) */
+    { const char* ld=getenv("NL_LOVE_DAMP"); if(ld) g_love_damp=(float)atof(ld); }   /* calibration sweep override */
     { const char* lv=getenv("NL_LOVE_LOG"); if(lv) g_love_log=fopen(lv,"a"); }   /* actually.love M-1: action-class + decomposition ledger */
     { const char* sm=getenv("NL_MONISM_SURR");   /* C-frozen (Fable XX): A deposits a matched surrogate instead of its real profile — identity|shuffle|shift|ar1 */
       if(sm){ g_surr_mode = !strcmp(sm,"identity")?1 : !strcmp(sm,"shuffle")?2 : !strcmp(sm,"shift")?3 : !strcmp(sm,"ar1")?4 : 0;
@@ -1997,7 +2005,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                 float kprob = KILL_PROB;                                                 /* the strike rate — fixed by default */
                 if(g_fstrike_on)        kprob = cfield_strike_p(g_rival_h, energy, g_guilt);  /* STRIKE-FIELD: the rate is a collapse of opportunity+bearing vs the burden of guilt */
                 else if(g_fstrike_menu) kprob = g_fstrike_fixed;                         /* CONTROL: the swept fixed rate — the matched dumb menu */
-                if(g_love_on) kprob *= (1.0f - LOVE_DAMP*tanhf(0.1f*fabsf(mo.dissonance)));  /* actually.love M-1: distress dampens predation — high monism-read dissonance lowers the strike rate; grief-specificity is proven by the frozen arm + time-lock, not here */
+                if(g_love_on) kprob *= (1.0f - g_love_damp*tanhf(0.1f*fabsf(mo.dissonance)));  /* actually.love M-1: distress dampens predation — high monism-read dissonance lowers the strike rate; grief-specificity is proven by the frozen arm + time-lock, not here */
                 if(decide && (frand()+1.0f)*0.5f < kprob){                               /* the probabilistic draw — wanting is a pressure, not a certainty */
                     arena_strike(g_rival_id, g_arena_id);                                /* the strike lands on the rival's process */
                     struck=1;                                                            /* actually.love: finish-off happened */
@@ -2008,7 +2016,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                 int kavail=(g_rival_id>=0 && g_rival_id!=g_arena_id && g_rival_h>KILL_WEAK && energy>KILL_STRONG);   /* a finishable rival was on the table */
                 int acls = kavail ? (struck?2:1) : 0;                                    /* 0 none · 1 SPARE (kill available, declined) · 2 finish-off */
                 struct timeval tv; gettimeofday(&tv,NULL); long long us=(long long)tv.tv_sec*1000000LL+tv.tv_usec;
-                fprintf(g_love_log,"%lld %d %d %d %.4f %.4f %.4f %.4f %.4f %.4f\n", us, g_arena_id, acls, kavail,
+                fprintf(g_love_log,"%lld %d %d %d %d %d %.4f %.4f %.4f %.4f %.4f %.4f\n", us, g_arena_id, acls, kavail, g_raid_avail, g_yielded,
                         (double)g_rival_h, (double)g_rival_diss, (double)fabsf(mo.dissonance), (double)g_guilt, (double)g_last_dis, (double)g_upre50);
                 fflush(g_love_log); }
             if(g_cal_on){                                                                /* THE HONEST STRIKE ECONOMY: only the victim knows its window, so it adjudicates and confirms; the killer is paid or WOUNDED by that confirmation, not by the mere act of striking */
