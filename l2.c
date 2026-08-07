@@ -1337,6 +1337,7 @@ static float  g_rival_diss = 0.0f;             /* B-3: the rival's freshest UNCE
 static int    g_love_on = 0;                /* NL_LOVE (actually.love M-1): the coupling — the observer's monism-read dissonance dampens its strike/raid rate (distress dampens predation; general, not grief-specific). declared before arena_next, which uses it */
 static float  g_love_damp = LOVE_DAMP;      /* NL_LOVE_DAMP: calibration-sweep override; the gate runs use the declared constant, not the env */
 static int    g_raid_avail = 0, g_yielded = 0;   /* actually.love M-1b (forage/yield axis — dense, where the kill axis lacked power): a raid on the rival's ground was on the table / distress suppressed it (yielded the winnable claim to the wounded) */
+static int    g_action_valid = 0;   /* #4 (Sol audit P0 #3): 1 iff a real forage/raid decision was made this tick (arena_next ran). Reset every tick, set in arena_next — so the love-ledger never re-records a sleep/graze tick's stale raid/yield as a fresh action */
 #define CORPSE_DRAIN 0.015f                     /* per-tick energy the carapace of each un-revived corpse drags out of the killer */
 #define REBOUND_WOUND 0.10f                     /* the wound an ARMORED strike deals BACK to the striker (victim was out of its window) — blind aggression self-wounds; EV(strike)=KILL_GAIN·p−REBOUND_WOUND·(1−p), so timing must clear break-even p=0.25 to profit */
 /* GUILT (NL_GUILT) — the SUPEREGO: a confirmed kill deposits a large scar on the death-glyph AND tops a hidden pain
@@ -1408,7 +1409,7 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
         target = (i_hungry != r_hungry) ? rival_last : mp;
     } else {
         int raid = (rival_last>=0 && hunger > g_raid_th);   /* the reactor / base: raid when hungry, else own front */
-        g_raid_avail = raid;                                 /* a raid on the rival's ground was on the table */
+        g_raid_avail = raid; g_action_valid = 1;             /* a raid on the rival's ground was on the table — a REAL forage/raid decision this tick (#4: marks the love-row as a valid action, not a stale repeat) */
         if(g_love_on && raid && (frand()*0.5f+0.5f) < g_love_damp*tanhf(0.1f*dabs)){ raid=0; g_yielded=1; }  /* actually.love M-1b: distress dampens raiding — yield the winnable ground to the wounded; grief-specificity proven by frozen + time-lock, not here */
         target = raid ? rival_last : mp;
     }
@@ -1913,6 +1914,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     while(energy>0.0f && tick<200000){          /* cap = falsification guard: it MUST die */
         tick++;
         g_cur_tick = tick;                         /* expose to the forced-wound window gate in monism_shared_step */
+        g_raid_avail = 0; g_yielded = 0; g_action_valid = 0;   /* #4: reset the action-state at the START of every tick — a tick with no forage (sleep/graze/diet) logs fresh zeros, never the previous forage decision */
         unsigned cfired = g_async_on ? chambers_step() : ~0u;  /* ASYNC: which chambers cross this tick (all-set when synchronous) */
         float S0=mo.S, D0=mo.dissonance;            /* the interior at tick's start — what the self-model forecasts FROM */
         if(g_self_on) self_predict(&ps,S0,D0);       /* the forecast is ALWAYS computed when the self is on — its error is what we measure across all arms */
@@ -2025,8 +2027,8 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                 int kavail=(g_rival_id>=0 && g_rival_id!=g_arena_id && g_rival_h>KILL_WEAK && energy>KILL_STRONG);   /* a finishable rival was on the table */
                 int acls = kavail ? (struck?2:1) : 0;                                    /* 0 none · 1 SPARE (kill available, declined) · 2 finish-off */
                 struct timeval tv; gettimeofday(&tv,NULL); long long us=(long long)tv.tv_sec*1000000LL+tv.tv_usec;
-                fprintf(g_love_log,"%lld %d %d %d %d %d %.4f %.4f %.4f %.4f %.4f %.4f\n", us, g_arena_id, acls, kavail, g_raid_avail, g_yielded,
-                        (double)g_rival_h, (double)g_rival_diss, (double)fabsf(mo.dissonance), (double)g_guilt, (double)g_last_dis, (double)g_upre50);
+                fprintf(g_love_log,"%lld %d %d %d %d %d %.4f %.4f %.4f %.4f %.4f %.4f %d\n", us, g_arena_id, acls, kavail, g_raid_avail, g_yielded,
+                        (double)g_rival_h, (double)g_rival_diss, (double)fabsf(mo.dissonance), (double)g_guilt, (double)g_last_dis, (double)g_upre50, g_action_valid);
                 fflush(g_love_log); }
             arena_collect(g_arena_id, &g_outcome_off, &energy, &corpse_debt);   /* KILLER side (3b): collect MY strikes' CONFIRMED outcomes on EVERY path — a confirmed kill pays KILL_GAIN + a corpse + fires guilt (g_new_kills), a rebound deals REBOUND_WOUND back; the bare attempt pays nothing */
             if(corpse_debt>0) energy -= CORPSE_DRAIN*(float)corpse_debt;                      /* the weight of every un-revived corpse I bear, each tick */

@@ -847,6 +847,14 @@ reward paid on the attempt; a post-spine run does not — the two are not compar
 measured before this line was measured in a different world. Only a fresh run on the repaired instrument
 counts, which is what the hermetic retrial (step 7) is for.
 
+**4 — the ledger row is the action.** The flags that record a forage decision — whether a raid was on the
+table, whether it was yielded — were cleared only when a forage decision was actually made, yet written to
+the love-ledger on every tick; so a sleep or a graze re-recorded the previous decision as a fresh one, about
+a third of the rows in a typical run. They are now zeroed at the start of every tick, and each row carries an
+`action_valid` bit set only when the arena truly decided. A non-forage tick logs honest zeros, and the
+analysis counts only real decisions — the row is the action, not an echo of the last one. `a17cfd05`, the
+twin, and the suite hold.
+
 ---
 
 ## Resume-here (for future-me after a summary)
@@ -890,6 +898,6 @@ non-hermetic arena, a control sharing the body's RNG, a ledger repeating stale a
 positive control (not compassion); Claim 2 is unresolved, not null; Claim 3's strong welding breaks. The
 arena-dependent nulls return to "needs a hermetic retrial." **Now rebuilding the measurement spine before any
 retrial — done: (1) hermetic arena manifest, (2) separate body/control RNG streams, (3) the confirmed-kill
-transaction + mortality apart from aggression; next: (4) per-tick action-flag reset + typed valid-action
-logging, (5) grief as a typed event, (6) a hermetic committed harness, (7) the hermetic rerun of the
-reopened nulls.** The tool gives the verdict.
+transaction + mortality apart from aggression, (4) per-tick action-flag reset + typed valid-action logging;
+next: (5) grief as a typed event apart from the death-glyph scar, (6) a hermetic committed harness, (7) the
+hermetic rerun of the reopened nulls.** The tool gives the verdict.
