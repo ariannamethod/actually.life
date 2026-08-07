@@ -1617,7 +1617,8 @@ static float cfield_strike_p(float rival_h, float energy, float guilt){  /* THE 
  * scale-free (cos ignores the norm, so a norm-matched surrogate keeps only its time-structure = the diff-in-diff target).
  * accumulating channels map through log1p+clamp+isfinite (dead at plateau under tanh, NaN-runaway under raw — the 07-06
  * Hebbian-no-ceiling defect). gate-invariant off → a17cfd05. design: llog "THE MONISM", four hands 2026-07-18. ── */
-#define MONISM_DEATH_SITE 50       /* DEATH_ID's dedicated, collision-free ring site */
+#define MONISM_DEATH_SITE 50       /* DEATH_ID's dedicated, collision-free ring site (the death-glyph scar — conflates kill and SEMANTIC "death"-eating) */
+#define MONISM_GRIEF_SITE 38       /* the guilt scalar's dedicated, collision-free ring site (#5): confirmed-kill grief ONLY, the clean typed channel the natural gate reads instead of the contaminated death-scar */
 #define MONISM_CLAMP      4.0f     /* log1p hard ceiling on per-site forcing — bounded top, isfinite-gated */
 #define MONISM_EPS        1e-6f    /* below this a field/profile is too small to align against — disorder 0 */
 #define MONISM_DCLAMP     2.0f     /* 1 − cos lives in [0,2]; clamp guards a NaN slipping through */
@@ -1667,7 +1668,7 @@ static int monism_glyph_site(int g){   /* deterministic FNV-1a projection of a g
     if(g==DEATH_ID) return MONISM_DEATH_SITE;
     unsigned h=2166136261u; h=(h^(unsigned)g)*16777619u;   /* the router the mouth already uses (l.c:237) */
     int s=(int)(h % (unsigned)CFIELD_N);
-    if(s==MONISM_DEATH_SITE) s=(s+1)%CFIELD_N;             /* keep the death site clean of collisions */
+    while(s==MONISM_DEATH_SITE || s==MONISM_GRIEF_SITE) s=(s+1)%CFIELD_N;   /* #5 (Sol audit): keep the death site (50) AND the GRIEF site (38, guilt) collision-free. site 50 conflates kill-death-scar with the SEMANTIC death-glyph scar (eating the word "death"); site 38 carries only the confirmed-kill guilt magnitude, so it is the clean, typed grief channel the natural gate must read — no glyph-scar may leak into it */
     return s;
 }
 static void monism_bump_into(float* U, int site, float amp){   /* one gaussian deposit onto a profile/field vector */
@@ -1681,7 +1682,7 @@ static void monism_profile(float S,float diss,float hunger,float guilt,const flo
     monism_bump_into(L, 2,  S);                     /* canonical scalars, spaced off the death site and each other */
     monism_bump_into(L,14,  tanhf(0.1f*diss));
     monism_bump_into(L,26,  hunger);
-    monism_bump_into(L,38,  log1pf(guilt>0.0f?guilt:0.0f));   /* the guilt TRANSIENT via log1p — keeps the per-event bump alive */
+    monism_bump_into(L,MONISM_GRIEF_SITE,  log1pf(guilt>0.0f?guilt:0.0f));   /* the guilt TRANSIENT via log1p — keeps the per-event bump alive; site 38 is collision-free (#5) so this is the clean confirmed-kill grief signal */
 }
 static float monism_disorder(const float* L,const float* u){  /* 1 − cos(L, u): the reader's own profile against the field it reads (pre-deposit). the foreign dent (quasi-orthogonal to L) raises it; the reader's own echo (aligned) keeps it low. */
     float dot=0.0f,nl=0.0f,nu=0.0f;

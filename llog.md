@@ -855,6 +855,17 @@ a third of the rows in a typical run. They are now zeroed at the start of every 
 analysis counts only real decisions — the row is the action, not an echo of the last one. `a17cfd05`, the
 twin, and the suite hold.
 
+**5 — grief with its own address, apart from the death-glyph scar.** Two things were living at one site. A
+confirmed kill lays a guilt on the killer and a scar on the death-glyph — but reading the word *death* also
+scars the death-glyph, with no kill at all, so the address meant to mark grief lit up whenever a creature ate
+the wrong word. The guilt already had its own scalar channel; it only lacked protection, so a colliding glyph
+could leak into it. That channel (site 38) is now collision-free and carries the confirmed-kill grief alone:
+a creature that eats a corpus full of *death* but kills nothing leaves it at zero while the death-glyph scar
+rises, and a killer with a confirmed kill lifts it to 0.53. The natural retrial reads grief there, clean, not
+at the address the semantic scar shares. This is the minimal form of the typed grief the audit asked for —
+the fuller version, a grief *event* carrying the id of the kill that caused it, waits with the causal ledger.
+`a17cfd05`, the twin, and the suite hold.
+
 ---
 
 ## Resume-here (for future-me after a summary)
@@ -898,6 +909,6 @@ non-hermetic arena, a control sharing the body's RNG, a ledger repeating stale a
 positive control (not compassion); Claim 2 is unresolved, not null; Claim 3's strong welding breaks. The
 arena-dependent nulls return to "needs a hermetic retrial." **Now rebuilding the measurement spine before any
 retrial — done: (1) hermetic arena manifest, (2) separate body/control RNG streams, (3) the confirmed-kill
-transaction + mortality apart from aggression, (4) per-tick action-flag reset + typed valid-action logging;
-next: (5) grief as a typed event apart from the death-glyph scar, (6) a hermetic committed harness, (7) the
-hermetic rerun of the reopened nulls.** The tool gives the verdict.
+transaction + mortality apart from aggression, (4) per-tick action-flag reset + typed valid-action logging,
+(5) a collision-free grief site apart from the death-glyph scar; next: (6) a hermetic committed harness (seed
+manifest, barrier, raw data), (7) the hermetic rerun of the reopened nulls.** The tool gives the verdict.
