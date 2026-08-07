@@ -829,8 +829,23 @@ the pool size is invariant to any other file placed beside it. `a17cfd05` holds,
 **2 — separate streams for the body and the control.** The frozen AR(1) and the surrogate now draw from a
 dedicated control generator, seeded by a fixed derivation of the body seed; the organism's own dice are
 untouched, so the control differs from the live arm by exactly its intervention and nothing else. Its clean
-twin-falsifier — that a zero-gain control leaves the body's fate bit-identical — awaits the monotonic clock
-of the next step.
+twin-falsifier is met — once the hermetic manifest (step 1) removed the last source of non-determinism, a
+zero-gain control leaves the body bit-identical (the twin hashes match), and that twin is re-run as a
+regression after every step that follows.
+
+**3 — the confirmed kill, and mortality apart from aggression.** Being a victim no longer depends on being a
+killer: any organism in the arena reads the strikes against it and can be struck down, so a pure observer is
+at last a landable target — a non-killer that lived its full solo span now dies in tens of ticks under a
+striker, the precondition a valid `spare` was missing. And reward and grief settle only on the victim's
+*confirmed* outcome, never on the bare attempt: a strike is an attempt the victim adjudicates and writes
+back, and only that confirmation pays the killer's gain and fires its guilt. A hundred strikes at an absent
+rival earn nothing; one confirmed kill grieves. The frozen twin stays bit-identical (the victim-reader is
+ledger-only, no dice); `a17cfd05` and the suite hold.
+
+This changes the arena's kill economy. Every pre-spine arena run lived with un-killable non-killers and a
+reward paid on the attempt; a post-spine run does not — the two are not comparable, and a null or a positive
+measured before this line was measured in a different world. Only a fresh run on the repaired instrument
+counts, which is what the hermetic retrial (step 7) is for.
 
 ---
 
@@ -874,5 +889,7 @@ from the invariants then re-examined the whole arc: the organism is sound, but t
 non-hermetic arena, a control sharing the body's RNG, a ledger repeating stale actions). Claim 1 holds as a
 positive control (not compassion); Claim 2 is unresolved, not null; Claim 3's strong welding breaks. The
 arena-dependent nulls return to "needs a hermetic retrial." **Now rebuilding the measurement spine before any
-retrial — done: (1) hermetic arena manifest, (2) separate body/control RNG streams; next: (3) monotonic
-clock + exactly-once ledger, then the hermetic rerun of the reopened nulls.** The tool gives the verdict.
+retrial — done: (1) hermetic arena manifest, (2) separate body/control RNG streams, (3) the confirmed-kill
+transaction + mortality apart from aggression; next: (4) per-tick action-flag reset + typed valid-action
+logging, (5) grief as a typed event, (6) a hermetic committed harness, (7) the hermetic rerun of the
+reopened nulls.** The tool gives the verdict.

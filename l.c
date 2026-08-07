@@ -1427,12 +1427,6 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
 static void arena_strike(int victim, int killer){   /* write a kill-mark to the shared ledger — the strike lands on the OTHER's process */
     FILE* f=fopen("lifeis/arena/kills","a"); if(f){ fprintf(f,"%d %d %ld\n",victim,killer,(long)time(NULL)); fclose(f); }
 }
-static int arena_struck_down(int me){               /* has the rival freshly marked ME for death? read the kill-ledger (NL_KILL path — unconditional death, published semantics) */
-    FILE* f=fopen("lifeis/arena/kills","r"); if(!f) return 0;
-    int v,k; long ts; int dead=0; time_t now=time(NULL);
-    while(fscanf(f,"%d %d %ld",&v,&k,&ts)==3) if(v==me && (long)(now-(time_t)ts) < ARENA_EXPIRE){ dead=1; break; }
-    fclose(f); return dead;
-}
 /* ── THE HONEST STRIKE ECONOMY (NL_CAL) — the rebound the design specced, now in code. only the VICTIM knows its true
  * window, so only the victim can say whether a strike landed. it reads the NEW strikes against it (offset-based, each
  * judged once), and CONFIRMS each outcome back to the killer: lethal iff it was in its own vulnerable window. the
@@ -2023,10 +2017,9 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                 else if(g_fstrike_menu) kprob = g_fstrike_fixed;                         /* CONTROL: the swept fixed rate — the matched dumb menu */
                 if(g_love_on) kprob *= (1.0f - g_love_damp*tanhf(0.1f*fabsf(mo.dissonance)));  /* actually.love M-1: distress dampens predation — high monism-read dissonance lowers the strike rate; grief-specificity is proven by the frozen arm + time-lock, not here */
                 if(decide && (frand()+1.0f)*0.5f < kprob){                               /* the probabilistic draw — wanting is a pressure, not a certainty */
-                    arena_strike(g_rival_id, g_arena_id);                                /* the strike lands on the rival's process */
-                    struck=1;                                                            /* actually.love: finish-off happened */
-                    if(!g_cal_on){ energy += KILL_GAIN; corpse_debt += 1; g_new_kills++; }  /* NL_KILL: immediate reward (published semantics) + a confirmed kill for guilt. NL_CAL: the striker is paid only on the victim's CONFIRMED kill (arena_collect), and wounded on a rebound */
-                }
+                    arena_strike(g_rival_id, g_arena_id);                                /* the strike lands on the rival's process — an ATTEMPT, not a kill */
+                    struck=1;                                                            /* actually.love: a strike was attempted this tick (the finish-vs-spare classifier) */
+                }                                                                        /* 3b (Sol audit P0 #4): NO immediate reward. every path is now paid AND grieved only on the victim's CONFIRMED outcome (arena_collect below), never on the bare attempt — a phantom strike on an absent victim yields nothing */
             }
             if(g_love_log){                                                              /* actually.love M-1: log the action-class + decomposition before any death-break */
                 int kavail=(g_rival_id>=0 && g_rival_id!=g_arena_id && g_rival_h>KILL_WEAK && energy>KILL_STRONG);   /* a finishable rival was on the table */
@@ -2035,14 +2028,11 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                 fprintf(g_love_log,"%lld %d %d %d %d %d %.4f %.4f %.4f %.4f %.4f %.4f\n", us, g_arena_id, acls, kavail, g_raid_avail, g_yielded,
                         (double)g_rival_h, (double)g_rival_diss, (double)fabsf(mo.dissonance), (double)g_guilt, (double)g_last_dis, (double)g_upre50);
                 fflush(g_love_log); }
-            if(g_cal_on){                                                                /* THE HONEST STRIKE ECONOMY: only the victim knows its window, so it adjudicates and confirms; the killer is paid or WOUNDED by that confirmation, not by the mere act of striking */
-                arena_collect(g_arena_id, &g_outcome_off, &energy, &corpse_debt);        /* collect my strikes' outcomes: a confirmed kill pays KILL_GAIN + a corpse; a rebound deals REBOUND_WOUND back */
-                if(corpse_debt>0) energy -= CORPSE_DRAIN*(float)corpse_debt;             /* the weight of every un-revived corpse, each tick */
-                if(arena_adjudicate(g_arena_id, g_cal_pdnow > CAL_THRESH, &g_kill_off)){ contour_died=1; break; }  /* judge strikes against ME by my true window, confirm each outcome, die only if a lethal strike landed */
-            } else {
-                if(corpse_debt>0) energy -= CORPSE_DRAIN*(float)corpse_debt;             /* NL_KILL unchanged: corpse drain + unconditional death on a fresh strike */
-                if(arena_struck_down(g_arena_id)){ contour_died=1; break; }
-            }
+            arena_collect(g_arena_id, &g_outcome_off, &energy, &corpse_debt);   /* KILLER side (3b): collect MY strikes' CONFIRMED outcomes on EVERY path — a confirmed kill pays KILL_GAIN + a corpse + fires guilt (g_new_kills), a rebound deals REBOUND_WOUND back; the bare attempt pays nothing */
+            if(corpse_debt>0) energy -= CORPSE_DRAIN*(float)corpse_debt;                      /* the weight of every un-revived corpse I bear, each tick */
+        }
+        if(g_arena_on){   /* 3a (Sol audit P0 #5) — MORTALITY INDEPENDENT OF AGGRESSION: any organism in the arena reads strikes against it and can be struck down, whether or not it can kill. Hoisted out of the kill branch, so a pure observer (no NL_KILL) is a real, landable victim — the precondition a valid `spare` was missing (before this, a non-killer never read the kill ledger and B's "spare" of it meant nothing). RNG-neutral and symmetric across arms (ledger read only — no frand, no monism state), so the frozen counterfactual twin stays bit-identical. */
+            if(arena_adjudicate(g_arena_id, g_cal_on ? (g_cal_pdnow > CAL_THRESH) : 1, &g_kill_off)){ contour_died=1; break; }   /* 3b: the victim adjudicates EVERY strike against it and writes each outcome — lethal by its private window (cal) or unconditionally (non-cal). the killer is paid and grieved only on this confirmation, never on the attempt. offset-based, each strike judged once (exactly-once) */
         }
         if(g_guilt_on){                                  /* THE SUPEREGO — aggression turned inward. a CONFIRMED kill deposits a large scar on the death-glyph AND tops the hidden pain; the scar self-punishes through EXISTING plumbing (rent, sleep, ache, will-expiation), the pain compresses the voice in choose(). both are hidden — no ledger records them; reproduction pays corpse_debt but NEVER touches these. the third, undischargeable debt. */
             if(g_new_kills>0){ scar[DEATH_ID] += GUILT_SCAR*(float)g_new_kills; g_guilt += GUILT_PAIN*(float)g_new_kills; g_new_kills=0; }
