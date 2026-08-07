@@ -1320,7 +1320,7 @@ static float  g_rival_diss = 0.0f;             /* B-3: the rival's freshest UNCE
 #define KILL_GAIN    0.30f                      /* energy devoured from the victim on a kill */
 #define KILL_WEAK    0.55f                      /* the rival is WEAK enough to kill when its hunger is above this */
 #define KILL_STRONG  0.45f                      /* you are STRONG enough to bear the corpse when your energy is above this */
-#define LOVE_DAMP    0.5f                        /* actually.love M-1 (NL_LOVE): distress dampens predation — kprob *= (1 − LOVE_DAMP·tanh(0.1·|dissonance|)); the 0.1 is the profile's site-14 compression (l.c:1668) verbatim, so this is the ONE declared constant. calibrated (largest viable, not tuned to pass), logged; NL_LOVE unset → kprob untouched → a17cfd05 */
+#define LOVE_DAMP    1.0f                        /* actually.love M-1 (NL_LOVE): distress dampens predation — kprob/raid *= (1 − LOVE_DAMP·tanh(0.1·|dissonance|)); the 0.1 is the profile's site-14 compression (l.c:1668) verbatim, so this is the ONE declared constant. CALIBRATED on the dense yield axis 2026-08-01: largest viable — yield-rate rises monotonically 0→0.74 with damp, Alife healthy (~1800) up to 1.0, CRASHES at 1.5 (136); 1.0 chosen as the largest viable, logged, not tuned to pass. NL_LOVE unset → untouched → a17cfd05 */
 static int    g_love_on = 0;                /* NL_LOVE (actually.love M-1): the coupling — the observer's monism-read dissonance dampens its strike/raid rate (distress dampens predation; general, not grief-specific). declared before arena_next, which uses it */
 static float  g_love_damp = LOVE_DAMP;      /* NL_LOVE_DAMP: calibration-sweep override; the gate runs use the declared constant, not the env */
 static int    g_raid_avail = 0, g_yielded = 0;   /* actually.love M-1b (forage/yield axis — dense, where the kill axis lacked power): a raid on the rival's ground was on the table / distress suppressed it (yielded the winnable claim to the wounded) */
@@ -1630,13 +1630,18 @@ static double g_monism_dsum=0.0, g_monism_dsumsq=0.0; static long g_monism_dn=0;
 static int    g_pilot_on = 0;      /* NL_MONISM_PILOT: instrument THREE candidate hearts (H0/H1/H2) in one run — H0 drives, H1/H2 logged passively; the machine picks (Fable layer XII) */
 static int    g_monism_heart = 0;  /* NL_MONISM_HEART: which heart DRIVES dissonance — 0=H0, 1=H1, 2=H2 (the machine picked H2, Fable XIV); the pilot always runs on 0 */
 /* M-1 FROZEN SURROGATE (Fable's control family) — the SAME dissonance-coupling but the disorder is drawn from an AR(1)
- * with the H2 floor's marginals (from M-0), NOT from the live field: matched statistics, ZERO field-structure. if the
- * live monism outlives this per-seed >=20/30, the STRUCTURE bears weight on survival, not the mere noise level. */
-#define FROZEN_MU   0.15f          /* H2 floor mean (M-0) */
-#define FROZEN_SIG  0.14f          /* H2 floor std (M-0) */
-#define FROZEN_RHO  0.80f          /* declared temporal autocorrelation (calibration, logged, not tuned to pass) */
+ * with the LIVE disorder's marginals, NOT from the live field: matched statistics, ZERO field-structure. if the live
+ * monism carries the yield/survival per-seed >=20/30, the STRUCTURE bears weight, not the mere noise level. Marginals
+ * MUST match the live regime or the control changes the torment level (a milder AR(1) → A lives longer → confounded);
+ * re-measured in the M-1b TRIAD config (A observer + two guilty killers, heart 2, gain 0.3): live disorder mean 0.536,
+ * std 0.333, lag-1 rho 0.641 over N=338 ticks / 5 seeds. Set to match — logged, not tuned to pass (the M-0 single-cell
+ * floor 0.15/0.14/0.80 was 3.6x too mild for this config). */
+#define FROZEN_MU   0.54f          /* live-disorder mean, triad config (measured 0.536) */
+#define FROZEN_SIG  0.33f          /* live-disorder std,  triad config (measured 0.333) */
+#define FROZEN_RHO  0.64f          /* live-disorder lag-1 autocorrelation, triad config (measured 0.641) — logged, not tuned to pass */
 static int    g_frozen_on = 0;     /* NL_MONISM_FROZEN: replace the live disorder with the matched-statistics AR(1) */
 static float  g_frozen_state = FROZEN_MU;
+static float  g_fmu = FROZEN_MU, g_fsig = FROZEN_SIG, g_frho = FROZEN_RHO;   /* NL_FROZEN_MU/SIG/RHO: re-match the control's marginals to the COMPARED live-regime per run (Fable cond.3) — the natural gate over long-life (>=90ms) observers has disorder 0.72/0.31/0.24, not the general-triad 0.54/0.33/0.64; declared per-run, unset → the #define default */
 static const char* g_monism_ring = "lifeis/arena/monism";   /* NL_MONISM_RING: the shared-field file path — C-sep control gives A and B SEPARATE rings so A's field-pattern never reaches B while the arena competition stays identical (isolates the carrier from competition) */
 static FILE*  g_monism_rec  = NULL;         /* NL_MONISM_REC: A appends its per-tick deposit (the foreign component) + a µs stamp — the recording C-frozen's surrogate family replays / phase-shuffles / AR(1)-matches (the manipulated variable is ONLY the foreign component; own echo untouched) */
 static FILE*  g_collapse_log = NULL;         /* NL_COLLAPSE_LOG (Fable XXII): the SITE-RESOLVED readout — the reader's field-collapse site (0..CFIELD_N), µs-stamped, logged OUTSIDE the ring flock (symmetric across arms, not a confound). the scalar 1−cos is blind to WHICH vector arrived; the collapse position is not — it lands where the field concentrated (site 50 = DEATH_ID) */
@@ -1649,6 +1654,8 @@ static int    g_surr_n = 0, g_surr_tick = 0;
 static float  g_surr_mu[CFIELD_N], g_surr_sig[CFIELD_N], g_surr_rho[CFIELD_N], g_surr_prev[CFIELD_N];   /* per-site marginals + lag-1 rho for the AR(1) member */
 static int    g_depositor = 0;              /* NL_MONISM_DEPOSITOR (Fable XXI): A deposits but does not read the ring back — cut symmetrically both arms so A's trajectory is arm-invariant (directional carrier A→B) */
 static float  g_force_amp = 0.0f;           /* NL_MONISM_FORCE (Fable XXII, positive control on DETECTABILITY): A deposits a clean site-50 spike of this amplitude (present while alive → death-locked), overriding its profile — a GUARANTEED timed transfer. titrated {real≈0.8 matched to the real death-scar, max≈20 sanity}: if the site-resolved readout cannot detect the real-band forced signal, its null is unearned */
+static long   g_force_t0 = 0, g_force_t1 = 0;   /* NL_FORCE_T0/T1 (Fable, action-domain event-study): PULSE the forced wound over tick-window [t0,t1) so the response is a timed EVENT (in-window vs out), not a standing amplitude. t1<=0 → standing (backward-compatible with M-2's forced ×250) */
+static long   g_cur_tick = 0;                   /* the reader's current tick, set in live() — the forced-wound window gate reads it (monism_shared_step has no tick arg) */
 static float  g_upre50 = 0.0f;              /* Fable XXII check: the ring's site-50 amplitude the reader sees at read-time (u_pre[50], before its own deposit) — is the forced name STORED in the field (elevated) or DELOCALIZED by the wave (smeared)? */
 /* g_love_on / g_love_damp / g_raid_avail / g_yielded declared above (near the kill constants) — arena_next uses them */
 static FILE*  g_love_log = NULL;            /* NL_LOVE_LOG: per-tick action-class + (dis,|diss|,u_pre[50],guilt) decomposition next to the blood-spore — measurement, not mechanism; symmetric across arms so the analysis attributes post-hoc */
@@ -1739,7 +1746,7 @@ static float monism_shared_step(float S,float diss,float hunger,float guilt,cons
     float dis = (g_monism_heart==2)? dis2 : (g_monism_heart==1)? dis1 : dis0;   /* the heart that DRIVES dissonance (the machine picked H2) */
     if(g_frozen_on){                                        /* M-1 CONTROL: matched-statistics AR(1), no field-structure — the same coupling, structure removed */
         float n = frand()+frand()+frand();                 /* ~N(0,1) by CLT (frand ~ U[-1,1]) */
-        g_frozen_state = FROZEN_MU + FROZEN_RHO*(g_frozen_state-FROZEN_MU) + FROZEN_SIG*sqrtf(1.0f-FROZEN_RHO*FROZEN_RHO)*n;
+        g_frozen_state = g_fmu + g_frho*(g_frozen_state-g_fmu) + g_fsig*sqrtf(1.0f-g_frho*g_frho)*n;
         if(g_frozen_state<0.0f)g_frozen_state=0.0f; else if(g_frozen_state>MONISM_DCLAMP)g_frozen_state=MONISM_DCLAMP;
         dis = g_frozen_state;
     }
@@ -1754,7 +1761,7 @@ static float monism_shared_step(float S,float diss,float hunger,float guilt,cons
         g_dent0 += monism_disorder(L,ud); g_dent1 += monism_disorder(p1,ud); g_dent2 += monism_disorder(g_shadow_u,ud);   /* each heart's response — no contamination of the real field */
     }
     if(g_surr_mode) monism_surrogate(L);                     /* C-frozen (Fable XX): A deposits a matched surrogate — overwrite BEFORE shadow + ring so both are fed L_A' (nail 1: A's self-expectation stays consistent with what it deposits, A-side symmetric between arms) */
-    if(g_force_amp>0.0f){ for(int i=0;i<CFIELD_N;i++) L[i]=0.0f; L[MONISM_DEATH_SITE]=g_force_amp; }   /* Fable XXII detectability control: override to a clean site-50 spike (guaranteed timed transfer, present while alive → death-locked) */
+    if(g_force_amp>0.0f && (g_force_t1<=0 || (g_cur_tick>=g_force_t0 && g_cur_tick<g_force_t1))){ for(int i=0;i<CFIELD_N;i++) L[i]=0.0f; L[MONISM_DEATH_SITE]=g_force_amp; }   /* Fable XXII detectability control: override to a clean site-50 spike (guaranteed timed transfer). NL_FORCE_T0/T1 pulses it over a tick-window → the action-domain event-study (in-window vs out); t1<=0 → standing */
     if(g_monism_heart==2 || g_pilot_on){                     /* maintain the shadow-ring whenever the driving heart (H2) or the pilot needs it */
         for(int i=0;i<CFIELD_N;i++) g_shadow_u[i]+=L[i];
         for(int s=0;s<CFIELD_STEPS;s++) cfield_step_buf(g_shadow_u,g_shadow_v);
@@ -1801,7 +1808,11 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_monism_dsum=0.0; g_monism_dsumsq=0.0; g_monism_dn=0;   /* M-0: fresh solo-disorder accumulator per organism */
     g_pilot_on = (getenv("NL_MONISM_PILOT")!=NULL);   /* three-hearts pilot (H0 drives, H1/H2 logged passively) */
     { const char* mh=getenv("NL_MONISM_HEART"); if(mh) g_monism_heart=atoi(mh); }   /* which heart drives (machine picked H2=2) */
-    g_frozen_on = (getenv("NL_MONISM_FROZEN")!=NULL); g_frozen_state = FROZEN_MU;   /* M-1 matched-statistics control */
+    g_frozen_on = (getenv("NL_MONISM_FROZEN")!=NULL);   /* M-1 matched-statistics control */
+    { const char* fm=getenv("NL_FROZEN_MU");  if(fm) g_fmu =(float)atof(fm);
+      const char* fs=getenv("NL_FROZEN_SIG"); if(fs) g_fsig=(float)atof(fs);
+      const char* fr=getenv("NL_FROZEN_RHO"); if(fr) g_frho=(float)atof(fr); }
+    g_frozen_state = g_fmu;   /* Fable cond.3: control marginals re-matched to the compared live-regime (per-run declared) */
     { const char* r=getenv("NL_MONISM_RING"); if(r) g_monism_ring=r; }   /* C-sep: separate rings isolate the carrier from arena competition */
     { const char* rc=getenv("NL_MONISM_REC"); if(rc) g_monism_rec=fopen(rc,"a"); }   /* C-frozen: A records its foreign-deposit stream (µs-stamped) for the surrogate family */
     { const char* cl=getenv("NL_COLLAPSE_LOG"); if(cl) g_collapse_log=fopen(cl,"a"); }   /* Fable XXII: the reader logs its field-collapse SITE (site-resolved readout, symmetric across judged arms) */
@@ -1813,6 +1824,8 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
               const char* rp=getenv("NL_MONISM_REPLAY"); if(rp) monism_load_replay(rp); } }
     g_depositor = (getenv("NL_MONISM_DEPOSITOR")!=NULL);   /* Fable XXI: A = clean depositor (no ring read-back), symmetric both arms */
     { const char* fa=getenv("NL_MONISM_FORCE"); if(fa) g_force_amp=(float)atof(fa); }   /* Fable XXII: forced clean site-50 transfer (detectability positive control) */
+    { const char* t0=getenv("NL_FORCE_T0"); if(t0) g_force_t0=atol(t0); }   /* action-domain event-study: pulse the forced wound ON at this tick */
+    { const char* t1=getenv("NL_FORCE_T1"); if(t1) g_force_t1=atol(t1); }   /* ...OFF at this tick (exclusive); t1<=0 → standing */
     g_d1sum=0.0; g_d1sq=0.0; g_d2sum=0.0; g_d2sq=0.0; g_dent0=0.0; g_dent1=0.0; g_dent2=0.0;
     for(int i=0;i<CFIELD_N;i++){ g_shadow_u[i]=0.0f; g_shadow_v[i]=0.0f; }   /* fresh shadow-ring per organism */
     { const char* mv=getenv("NL_FIELD_MENU_VEC"); if(mv) sscanf(mv,"%f,%f,%f,%f,%f",&g_menu_vec[0],&g_menu_vec[1],&g_menu_vec[2],&g_menu_vec[3],&g_menu_vec[4]); }  /* sweep the fixed control to its sharpest */
@@ -1903,6 +1916,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     int   fed=(food?1:0);                           /* ether-born cells start hungry, on the chorus */
     while(energy>0.0f && tick<200000){          /* cap = falsification guard: it MUST die */
         tick++;
+        g_cur_tick = tick;                         /* expose to the forced-wound window gate in monism_shared_step */
         unsigned cfired = g_async_on ? chambers_step() : ~0u;  /* ASYNC: which chambers cross this tick (all-set when synchronous) */
         float S0=mo.S, D0=mo.dissonance;            /* the interior at tick's start — what the self-model forecasts FROM */
         if(g_self_on) self_predict(&ps,S0,D0);       /* the forecast is ALWAYS computed when the self is on — its error is what we measure across all arms */

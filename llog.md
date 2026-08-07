@@ -742,6 +742,48 @@ hand against its own advantage more than a frozen field can.
 
 ---
 
+## actually.love — the forced yes and the natural null (M-1b)
+
+The coupling was built and calibrated. Under `NL_LOVE` the observer's field-read dissonance dampens
+both its strike and its raid on a wounded rival's ground — `kprob·(1 − LOVE_DAMP·tanh(0.1·|dissonance|))`,
+one declared constant, the `0.1` the profile's own site-14 compression taken verbatim, off → `a17cfd05`.
+Distress dampens predation; whether *grief* specifically does was handed to the controls.
+
+First the instrument had to be shown it can see. A forced clean wound — a death-spike deposited into the
+shared field, titrated to the real death-scar's band and to a sanity twenty times larger — was read by a
+second body's **action**: its rate of sparing a killable rival and yielding a winnable claim rose with the
+wound's size in the live field (0.74 → 0.89 → 0.94) and stayed flat against a marginals-matched frozen
+field (0.81 → 0.81 → 0.80). A dose-response the matched noise does not have. This is the first thing the
+action domain does that the feeling domain could not: in the earlier terminal the felt readout was blind to
+a forced name at two hundred times its size; here the hand answers a forced wound at its real band. The
+field→action channel is real.
+
+Then the natural test: three symmetric bodies, one an observer with its guilt turned off (the clean
+stratum), two guilty killers whose confirmed kills deposit real grief into the shared field, the observer's
+spare-and-yield time-locked at microsecond resolution to those foreign wounds against the same frozen
+control. Two structural facts surfaced before any verdict. Grief forms slower than a short life lasts — the
+strike-outcome-confirm round-trip outlives the observer, so one that dies young never witnesses a wound that
+formed after it: **compassion has a minimum lifespan**. And conditioning the test on observers that do
+outlive the wound — a threshold declared before the run, its qualification rate matched across arms so the
+selection stays honest — the effect vanishes: the live field carries no more of the wound into the hand than
+the frozen one, if anything less (matched-noise +0.094 against live +0.024 on the wounded-minus-quiet rate).
+
+The reason is in the organism's own construction, and it is the sharpest thing this arc taught. Grief here
+has exactly one source: a confirmed kill, which in the same instant pays the killer its gain. Grief and
+resource are the same event. So the wounded-tick response rises in the frozen arm too — the hand is tracking
+the resource-shift the kill caused, a stronger freshly-fed rival, not the grief the kill left in the field.
+There is no natural grief in this creature that is not already a resource-event, and so
+**compassion-against-resource cannot be isolated from it**: the very thing that would make one body's grief
+matter to another is welded to the thing they compete over. That is the original wall, fallen out of the
+code — whose grief moves you, when grief is what winning costs someone else. The field can carry a wound to
+the hand; forced and decoupled, it does. Naturally, the wound never arrives alone.
+
+So the arc's answer is a second split, paired to the field-carrier's: presence is carried and a forced,
+decoupled grief moves the hand, but natural grief is inseparable, by construction, from the advantage its
+cause conferred. Every organ off → `a17cfd05`, suite 48/48.
+
+---
+
 ## Resume-here (for future-me after a summary)
 
 Build `cc -O2 -o l l.c -lm && cc -O2 -o l2 l2.c -lm`; run `./l 42`,
@@ -768,9 +810,15 @@ other minds in 64 dimensions. → **actually.love** (the next arc, pre-registere
 non-private by construction — a deformation of one shared field, three symmetric bodies
 (l.c ×3), emergent roles under a fluidity statistic, observation-is-action tested against a
 surrogate-writing third, and compassion-against-resource (a RATE vs a matched-frozen field) as
-the first primary metric by-construction outside the arc's law. M-1 built (`NL_LOVE`: dissonance
-dampens the strike rate, one constant, off → a17cfd05, suite 48/48; a love-ledger logs the
-action-class + decomposition). **Next: calibrate LOVE_DAMP (largest viable), then Gate 1/2 — does
-grief carried in the shared field bend the other's hand against its own advantage more than a
-frozen field, over foreign/forced wounds in the low-guilt stratum, ≥20/30; M-2 triad, M-3 the gaze
-follow.** Each step 30 seeds; the verdict is given by the tool.
+the first primary metric by-construction outside the arc's law. M-1/M-1b built and run
+(`NL_LOVE`: dissonance dampens the strike and the raid, one constant, off → a17cfd05, suite 48/48).
+A forced clean wound moves a second body's spare-and-yield dose-responsively in the live field and
+flat against a marginals-matched frozen one — the field→action channel is real. Natural grief is a
+null under that same control, and the reason is structural: grief here has one source, a confirmed
+kill, which pays the killer its gain in the same instant — grief and resource are the same event, so
+compassion-against-resource cannot be isolated from the advantage its cause conferred (matched-noise
++0.094 vs live +0.024 on wounded-minus-quiet). Two scoped findings stand: compassion has a minimum
+lifespan (the witness must outlive the wound-formation), and natural grief is welded to resource by
+construction. **A second split, paired to the field-carrier's: forced/decoupled grief moves the
+hand, natural grief never arrives alone. Open: whether this terminates the arc or opens a next rung —
+an organism whose grief decouples from resource-gain, then re-ask.** Verdict given by the tool.
