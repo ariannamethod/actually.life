@@ -390,14 +390,27 @@ typedef struct {
 } Model;
 
 /* ── deterministic rng (no Math.random — рождение воспроизводимо по сиду) ── */
-static unsigned long g_rng = 42;
-static void  seed_rng(unsigned long s){ g_rng = s ? s : 1; }
-static float frand(void){ /* ~U(-1,1) */
+static unsigned long g_rng = 42;          /* rng_body — the organism's own dice (decisions, mortality, dream, kin, weights) */
+static unsigned long g_rng_ctrl = 42;     /* rng_control (Sol audit inv.IV): the CONTROL's dice (frozen AR(1), surrogate) — a SEPARATE stream so a control draws NO number from the body's, and live/frozen stay counterfactual twins */
+static void  seed_rng(unsigned long s){ unsigned long b = s ? s : 1;
+    g_rng = b;
+    g_rng_ctrl = (b ^ 0x9E3779B97F4A7C15UL) * 6364136223846793005UL + 1442695040888963407UL;   /* fixed derivation → reproducible, decorrelated from the body stream */
+}
+static float frand(void){ /* ~U(-1,1) — BODY stream */
     g_rng = g_rng*6364136223846793005UL + 1442695040888963407UL;
     return ((float)((g_rng>>33)&0x7fffffff)/(float)0x40000000) - 1.0f;
 }
+static float frand_ctrl(void){ /* ~U(-1,1) — CONTROL stream (never touches the body's fate) */
+    g_rng_ctrl = g_rng_ctrl*6364136223846793005UL + 1442695040888963407UL;
+    return ((float)((g_rng_ctrl>>33)&0x7fffffff)/(float)0x40000000) - 1.0f;
+}
 static float gauss(float mu, float sigma){ /* Box-Muller on frand — deterministic by seed */
     float u1=(frand()+1.0f)*0.5f, u2=(frand()+1.0f)*0.5f;
+    if(u1<1e-7f) u1=1e-7f;
+    return mu + sigma*sqrtf(-2.0f*logf(u1))*cosf(6.2831853f*u2);
+}
+static float gauss_ctrl(float mu, float sigma){ /* gauss on the CONTROL stream (surrogate AR(1)) */
+    float u1=(frand_ctrl()+1.0f)*0.5f, u2=(frand_ctrl()+1.0f)*0.5f;
     if(u1<1e-7f) u1=1e-7f;
     return mu + sigma*sqrtf(-2.0f*logf(u1))*cosf(6.2831853f*u2);
 }
@@ -1340,7 +1353,6 @@ static int    g_kill_never  = 0;               /* CONTROL: NL_KILL_NEVER=1 → n
 static int    g_fstrike_on   = 0;              /* NL_FIELD_STRIKE: the strike RATE emerges from a field-collapse of opportunity+bearing vs the burden of guilt — timing under your own state */
 static int    g_fstrike_menu = 0;              /* CONTROL: NL_FIELD_STRIKE_MENU — a FIXED strike rate (the matched dumb menu), swept to its sharpest */
 static float  g_fstrike_fixed = KILL_PROB;     /* the fixed control rate, set by NL_FIELD_STRIKE_FIXED (default = the classical base) */
-static int  arena_namecmp(const void* a, const void* b){ return strcmp(*(const char* const*)a, *(const char* const*)b); }
 static void arena_addfile(const char* path){  /* index every non-empty line of one file into the pool */
     FILE* f=fopen(path,"r"); if(!f) return;
     char buf[4096];
@@ -1352,21 +1364,11 @@ static void arena_addfile(const char* path){  /* index every non-empty line of o
     }
     fclose(f);
 }
-static void arena_index(const char* corpus_unused){   /* the arena eats the whole folder: ANY .txt in lifeis/ is territory — a dropped file is instantly in the fight */
+static void arena_index(const char* corpus_unused){   /* HERMETIC ARENA (Sol audit P0 #1): the contested pool is the IMMUTABLE base corpus (world.txt) ONLY, indexed identically by every process — never a live-folder glob. A runtime artifact (ether/births/slice) can no longer become territory, so the test tail cannot rewrite the next experiment's world and two processes cannot disagree on a chunk_id. (The old "any dropped .txt is instantly in the fight" was the leak: +9.3% world after a test suite, seed 42 dying tick 4069 vs 2287.) */
     (void)corpus_unused;
     mkdir("lifeis", 0755); mkdir("lifeis/arena", 0755);
-    DIR* d=opendir("lifeis"); if(!d) return;
-    char* names[4096]; int nn=0; struct dirent* e;
-    while((e=readdir(d)) && nn<4096){
-        const char* nm=e->d_name; int L=(int)strlen(nm);
-        if(L<4 || strcmp(nm+L-4,".txt")!=0) continue;         /* only .txt */
-        if(strncmp(nm,"slice_",6)==0) continue;               /* skip the chorus's runtime slices */
-        names[nn++]=strdup(nm);
-    }
-    closedir(d);
-    qsort(names,(size_t)nn,sizeof(char*),arena_namecmp);      /* stable order — the pool is the same across one run */
-    char path[512];
-    for(int i=0;i<nn;i++){ snprintf(path,sizeof path,"lifeis/%s",names[i]); arena_addfile(path); free(names[i]); }
+    arena_addfile("lifeis/world.txt");                        /* the manifest — one immutable snapshot, the same for all */
+    if(getenv("NL_POOL_N")) fprintf(stderr,"POOL_N %d\n", g_pool_n);   /* manifest size report — invariant to any other file in lifeis/ */
 }
 static float arena_hunger(float energy, float dabs){
     /* GREED-HUNGER — how hard this organism eyes the RIVAL's plate. energy-hunger, lightly entangled with agitation:
@@ -1713,13 +1715,13 @@ static void monism_load_replay(const char* path){   /* C-frozen: load A's record
 static void monism_surrogate(float* L){   /* overwrite A's real deposit L with a matched surrogate (Fable XX) — decoupled from A's real scar-history, marginals preserved */
     if(g_surr_mode==1) return;                                          /* identity: keep real L (frozen ≡ live) */
     if(g_surr_mode==4){                                                 /* AR(1), per-site matched marginals — same coupling, temporal structure of the scar removed */
-        for(int i=0;i<CFIELD_N;i++){ float n=gauss(0.0f,1.0f);
+        for(int i=0;i<CFIELD_N;i++){ float n=gauss_ctrl(0.0f,1.0f);
             g_surr_prev[i]=g_surr_mu[i]+g_surr_rho[i]*(g_surr_prev[i]-g_surr_mu[i])+g_surr_sig[i]*sqrtf(1.0f-g_surr_rho[i]*g_surr_rho[i])*n;
             L[i]=g_surr_prev[i]; }
         return; }
     if(g_surr_n<=0) return;                                             /* replay members need the recording */
     int idx;
-    if(g_surr_mode==2){ idx=(int)((frand()*0.5f+0.5f)*g_surr_n); if(idx>=g_surr_n)idx=g_surr_n-1; if(idx<0)idx=0; }   /* phase-shuffle: random recorded row → exact marginals, temporal order destroyed */
+    if(g_surr_mode==2){ idx=(int)((frand_ctrl()*0.5f+0.5f)*g_surr_n); if(idx>=g_surr_n)idx=g_surr_n-1; if(idx<0)idx=0; }   /* phase-shuffle: random recorded row (CONTROL stream) → exact marginals, temporal order destroyed */
     else { idx=(g_surr_tick + g_surr_n/2) % g_surr_n; g_surr_tick++; }  /* phase-shift: circular offset → autocorrelation kept, real scar-timing decoupled */
     for(int i=0;i<CFIELD_N;i++) L[i]=g_surr_data[idx*CFIELD_N+i];
 }
@@ -1745,7 +1747,7 @@ static float monism_shared_step(float S,float diss,float hunger,float guilt,cons
     }
     float dis = (g_monism_heart==2)? dis2 : (g_monism_heart==1)? dis1 : dis0;   /* the heart that DRIVES dissonance (the machine picked H2) */
     if(g_frozen_on){                                        /* M-1 CONTROL: matched-statistics AR(1), no field-structure — the same coupling, structure removed */
-        float n = frand()+frand()+frand();                 /* ~N(0,1) by CLT (frand ~ U[-1,1]) */
+        float n = frand_ctrl()+frand_ctrl()+frand_ctrl();  /* ~N(0,1) by CLT — CONTROL stream (Sol inv.IV: the frozen control draws NO number from the body's fate) */
         g_frozen_state = g_fmu + g_frho*(g_frozen_state-g_fmu) + g_fsig*sqrtf(1.0f-g_frho*g_frho)*n;
         if(g_frozen_state<0.0f)g_frozen_state=0.0f; else if(g_frozen_state>MONISM_DCLAMP)g_frozen_state=MONISM_DCLAMP;
         dis = g_frozen_state;

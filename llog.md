@@ -784,6 +784,56 @@ cause conferred. Every organ off → `a17cfd05`, suite 48/48.
 
 ---
 
+## the instrument, re-examined — an internal audit from the invariants
+
+Before trusting any more of the arc's verdicts we turned the falsifier on the falsifier: an internal audit
+from the invariants, rebuilding from source and re-measuring every claim from the raw ledgers rather than
+from this log's stated numbers. The organism came through clean — 48/48, 49/49 under ASan/UBSan, the frozen
+baseline hash reproduces on a fresh build, every organ still gate-invariant off. The C is sound.
+
+The measurements were not, in three ways — each of them the observer changing the reality it was measuring,
+which for a project about exactly that is almost too on-theme to be chance, and is a bug all the same. The
+arena was not a stable territory: it indexed *any* `.txt` dropped in `lifeis/` as food, so a test suite's
+own runtime tail became ~9% of the next experiment's world, and two concurrent processes could read one
+chunk id as different text. The frozen control drew its three random numbers each tick from the *same*
+generator that chooses the organism's actions and its death, so turning the control on gave the body a
+different fate before any field effect — at zero gain the live and frozen twins died at different ticks.
+The action ledger reset its raid/yield flags only on a forage tick but logged every tick, so a sleep or a
+graze re-recorded the previous forage decision as a fresh one.
+
+So the three claims are re-stated honestly, without erasing what stands above them. **Claim 1** — the forced
+field bends a second body's yield dose-responsively, and it survives the ledger fix (+0.143) — holds, but as
+what it is: a positive control that the `field → disorder → yield` channel conducts, not a demonstration of
+compassion; the `spare` axis was void (the reader was un-killable) and yield is policy over disorder by
+construction. **Claim 2** — natural grief bends the hand — is not a null but **unresolved**: three usable
+pairs in seventy-five, a survival filter on a post-treatment variable, the control's own RNG leak. **Claim
+3** — grief is welded to resource — breaks in its strong form: the death-site scar has a second, kill-free
+source (eating the death-glyph), and the kill path pays its gain on the *attempt*, before any confirmation.
+A weaker welding remains; the identity does not.
+
+The heavier consequence reaches backward. A refusal accepted from a dirty instrument is worth no more than a
+positive from one — the same lesson the forced ×250 taught the felt readout, now turned on our own negatives.
+So the arc's arena-dependent nulls — movement and state, the birthday war, the C-field decisions, monism
+survival, natural love, and the C-sep presence result with them — return from "the world said no" to **open
+questions awaiting a hermetic retrial**. The solo-deterministic results (the will design, autopoiesis, the
+turn to guilt) stand as they stood, and the felt-blindness under forced ×250 stands with them — a within-arm
+control the RNG leak never touched. Reopened is not refuted: no old null has become a possibility, only a
+question a clean instrument has not yet asked.
+
+What follows is not a new organ but a measurement spine, built and falsified step by step.
+
+**1 — the hermetic arena.** The contested pool is now a single immutable manifest — the base corpus, indexed
+identically by every process — never a live-folder glob. A runtime artifact can no longer become territory:
+the pool size is invariant to any other file placed beside it. `a17cfd05` holds, the build is warning-clean.
+
+**2 — separate streams for the body and the control.** The frozen AR(1) and the surrogate now draw from a
+dedicated control generator, seeded by a fixed derivation of the body seed; the organism's own dice are
+untouched, so the control differs from the live arm by exactly its intervention and nothing else. Its clean
+twin-falsifier — that a zero-gain control leaves the body's fate bit-identical — awaits the monotonic clock
+of the next step.
+
+---
+
 ## Resume-here (for future-me after a summary)
 
 Build `cc -O2 -o l l.c -lm && cc -O2 -o l2 l2.c -lm`; run `./l 42`,
@@ -819,6 +869,10 @@ kill, which pays the killer its gain in the same instant — grief and resource 
 compassion-against-resource cannot be isolated from the advantage its cause conferred (matched-noise
 +0.094 vs live +0.024 on wounded-minus-quiet). Two scoped findings stand: compassion has a minimum
 lifespan (the witness must outlive the wound-formation), and natural grief is welded to resource by
-construction. **A second split, paired to the field-carrier's: forced/decoupled grief moves the
-hand, natural grief never arrives alone. Open: whether this terminates the arc or opens a next rung —
-an organism whose grief decouples from resource-gain, then re-ask.** Verdict given by the tool.
+construction. An internal audit
+from the invariants then re-examined the whole arc: the organism is sound, but the measurement leaked (a
+non-hermetic arena, a control sharing the body's RNG, a ledger repeating stale actions). Claim 1 holds as a
+positive control (not compassion); Claim 2 is unresolved, not null; Claim 3's strong welding breaks. The
+arena-dependent nulls return to "needs a hermetic retrial." **Now rebuilding the measurement spine before any
+retrial — done: (1) hermetic arena manifest, (2) separate body/control RNG streams; next: (3) monotonic
+clock + exactly-once ledger, then the hermetic rerun of the reopened nulls.** The tool gives the verdict.
