@@ -866,6 +866,15 @@ at the address the semantic scar shares. This is the minimal form of the typed g
 the fuller version, a grief *event* carrying the id of the kill that caused it, waits with the causal ledger.
 `a17cfd05`, the twin, and the suite hold.
 
+**6 — a hermetic bench for the retrial.** The five steps above repaired the organism; this one repairs how it
+is measured. A committed runner (`tests/hermetic.sh`) now gives every trial a fresh isolated root with an
+immutable copy of the corpus and a scrubbed environment — `env -i`, so no `NL_*` left in a shell can reach
+it — and stamps the instrument's identity (the source, binary and corpus hashes) on every batch. Its
+self-test holds the three properties the old measurements lacked: the same seed in two isolated trials gives
+the same result; a stray `NL_LOVE` exported in the shell changes nothing; a decoy file dropped beside the
+corpus is ignored. Reproducible, scrubbed, isolated — the bench the retrial runs on, and it lives in the repo
+now, not in a scratch directory that dies with the session.
+
 ---
 
 ## Resume-here (for future-me after a summary)
@@ -910,5 +919,6 @@ positive control (not compassion); Claim 2 is unresolved, not null; Claim 3's st
 arena-dependent nulls return to "needs a hermetic retrial." **Now rebuilding the measurement spine before any
 retrial — done: (1) hermetic arena manifest, (2) separate body/control RNG streams, (3) the confirmed-kill
 transaction + mortality apart from aggression, (4) per-tick action-flag reset + typed valid-action logging,
-(5) a collision-free grief site apart from the death-glyph scar; next: (6) a hermetic committed harness (seed
-manifest, barrier, raw data), (7) the hermetic rerun of the reopened nulls.** The tool gives the verdict.
+(5) a collision-free grief site apart from the death-glyph scar, (6) a hermetic committed runner
+(`tests/hermetic.sh`: isolated trial roots, scrubbed env, recorded instrument hashes); next: (7) the hermetic
+rerun of the reopened nulls — natural love first, then the arena negatives.** The tool gives the verdict.
