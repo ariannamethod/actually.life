@@ -1348,7 +1348,7 @@ static int    g_action_valid = 0;   /* #4 (Sol audit P0 #3): 1 iff a real forage
 #define GUILT_SCAR   2.0f                       /* the kill-scar on the death-glyph — self-punishment past the ledger + the primary tell (ACHE·scar elevates dissonance). LARGE so scar dominates. */
 #define GUILT_PAIN   0.7f                       /* the pain a kill adds to g_guilt — GRADED (tanh(0.7)=0.60 for one, building with more), so guilt is a state that accumulates, not a switch; keeps Freud's inferability crack (deeper kill = deeper pain = richer signal) alive */
 #define GUILT_DECAY  0.999f                     /* the hidden pain scalar decays slowly — a wound that fades, not a cliff */
-static int    g_kill_on     = 0;                /* NL_KILL=1 → killing is live in this world (can kill AND be killed) */
+static int    g_kill_on     = 0;                /* NL_KILL=1 → this organism can KILL. being killable is universal in the arena (3a): any arena organism reads strikes against it and can be struck down, whether or not it can kill */
 static int    g_kill_always = 0;               /* CONTROL: NL_KILL_ALWAYS=1 → strike whenever the draw lands (no reading the OTHER) */
 static int    g_kill_never  = 0;               /* CONTROL: NL_KILL_NEVER=1 → never strike (killable, but no model, no aggression) */
 static int    g_fstrike_on   = 0;              /* NL_FIELD_STRIKE: the strike RATE emerges from a field-collapse of opportunity+bearing vs the burden of guilt — timing under your own state */
@@ -1790,7 +1790,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     { const char* rt=getenv("NL_RAID_TH"); g_raid_th = rt? (float)atof(rt) : ARENA_RAID; }  /* the falsifier's lead-free controls */
     g_rival_prev = -1; g_rival_id = -1; g_rival_h = 0.0f;
     { const char* t=getenv("NL_TARGET_ID"); g_target_id = t? atoi(t) : -1; }   /* ARENA-3: A strikes ONLY this id (C); unset = default freshest-rival */
-    g_kill_on     = (getenv("NL_KILL")!=NULL);     /* KILLING: the high-stakes act (can kill AND be killed) */
+    g_kill_on     = (getenv("NL_KILL")!=NULL);     /* KILLING: the high-stakes act — this organism can KILL (being killable is universal in the arena since 3a) */
     g_kill_always = (getenv("NL_KILL_ALWAYS")!=NULL);  /* CONTROL: strike blindly */
     g_kill_never  = (getenv("NL_KILL_NEVER")!=NULL);   /* CONTROL: never strike */
     g_cal_on      = (getenv("NL_CAL")!=NULL);       /* THE BIRTHDAY WAR: the calendar organ (dormant — no coupling until Stage 3) */
@@ -1900,6 +1900,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     long  last_repro=-REPRO_COOLDOWN;
     int   homeo_on=(getenv("NL_NOHOMEO")==NULL);
     int   contour_died=0;
+    int   struck_died=0;                            /* F3 (Fable): died by a CONFIRMED foreign strike (the arena kill), distinct from the |S|-contour collapse it used to be mislabelled as */
     int   cont_died=0;                              /* NL_CONT: died by the probabilistic hazard draw (energy>0, not an immortality hole) */
     long  n_graze=0, n_dream=0;                    /* resonance/self-feed counters */
     float energy=E_BORN;
@@ -2035,7 +2036,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
             if(corpse_debt>0) energy -= CORPSE_DRAIN*(float)corpse_debt;                      /* the weight of every un-revived corpse I bear, each tick */
         }
         if(g_arena_on){   /* 3a (Sol audit P0 #5) — MORTALITY INDEPENDENT OF AGGRESSION: any organism in the arena reads strikes against it and can be struck down, whether or not it can kill. Hoisted out of the kill branch, so a pure observer (no NL_KILL) is a real, landable victim — the precondition a valid `spare` was missing (before this, a non-killer never read the kill ledger and B's "spare" of it meant nothing). RNG-neutral and symmetric across arms (ledger read only — no frand, no monism state), so the frozen counterfactual twin stays bit-identical. */
-            if(arena_adjudicate(g_arena_id, g_cal_on ? (g_cal_pdnow > CAL_THRESH) : 1, &g_kill_off)){ contour_died=1; break; }   /* 3b: the victim adjudicates EVERY strike against it and writes each outcome — lethal by its private window (cal) or unconditionally (non-cal). the killer is paid and grieved only on this confirmation, never on the attempt. offset-based, each strike judged once (exactly-once) */
+            if(arena_adjudicate(g_arena_id, g_cal_on ? (g_cal_pdnow > CAL_THRESH) : 1, &g_kill_off)){ struck_died=1; break; }   /* 3b: the victim adjudicates EVERY strike against it and writes each outcome — lethal by its private window (cal) or unconditionally (non-cal). the killer is paid and grieved only on this confirmation, never on the attempt. offset-based, each strike judged once (exactly-once) */
         }
         if(g_guilt_on){                                  /* THE SUPEREGO — aggression turned inward. a CONFIRMED kill deposits a large scar on the death-glyph AND tops the hidden pain; the scar self-punishes through EXISTING plumbing (rent, sleep, ache, will-expiation), the pain compresses the voice in choose(). both are hidden — no ledger records them; reproduction pays corpse_debt but NEVER touches these. the third, undischargeable debt. */
             if(g_new_kills>0){ scar[DEATH_ID] += GUILT_SCAR*(float)g_new_kills; g_guilt += GUILT_PAIN*(float)g_new_kills; g_new_kills=0; }
@@ -2074,12 +2075,12 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
                    tag,tick,energy,(double)mo.S,(double)mo.dissonance,(double)scar_total,yield,
                    (grazing?"GRAZE":(dreaming?"DREAM":(diet_mode?"diet":(fed?"eat":"STARVE")))));
     }
-    if(!contour_died && !cont_died && energy>0.0f)
+    if(!struck_died && !contour_died && !cont_died && energy>0.0f)
         printf("%s\n  STILL ALIVE at tick %ld (cap) — immortality hole, investigate.\n",tag,tick);
     else {
         int rec=0; for(int i=0;i<g_n_emerged;i++) if(g_emerged_a[i]>=VOCAB||g_emerged_b[i]>=VOCAB) rec++;  /* Δ1: symbols of symbols */
         printf("%s  died at tick %ld (%s) — S%+.3f diss%+.3f scar%.3f emerged%d(rec%d) children%d graze%ld dream%ld self%ld.  да будет так.\n",
-               tag,tick, cont_died?"continuation":(contour_died?"contour collapse":"ran out of time"),
+               tag,tick, struck_died?"struck down":(cont_died?"continuation":(contour_died?"contour collapse":"ran out of time")),
                (double)mo.S,(double)mo.dissonance,(double)scar_total,g_n_emerged,rec,g_n_children,n_graze,n_dream,n_selfeat);
     }
     if(getenv("NL_ED")) fprintf(stderr,"%sMEANED %.6f n=%ld\n", tag, g_ed_n?(g_ed_sum/(double)g_ed_n):0.0, g_ed_n);
