@@ -14,6 +14,8 @@
 #include <sys/time.h>    /* gettimeofday — a microsecond clock in the spore ledger, fine enough to resolve exposition epochs the wall-second collapses (M-2 measurement) */
 #include <dirent.h>      /* the arena indexes ANY .txt in lifeis/ — a dropped file is instantly in the fight */
 #include <sys/file.h>    /* flock — an atomic claim, so two organisms never double-claim the same ground */
+#include <fcntl.h>       /* open(O_RDWR|O_CREAT) — create the shared ring WITHOUT truncating it (no creation race, Sol #8) */
+extern char **environ;   /* for the startup config-as-fact print — the whole active NL_* set, so a shell that failed to word-split an env string is caught in one glance, not one misdiagnosis */
 /* ── semantic membrane (inlined) — English → 88 cave-glyphs ──────────────
  * one source of truth for eat / train / speak. word -> concept compression,
  * BE = super-glyph copula. function words die at the door. (from caveLLMan.) */
@@ -1729,8 +1731,9 @@ static float monism_shared_step(float S,float diss,float hunger,float guilt,cons
      * pattern), measure the reader's misalignment with it (disorder = 1−cos, computed BEFORE its own deposit — else this
      * tick's self-alignment masks the foreign dent), THEN deposit the reader's profile, propagate, collapse to a forage
      * target, write back. read-modify-write under flock so two organisms' reads do not commute. returns the disorder. */
-    FILE* f=fopen(g_monism_ring,"r+b"); if(!f) f=fopen(g_monism_ring,"w+b"); if(!f){ if(pk_out)*pk_out=-1; return 0.0f; }
-    int fd=fileno(f); flock(fd, LOCK_EX);
+    int fd=open(g_monism_ring, O_RDWR|O_CREAT, 0644); if(fd<0){ if(pk_out)*pk_out=-1; return 0.0f; }   /* (b) Sol #8: O_CREAT never truncates, so two processes creating the ring at once can't wipe it; the flock below is taken BEFORE any read */
+    flock(fd, LOCK_EX);
+    FILE* f=fdopen(fd,"r+b"); if(!f){ flock(fd,LOCK_UN); close(fd); if(pk_out)*pk_out=-1; return 0.0f; }
     rewind(f);
     if(fread(g_cfield_u,sizeof(float),CFIELD_N,f)!=(size_t)CFIELD_N || fread(g_cfield_v,sizeof(float),CFIELD_N,f)!=(size_t)CFIELD_N)
         cfield_reset();                                      /* first touch: a field at rest */
@@ -1788,6 +1791,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     seed_rng(seed);
     Model* m=model_new();                          /* own seed -> own random body */
     g_arena_on = (getenv("NL_ARENA")!=NULL);       /* ARENA: set early so the ether wiring below sees it */
+    if(g_arena_on){ for(char** e=environ; *e; e++) if(strncmp(*e,"NL_",3)==0) fprintf(stderr,"[cfg] %s\n",*e); }   /* config-as-fact: the active NL_* set to stderr (arena runs only) — Fable's fix for the shell-artifact class (an unsplit env string shows up as one NL_ value, not many) */
     g_arena_id = getenv("NL_ID") ? atoi(getenv("NL_ID")) : (int)getpid();  /* a stable per-organism voice-id */
     g_mind_on  = (getenv("NL_MIND")!=NULL);        /* THEORY OF THE OTHER: model the rival's movement + pre-empt (the load-bearing test) */
     { const char* rt=getenv("NL_RAID_TH"); g_raid_th = rt? (float)atof(rt) : ARENA_RAID; }  /* the falsifier's lead-free controls */

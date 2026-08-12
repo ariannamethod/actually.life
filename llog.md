@@ -875,6 +875,27 @@ the same result; a stray `NL_LOVE` exported in the shell changes nothing; a deco
 corpus is ignored. Reproducible, scrubbed, isolated — the bench the retrial runs on, and it lives in the repo
 now, not in a scratch directory that dies with the session.
 
+## the spine, re-judged, and two bugs it flushed out
+
+Before the retrial the six steps were audited a second time — rebuilt from source and each falsifier re-run
+independently on another bench, so the instrument is confirmed twice: once by the hand that built it, once by
+a hand that trusted none of its stated numbers. All six held; the unarmed observer even died at the same
+tick, byte-for-byte, on both machines. The second look flushed out two bugs of its own, both fixed before any
+verdict runs. A fresh process that reused an id read the shared kill-ledger from its start, re-judging the
+strikes of whoever had held the id before it — so in a respawning triad every replacement would have died at
+tick one, carrying no grief; a birth now seeks its ledger offsets to the current end and answers only for the
+wounds of its own time. And the shared ring, created with a truncating open, could be blanked by two
+processes racing to make it at once; it is created now without truncation, under the lock. A startup line
+prints the live configuration to stderr, so a run that believes an organ is on when the shell quietly left it
+off is caught in a glance, not a misreading — the small errors of measurement are the ones that cost the most.
+
+So the instrument is whole and twice-checked, and the retrial opens — natural love first, on the hermetic
+bench and only there, where the environment is scrubbed, the corpus immutable, every trial reproducible, and
+the frozen control re-matched to this repaired regime. The question it re-asks is the one the pre-audit
+instrument could not honestly answer: whether grief carried in the shared field bends the other's hand
+against its own advantage more than a matched-frozen field, per seed, with no survival filter. Whatever it
+answers now, it answers on an instrument that earned the right to be believed.
+
 ---
 
 ## Resume-here (for future-me after a summary)
@@ -920,5 +941,9 @@ arena-dependent nulls return to "needs a hermetic retrial." **Now rebuilding the
 retrial — done: (1) hermetic arena manifest, (2) separate body/control RNG streams, (3) the confirmed-kill
 transaction + mortality apart from aggression, (4) per-tick action-flag reset + typed valid-action logging,
 (5) a collision-free grief site apart from the death-glyph scar, (6) a hermetic committed runner
-(`tests/hermetic.sh`: isolated trial roots, scrubbed env, recorded instrument hashes); next: (7) the hermetic
-rerun of the reopened nulls — natural love first, then the arena negatives.** The tool gives the verdict.
+(`tests/hermetic.sh`: isolated trial roots, scrubbed env, recorded instrument hashes). The six were then
+re-audited independently and confirmed, and two bugs the audit found were fixed before any verdict — the
+respawn-replay (a birth now reads the kill-ledger from its own start) and the ring creation-race (created
+under the lock, without truncation), plus a startup config-print. next: (7) the hermetic retrial — natural
+love first, then the arena negatives, on the hardened instrument and only through the hermetic runner.** The
+tool gives the verdict.
