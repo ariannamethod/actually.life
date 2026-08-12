@@ -1425,6 +1425,9 @@ static int arena_next(char* out, int cap, float energy, float dabs, long tick, i
     memcpy(out,g_pool[pick],(size_t)L); out[L]=0;
     return L;
 }
+static long arena_eof(const char* path){   /* byte size of a shared ledger (0 if absent) — a fresh life seeks its read-offsets here at birth, so it never re-judges the strikes/outcomes of the predecessor that reused its id (Fable: the respawn-replay bug) */
+    FILE* f=fopen(path,"rb"); if(!f) return 0; fseek(f,0,SEEK_END); long n=ftell(f); fclose(f); return n<0?0:n;
+}
 static void arena_strike(int victim, int killer){   /* write a kill-mark to the shared ledger — the strike lands on the OTHER's process */
     FILE* f=fopen("lifeis/arena/kills","a"); if(f){ fprintf(f,"%d %d %ld\n",victim,killer,(long)time(NULL)); fclose(f); }
 }
@@ -1832,7 +1835,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     g_calkill_on    = (getenv("NL_CALKILL")!=NULL);          /* STRIKE FALSIFIER: kill on the believed window */
     g_calkill_blind = (getenv("NL_CALKILL_BLIND")!=NULL);    /* matched control: kill on a random-key window */
     g_calkill_bblind= (float)(hash_seed(seed,77) % 69396UL)/10.0f;  /* the wrong key, from a slot uncorrelated with any birthday (which uses slot 33) */
-    g_kill_off = 0; g_outcome_off = 0;
+    g_kill_off = arena_eof("lifeis/arena/kills"); g_outcome_off = arena_eof("lifeis/arena/outcomes");   /* (a) respawn-replay fix: judge/collect only strikes+outcomes written AFTER this life's birth, never the predecessor's (id-reuse) */
     g_guilt_on = (getenv("NL_GUILT")!=NULL);        /* GUILT: the superego */
     g_guilt = 0.0f; g_new_kills = 0;
     if(g_arena_on){ mkdir("lifeis",0755); mkdir("lifeis/arena",0755); }
