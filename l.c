@@ -1659,6 +1659,7 @@ static int    g_depositor = 0;              /* NL_MONISM_DEPOSITOR (Fable XXI): 
 static float  g_force_amp = 0.0f;           /* NL_MONISM_FORCE (Fable XXII, positive control on DETECTABILITY): A deposits a clean site-50 spike of this amplitude (present while alive → death-locked), overriding its profile — a GUARANTEED timed transfer. titrated {real≈0.8 matched to the real death-scar, max≈20 sanity}: if the site-resolved readout cannot detect the real-band forced signal, its null is unearned */
 static long   g_force_t0 = 0, g_force_t1 = 0;   /* NL_FORCE_T0/T1 (Fable, action-domain event-study): PULSE the forced wound over tick-window [t0,t1) so the response is a timed EVENT (in-window vs out), not a standing amplitude. t1<=0 → standing (backward-compatible with M-2's forced ×250) */
 static long   g_cur_tick = 0;                   /* the reader's current tick, set in live() — the forced-wound window gate reads it (monism_shared_step has no tick arg) */
+static int    g_force_site = MONISM_DEATH_SITE;  /* NL_FORCE_SITE: which ring site the forced wound lands on. default 50 (death-scar — the M-2 / detectability probe); 38 = MONISM_GRIEF_SITE is the MATCHED control, injecting at grief's OWN site at natural magnitude to test whether the reader detects a grief-signal, not a death-scar proxy (Sol/refutation: a site-50 probe cannot license "natural grief does not cross") */
 static float  g_upre50 = 0.0f;              /* Fable XXII check: the ring's site-50 amplitude the reader sees at read-time (u_pre[50], before its own deposit) — is the forced name STORED in the field (elevated) or DELOCALIZED by the wave (smeared)? */
 /* g_love_on / g_love_damp / g_raid_avail / g_yielded declared above (near the kill constants) — arena_next uses them */
 static FILE*  g_love_log = NULL;            /* NL_LOVE_LOG: per-tick action-class + (dis,|diss|,u_pre[50],guilt) decomposition next to the blood-spore — measurement, not mechanism; symmetric across arms so the analysis attributes post-hoc */
@@ -1765,7 +1766,7 @@ static float monism_shared_step(float S,float diss,float hunger,float guilt,cons
         g_dent0 += monism_disorder(L,ud); g_dent1 += monism_disorder(p1,ud); g_dent2 += monism_disorder(g_shadow_u,ud);   /* each heart's response — no contamination of the real field */
     }
     if(g_surr_mode) monism_surrogate(L);                     /* C-frozen (Fable XX): A deposits a matched surrogate — overwrite BEFORE shadow + ring so both are fed L_A' (nail 1: A's self-expectation stays consistent with what it deposits, A-side symmetric between arms) */
-    if(g_force_amp>0.0f && (g_force_t1<=0 || (g_cur_tick>=g_force_t0 && g_cur_tick<g_force_t1))){ for(int i=0;i<CFIELD_N;i++) L[i]=0.0f; L[MONISM_DEATH_SITE]=g_force_amp; }   /* Fable XXII detectability control: override to a clean site-50 spike (guaranteed timed transfer). NL_FORCE_T0/T1 pulses it over a tick-window → the action-domain event-study (in-window vs out); t1<=0 → standing */
+    if(g_force_amp>0.0f && (g_force_t1<=0 || (g_cur_tick>=g_force_t0 && g_cur_tick<g_force_t1))){ for(int i=0;i<CFIELD_N;i++) L[i]=0.0f; L[g_force_site]=g_force_amp; }   /* Fable XXII detectability control: override to a clean spike at g_force_site (default 50; NL_FORCE_SITE=38 → the matched grief-site control). NL_FORCE_T0/T1 pulses it over a tick-window → the action-domain event-study (in-window vs out); t1<=0 → standing */
     if(g_monism_heart==2 || g_pilot_on){                     /* maintain the shadow-ring whenever the driving heart (H2) or the pilot needs it */
         for(int i=0;i<CFIELD_N;i++) g_shadow_u[i]+=L[i];
         for(int s=0;s<CFIELD_STEPS;s++) cfield_step_buf(g_shadow_u,g_shadow_v);
@@ -1831,6 +1832,7 @@ static int live(const char* genome, const char* corpus, const char* waste_path, 
     { const char* fa=getenv("NL_MONISM_FORCE"); if(fa) g_force_amp=(float)atof(fa); }   /* Fable XXII: forced clean site-50 transfer (detectability positive control) */
     { const char* t0=getenv("NL_FORCE_T0"); if(t0) g_force_t0=atol(t0); }   /* action-domain event-study: pulse the forced wound ON at this tick */
     { const char* t1=getenv("NL_FORCE_T1"); if(t1) g_force_t1=atol(t1); }   /* ...OFF at this tick (exclusive); t1<=0 → standing */
+    { const char* fst=getenv("NL_FORCE_SITE"); if(fst){ int s=atoi(fst); if(s>=0 && s<CFIELD_N) g_force_site=s; } }   /* matched control: NL_FORCE_SITE=38 injects at the grief-site instead of the death-site */
     g_d1sum=0.0; g_d1sq=0.0; g_d2sum=0.0; g_d2sq=0.0; g_dent0=0.0; g_dent1=0.0; g_dent2=0.0;
     for(int i=0;i<CFIELD_N;i++){ g_shadow_u[i]=0.0f; g_shadow_v[i]=0.0f; }   /* fresh shadow-ring per organism */
     { const char* mv=getenv("NL_FIELD_MENU_VEC"); if(mv) sscanf(mv,"%f,%f,%f,%f,%f",&g_menu_vec[0],&g_menu_vec[1],&g_menu_vec[2],&g_menu_vec[3],&g_menu_vec[4]); }  /* sweep the fixed control to its sharpest */

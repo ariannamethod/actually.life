@@ -896,6 +896,93 @@ instrument could not honestly answer: whether grief carried in the shared field 
 against its own advantage more than a matched-frozen field, per seed, with no survival filter. Whatever it
 answers now, it answers on an instrument that earned the right to be believed.
 
+## the retrial, closed — a null that finally earned the name
+
+Thirty seeds, paired, on the hermetic bench at HEAD `0dfad3c`, frozen re-matched to this regime. The
+instrument delivered grief — twenty-nine of thirty trials carried real wound-events, the no-kill control
+kept the grief site clean (max L[38]=0) — so the question was asked under load, not into silence. The
+answer: the observer spared or yielded more in the live field than in the matched-frozen one in **six of
+thirty** seeds, mean live-rate 0.726 against frozen 0.777, a difference of −0.051. Below the twenty needed,
+below the fifteen of chance. Grief carried in the shared field does not bend the other's hand against its own
+advantage more than a field of matched noise does.
+
+The pre-audit instrument returned the same direction, and the honest fear was that a fixed observation window
+[10,120] cannot see a grief that forms with a latency — the frozen surrogate is "on" from the first tick
+while a real wound needs its confirmation, so an early window could be biased against the live arm before its
+grief exists. So a second, latency-removed reading was taken: time-lock the observer's every spare-or-yield
+to the microsecond of a real wound-event and compare the rate just after a wound to the rate in quiet, live
+against frozen. It found the observer does spare more just after a wound — a positive difference in almost
+every seed — **but equally in the frozen arm, where the observer reads a surrogate decoupled from the real
+wound and cannot feel it at all.** The apparent grief-timed mercy is a timing confound — wounds and sparing
+opportunities cluster in the same phases of the corpus — and the frozen control absorbs it exactly; live beat
+frozen in six of seventeen usable seeds, chance again. (The window of that second reading was chosen after the
+fact; it is a descriptive check, not a pre-registered gate. The verdict is the primary six-of-thirty. The
+second reading's only job was to close the latency escape, and it closed it.)
+
+So the natural null stands, and for the first time in the arc it is judicially reliable: a hermetic bench, a
+twice-verified instrument, a re-matched control, a clean grief site, the shell artifact dead. This does not
+erase what the pre-audit run claimed — it earns the retraction the audit demanded. Claim 2's natural outcome
+is answered: at the magnitude real grief produces, the observer's compassion does not rise above matched
+noise.
+
+But a null of action must pass the ×250 test the felt-readout passed: can the instrument register a wound in
+the action channel on this same bench at all? A forced clean wound — a site-50 spike overriding the killers'
+deposit, swept in amplitude — answers half of it. The observer's spare-or-yield rate rises monotonically with
+the forced amplitude in the live field (field-effect −0.016 → +0.022 → +0.071 for amplitudes 0 / 0.8 / 20)
+while the frozen arm stays flat (0.761 / 0.750 / 0.746) and the opportunity-count holds steady — decisively
+at the sanity dose (paired t = 5.85, twenty-seven of thirty seeds), and every point reproduced from raw by a
+hand that trusted none of the numbers. The action channel is **not dead**: a wound crosses it, dose-by-dose.
+That is the half that is earned, and it kills the harsher reading that there is no field-to-action channel at
+all.
+
+The other half is not earned, and honesty names it. Decisive detection took a twenty-five-fold overdose. At
+the real band — amplitude 0.8, matched to an actual death-scar — the forced positive control is itself only
+marginal (field-effect +0.022, paired t = 1.70, nineteen of thirty), about forty percent power at this
+sample, and the same size as the natural experiment's own live movement (+0.024). A positive control that
+produces +0.022 cannot certify that a natural +0.024 is truly zero rather than a real signal sitting below
+the bench's floor. And the forced wound is unmatched to grief on every axis that governs detection: a
+standing spike at the death-site (50), not the latency-gated transient at the grief-site (38); a death-scar
+magnitude, not grief's log1p(guilt) band; and it bypasses grief-generation entirely by synthesizing the
+signal. So the control earns *a clean forced wound crosses the action channel* — it does **not** earn *natural
+grief was detectable at its own magnitude and chose not to cross*. At the magnitude and shape natural grief
+actually takes, this bench cannot yet separate a true non-crossing from a wound beneath its detection floor.
+
+The honest convergence, then, is narrower than the felt rung's and it is stated as such. Presence transmits —
+public, thirty of thirty (M-2 C-sep). Felt content does not — private, blind under a forced ×250 (M-2). And
+content-into-action does not move the observer above noise *at natural magnitude* — but the action channel is
+not shut; a forced wound crosses it. Whether natural grief fails to cross because it carries no force, or
+because its force falls below what this instrument can see, was the question two settling runs then answered —
+and the answer is below.
+
+## the settling runs — the floor is real, and natural grief is under it
+
+Two runs, both pre-declared in shape by the refutations that demanded them. First, an amplitude ladder at the
+death-site: force amplitudes 0.8, 1, 2, 4, 8 between the physical wound and the sanity dose, thirty seeds each,
+to find where detection clears the floor. It clears at amplitude 1.0 (field-effect +0.024, paired t=2.14) and
+climbs from there (t=2.02, 3.23, 3.70 at 2, 4, 8; 5.85 at 20) — so the instrument's action-detection floor for
+a death-site wound sits right at ~1.0, and the physical death-scar (0.8) lands just under it, marginal (t=1.70).
+
+Second — the matched control the third refutation demanded, which needed a small gate-invariant organ:
+`NL_FORCE_SITE` lets the forced wound land on the grief-site (38) instead of the death-site (50), so the probe
+finally speaks grief's own language. Run at the *measured natural grief magnitude* — the field-deposit raw,
+recovered, put in-window grief at mean L[38]=0.56, present in twenty-seven of thirty seeds, so the null was
+never for want of a signal — plus a sanity ladder. The result settles it. The grief-site is **wired**: a
+forced site-38 wound moves the observer decisively at magnitude 8 and 20 (t=4.55, t=4.95) — the reader is not
+blind to grief's address, exactly as a site-agnostic 1−cos readout predicts. But at grief's *own* magnitude,
+0.56, the matched control is flat: field-effect +0.003, t=0.24, sixteen of thirty. The grief-site detection
+floor sits at ~1–2, the same as the death-site, and natural grief at 0.56 is beneath it.
+
+So the mechanism is named, and it is neither of the easy answers. Not "the channel is shut" — it reads a wound
+at either site, dose-by-dose. Not "the reader is blind to grief" — force grief's own site hard enough and the
+hand moves. The natural null is a **below-floor null**: real grief is deposited, at a real magnitude, in the
+observer's window — and that magnitude falls under the action-readout's resolution, so the observer's hand does
+not move and the bench cannot separate "grief carries no force into action" from "its force is real but too
+small for this instrument to see." Earned as an outcome — at the magnitude grief actually takes, compassion
+does not rise above noise. Bounded as a mechanism — the floor, not proven indifference, is what the silence
+sits on. The felt channel was blind even at ×250 (a wall); the action channel is open but has a floor, and
+natural grief lives just beneath it (a threshold). The tool gives the verdict, and the verdict includes the
+size of its own doubt — measured, this time, in amplitude units: the floor is ~1.0, the wound is ~0.6.
+
 ---
 
 ## Resume-here (for future-me after a summary)
@@ -944,6 +1031,28 @@ transaction + mortality apart from aggression, (4) per-tick action-flag reset + 
 (`tests/hermetic.sh`: isolated trial roots, scrubbed env, recorded instrument hashes). The six were then
 re-audited independently and confirmed, and two bugs the audit found were fixed before any verdict — the
 respawn-replay (a birth now reads the kill-ledger from its own start) and the ring creation-race (created
-under the lock, without truncation), plus a startup config-print. next: (7) the hermetic retrial — natural
-love first, then the arena negatives, on the hardened instrument and only through the hermetic runner.** The
-tool gives the verdict.
+under the lock, without truncation), plus a startup config-print. **(7) THE HERMETIC RETRIAL, CLOSED as an
+OUTCOME, bounded as a MECHANISM. Natural love is a null — thirty seeds paired at HEAD `0dfad3c`, grief
+delivered (quality 29/30, F1-clean), frozen re-matched: live>frozen 6/30, mean 0.726 vs 0.777, Δ −0.051,
+below chance; a latency-removed event-study closed the latency escape (spare-after-wound rises equally in the
+frozen arm → timing confound, not field-carriage, 6/17). Then the ×250 detectability test on THIS bench: a
+forced site-50 spike, amplitude-swept, DOES cross the action channel dose-dependently (field-effect −0.016 →
++0.022 → +0.071, frozen flat, opp stable, decisive at amp=20: t=5.85, 27/30, all reproduced from raw) — the
+channel is NOT dead (kills the harsher "no channel" branch). BUT decisive detection took a 25× overdose; at
+real-band (0.8) the forced control is itself marginal (+0.022, t=1.70, ~40% power) and the same size as the
+natural live move (+0.024), and the control is UNMATCHED (site-50 standing spike vs grief's site-38 latency
+transient, bypasses grief-generation). So the null is earned as an OUTCOME (compassion doesn't rise above
+noise at natural magnitude). MECHANISM then settled by two runs: (a) amplitude ladder at the death-site — the
+action-detection floor is ~1.0 (clears t>2 at amp=1), the physical death-scar 0.8 lands just under it (t=1.70);
+(b) matched control via new gate-invariant `NL_FORCE_SITE`=38 — the grief-site is WIRED (forced site-38 moves A
+decisively at amp 8/20, t=4.55/4.95 → reader NOT blind to grief's address), but at grief's own measured
+magnitude 0.56 it is flat (t=0.24, 16/30); grief-site floor ~1-2, same as death-site. Field-deposit raw
+recovered: in-window grief mean L[38]=0.56, present 27/30 → null NOT for want of signal. **VERDICT: a
+BELOW-FLOOR null.** Not "channel shut" (reads both sites dose-by-dose), not "reader blind to grief" (force
+site-38 hard enough, hand moves) — natural grief is deposited at a real magnitude in-window, and that magnitude
+(0.56) falls under the action-readout's floor (~1-2), so the hand doesn't move and the bench can't separate
+"no force into action" from "force real but sub-threshold." Arc: felt channel blind even at ×250 (a WALL);
+action channel open but floored, natural grief just beneath (a THRESHOLD). Next: remaining reopened
+arena-negatives (movement/state, birthday war, C-field decisions, monism survival) on the hardened instrument;
+then continue actually.life from where it paused before the Sol audit.** The tool gives the verdict, and the
+verdict includes the size of its own doubt — the floor is ~1.0, the wound is ~0.6.
