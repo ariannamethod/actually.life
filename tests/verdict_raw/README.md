@@ -16,14 +16,21 @@ The full per-seed tables from the three runs of `tests/forced_detect.sh`, exactl
 - `matched_site38_0.56-2-8-20.txt` — the matched control (`NL_FORCE_SITE=38`) at grief's own magnitude and a
   sanity ladder. FIELD-EFFECT +0.003 / +0.024 / +0.059 / +0.053 (t = 0.24 / 2.25 / 4.55 / 4.95): the
   grief-site is wired (decisive at 8/20) but natural grief's magnitude 0.56 is null — a below-floor null.
+- `grief_presence_amp0_site50.txt` — the **second leg** of the verdict: was natural grief present in A's
+  window, and at what magnitude? Per-seed in-window count + mean L[38] for the natural condition (amp=0). The
+  null is not vacuous — grief is present in 27/30 seeds at mean L[38]=0.56, right where the matched control
+  says it falls under the floor. (Re-derivable from the `recB_L38`/`recC_L38` extractions in the core below.)
 
 ## `forced_core.tgz` (committed, ~1.1 MB — the crux raw)
 
 The judicial readout for the two NULL conditions that ARE the verdict: natural (amp=0, site-50) and matched
-(amp=0.56, site-38), 30 seeds × 2 arms each. Per dir: `loveA.log` (the observer's per-tick action ledger —
-13 cols; spare∪yield rate = `sum(($3==1)+($6==1))/sum(($4>0)+($5==1))` over `NR∈[10,120] && $13==1`),
-`seqB.txt`/`seqC.txt` (the exact respawn-seed sequences — the run is only statistically reproducible), and
-`manifest.txt` (instrument hashes + regime). Unpack: `tar xzf forced_core.tgz`.
+(amp=0.56, site-38), 30 seeds × 2 arms each — **both legs of the floor**. Per dir: `loveA.log` (leg 1, the
+observer's per-tick action ledger — 13 cols; spare∪yield rate = `sum(($3==1)+($6==1))/sum(($4>0)+($5==1))`
+over `NR∈[10,120] && $13==1`); `recB_L38.txt`/`recC_L38.txt` (leg 2, the grief-signal timeline — µs + L[38]
+for every deposit with L[38]>0.01, the reduced form of the 64-float field-deposit logs, enough to recompute
+in-window grief presence and magnitude); `seqB.txt`/`seqC.txt` (the exact respawn-seed sequences — the run is
+only statistically reproducible); and `manifest.txt` (instrument hashes + regime). Unpack: `tar xzf
+forced_core.tgz`.
 
 ## full raw (not committed)
 

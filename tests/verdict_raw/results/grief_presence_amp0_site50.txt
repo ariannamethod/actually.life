@@ -1,0 +1,35 @@
+# second leg of the below-floor verdict: was natural grief PRESENT in A's window, and at what magnitude?
+# amp0 site-50 (the natural condition). A-window = loveA rows [10,120] -> µs [us0,us1]; count recB/recC rows L[38]>0.3 in range.
+seed | inwin_ev | mean_L38 | note
+10   | 0        | 0.0000   | NONE
+11   | 70       | 0.5234   | present
+12   | 36       | 0.5231   | present
+13   | 121      | 0.5254   | present
+14   | 51       | 0.5877   | present
+15   | 35       | 0.5237   | present
+16   | 44       | 0.5272   | present
+17   | 38       | 0.5265   | present
+18   | 56       | 0.5246   | present
+19   | 43       | 0.5274   | present
+1    | 15       | 0.7580   | present
+20   | 86       | 0.6077   | present
+21   | 62       | 0.5681   | present
+22   | 39       | 0.7313   | present
+23   | 49       | 0.5259   | present
+24   | 70       | 0.5603   | present
+25   | 34       | 0.6470   | present
+26   | 84       | 0.5330   | present
+27   | 86       | 0.5242   | present
+28   | 0        | 0.0000   | NONE
+29   | 59       | 0.5256   | present
+2    | 36       | 0.8653   | present
+30   | 79       | 0.6118   | present
+3    | 39       | 0.5259   | present
+4    | 68       | 0.5273   | present
+5    | 0        | 0.0000   | NONE
+6    | 76       | 0.5288   | present
+7    | 96       | 0.5731   | present
+8    | 29       | 0.5245   | present
+9    | 44       | 0.5226   | present
+# ---
+# seeds with in-window grief: 27/30 ; mean in-window L[38]: 0.5612 (n=1545 events)

@@ -983,6 +983,17 @@ sits on. The felt channel was blind even at ×250 (a wall); the action channel i
 natural grief lives just beneath it (a threshold). The tool gives the verdict, and the verdict includes the
 size of its own doubt — measured, this time, in amplitude units: the floor is ~1.0, the wound is ~0.6.
 
+One arithmetic on the organism's own constants closes the map and names the door out of it. Grief is
+`L[38]=log1p(guilt)` and guilt decays with a half-life near 693 ticks, so the ~1.0 floor is exactly
+guilt ≈ e−1 ≈ 1.72 — about two and a half deaths stacked before they fade. A single death pays 0.56 and stays
+under; a cluster of four within ~300 ticks reaches L[38] ≈ 1.06, and a sustained rate near one death per ~500
+ticks holds ≈1.02 — both over the floor. In this retrial the killers targeted each other, so each witness's
+rival died once and no grief ever stacked: the below-floor null is compassion measured against a *single*
+death, by construction. Grief accumulated by the density of death — a war rather than a duel — crosses the
+floor arithmetically. That is not a re-trial of this rung but the door of the next one, a single config change
+away: one surviving killer against a respawning victim, so the deaths pile faster than they decay. Stated as a
+measured fact about the constants, and nothing promised.
+
 ---
 
 ## Resume-here (for future-me after a summary)
