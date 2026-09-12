@@ -8,6 +8,8 @@ falsifier said. Arianna Method work. Single-file organism `l.c` (second body
 
 ## What this is
 
+It's actually life.
+
 `actually.life` (reborn from `nanolife`) is a digital organism in one C file
 that must satisfy every criterion of life except biology: metabolism, rent,
 mortality, reproduction, homeostasis, response to environment, symbol
