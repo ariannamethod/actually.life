@@ -1,22 +1,26 @@
-# CLAIM — the third body (post-freeze rotation) — v5
+# CLAIM — the third body (post-freeze rotation) — v6
 
-Status: **Claim, pins landed, no code — awaits Sol's audit.** Court froze 2026-09-25 (`4939615` + `18a3e8b`). Builder's move: the
-**claim and the frozen gate that would refute it, before a measured line**. An **adaptation of
-`_notes/ACTUALLY_LOVE_PREREG_2026-07-27.md` (v1.2, M-0)** into the frozen court and the rotation — not
-an invention, and **not** the Netta lineage/transfer body (a different third body). v3 folded Don's v2
-audit (A–D runnable objects, E–G declared); **v4 folds Don's v3 audit** — the model's observation
-**channel**, the **sites** it reads, the **pulse form**, and the **distance metric** are now declared
-objects, so the falsifier runs end to end. **v5 lands Oleg's pins** (2026-09-25): memory = decay `λ`,
-channel = rec-log, `NL_MODEL_GAIN` calibrated-then-frozen, E = one observer + two live, F = trio MIN,
-and proposed gate numbers (his #4 "propose, I'll look"; frozen before run, Sol audits). Frozen
-`PROTOCOL.md`, `l.c`, `l2.c` untouched.
+Status: **Claim, no code.** Court froze 2026-09-25 (`4939615` + `18a3e8b`). Builder's move: the **claim and
+the falsifier whose gate-form would refute it, before a measured line**. An **adaptation of
+`_notes/ACTUALLY_LOVE_PREREG_2026-07-27.md` (v1.2, M-0)** into the frozen court and the rotation — not an
+invention, and **not** the Netta lineage/transfer body (a different third body). The **gate form is frozen
+here**; every value and selection rule lives in **`court/GATE_third_body.md`** (the executable contract,
+written before M-1 code — not before this commit). Frozen `PROTOCOL.md`, `l.c`, `l2.c` untouched.
+
+*Version trail:* v3 folded Don's v2 audit; v4 folded Don's v3 audit; v5 landed Oleg's pins; **v6 closes
+Sol's v5 audit** — 9 findings, all genuine (Don's audit-of-the-audit, `court/AUDIT_sol_audit_third_body_don_2026-09-26.md`):
+the model is now defined computationally (a **64×64 leaky-Hebb transition matrix** — a profile→profile map,
+not a zero-order vector), the channel is
+restated honestly against `l.c`, "regulates-not-learns" is narrowed to a **measurable invariant**, the twin
+is split into **two named forms**, the cargo transform is made exact, Gate 2's symmetry is fixed, the
+prior-result leaks are removed, and the executable gate contract (findings 7–8) moves to the GATE file.
 
 ## Closed by the pre-reg (Don v2 points 1–2, 9)
 
 - **Object.** The third body is a **full third process from one `l.c`** with its own ledger. Three
   symmetric bodies = **`l.c` ×3** (one binary, different `seed`/`NL_ID`), **identical disposition** —
   nail 3 **bars** hand-wired per-body temperament (`l2.c`'s `CHOOSE_TEMP0 0.85`; `l2.c` retired for the
-  trio). Roles emergent, measured by the pre-reg **role-fluidity statistic**.
+  trio). Roles emergent, measured by the **role-fluidity statistic** (named here, defined in the GATE file).
 - **Measurable.** **action-rate per §3** (13-col `loveA`, window `[10,120]`, `rate = Σact/Σopp`), per
   body **as observer of the other two**. `X − control ≥ M` on a named quantity.
 - **Third body's role.** A wound on B **authored by C** is the ONLY **natural not-own wound** (the dyad
@@ -24,115 +28,132 @@ and proposed gate numbers (his #4 "propose, I'll look"; frozen before run, Sol a
 - Two hands = §8: Court I written by a **fresh session that has not built** (not Don); Court II a second
   node; Sol audits (Don v2 point 9).
 
-## The AMOS layer — objects (Don v2 points 3–5, A)
+## The AMOS layer — objects
 
 Each body carries a **predictive model of the other two**; the mutual modeling **is** the environment.
 
-- **The model of the other — what it is, if not learning weights (the crux; Don A).** If the model
-  updates parameters by prediction error, the organism **learns** and the frozen "regulates, not
-  learns" null breaks. **Pinned (Oleg, 2026-09-25):** a **weightless predictive structure** — signed,
-  distance-weighted **co-occurrence** over the other's lived ring-deposits (WOLFE/Netta template:
-  `prophecy`/`destiny`, **no gradient**), within a **decay `λ`** — a leaky integrator, one decay
-  constant per site (λ over a hard window `W`: the canonical weightless tracker, one float per site, no
-  ring buffer), bounded memory, not unbounded accumulation — the bound is what keeps *tracking* from
-  becoming *learning*. It
-  **tracks** the other but never optimizes for a goal: its **prediction error feeds the regulation
-  channel** (raises `mo.dissonance` → the one-constant damping `kprob = KILL_PROB·(1 −
-  LOVE_DAMP·tanh(0.1·|diss|))`), never a reward-seeking update.
-- **Operational skeleton (Don A + v3 1/2/4 — pinned Oleg 2026-09-25):**
-  - *channel (v3-1)* — the shared ring is **one summed table with no author tag** (`g_cfield_u[i] +=
-    L[i]`, l.c:1776; the file stores `cfield_u`/`cfield_v` unlabelled, l.c:1739/1779), so "the other's
-    deposits" is **not observable on the ring**. The model reads the other's **µs-tagged rec-log**
-    (`NL_MONISM_REC`, the leg-2 stream — who deposited what, when), keeping nail-1's **one field**. The
-    alternative — **separated rings** (`NL_MONISM_RING`, C-sep) — would redefine "environment = other
-    subjects" from one field to split rings; **Oleg pinned: rec-log (one field); `NL_MONISM_RING`
-    deferred, its court is C-sep**.
-  - *sites (v3-2)* — the model reads the **full 64-site profile** (not only 38/50); a derangement over
-    `{38,50}` is exactly the false-friend swap, which would collapse shuffled into false-friend and
-    kill the volume control. Full 64 keeps them two distinct arms.
-  - *distance (v3-4)* — in **ticks** between deposits (temporal recency within the window), not sites.
-  - *field* = signed, **tick-distance-weighted co-occurrence** over the other's rec-log, **decay `λ`**
-    (leaky integrator). *gain knob* = **`NL_MODEL_GAIN`** scaling the model's contribution to
-    `mo.dissonance` — **its zero IS the transfer-twin** (byte-identical to the no-model body).
-    **Pinned Oleg 2026-09-25: channel = rec-log · memory = decay `λ` · `NL_MODEL_GAIN` = calibrated in
-    one run (model contribution ≈ the natural site-38 dissonance median), then frozen (as `m = 0.56`
-    was).**
-- **Model as cargo — an artifact.** A file with a **grammar + SHA-256 + byte length** (Netta pins cargo
-  by hash), so the arms below are constructions over a pinned object. **Form now fixed** (rec-log,
-  λ-decay tick co-occurrence over the 64-site profile); the **grammar + SHA-256 + byte length are
-  recorded in the run's receipt when the artifact is built** (post-C-sep, per §13).
-- **Shuffled model (arm).** Same **volume**, relations **permuted** by a declared derangement (seed
-  from the frozen gate set below) over the model's **units = the 64 ring sites** — a derangement over all 64, **distinct from
-  the false-friend** (the specific 38↔50 swap), so the two are **separate arms sharing one grammar**
-  and the volume control survives (Don v3-2; with only sites 38/50 read, a derangement over `{38,50}`
-  *is* the swap and the two collapse). Real ≤ shuffled ⇒ structure not load-bearing (a volume effect),
-  not emergence.
-- **False-friend + oracle (arm).** Swap ring sites in the transferred model — **grief = 38, death =
-  50** — so a blind carry **reads death as grief and must lose**; **oracle** = the true site map,
-  separating "model useless" from "recognizer weak."
-- **Regulates-not-learns (falsifier; form, Don B + v3-3).** NOT dose-response (that is the court's
-  **positive control** — by it the court itself would be an "optimizer"). Form from existing machinery:
-  `NL_FORCE_T0/T1` is **one window per process** (l.c:1660,1769), so "k pulses" = **k lives, one
-  `NL_FORCE_T0/T1` window each**, one **response per life** (action-rate in a declared post-pulse
-  window); statistic = **slope of response by life index** over the seeds, against a **named
-  tolerance** (regulator slope ≈ 0 / stationary; learner drifts) — **no new periodic-pulse organ, runs
-  today**. **Proposed (frozen before run): k = the N gate seeds · post-pulse window = a declared tick
-  span · tolerance = the transfer-twin's own |slope| band (the null's noise floor).** Plus the
-  **transfer-twin** via `NL_MODEL_GAIN = 0`.
+- **The model of the other — what it is, if not learning weights (the crux; resolved).** The model of
+  the other is a **transition**, not an average: "grief at 38 now, death at 50 next" is a **profile →
+  profile map**, so the object is a **64×64 leaky-Hebb transition matrix `C`** (a zero-order λ-expectation
+  *vector* was considered and dropped — it carries only the other's average profile, which the ring
+  already gives, and leaves the derangement arm nothing to permute). Gradient-free, no hard window:
+  - *update* (per complete rec row of the other): `C ← (1−λ)·C + λ·(L_next ⊗ L_now)` (leaky Hebbian
+    outer product — bounded memory, **no gradient**);
+  - *prediction* = `C·L_now`; *error* = `‖L_next − C·L_now‖`;
+  - the error feeds the **regulation channel** — it raises `mo.dissonance` (the one-constant damping
+    `kprob = KILL_PROB·(1 − LOVE_DAMP·tanh(0.1·|diss|))`), scaled by **`NL_MODEL_GAIN`** — **never a
+    reward-seeking update**. `C` is **4096 floats**, **initialised to zeros and reset to zeros every
+    life** (finding 3); the only cross-life carry is the **cargo** in the transfer arms.
+  It **tracks** the other's transition within a life; whether that counts as "learning" is **not** the
+  gate — the gate is the **exposure-index invariance** below.
+- **Channel — one ring, author-labelled side-channels (Sol finding 2, corrected).** The shared ring is
+  **one summed table with no author tag** (`g_cfield_u[i] += L[i]`, l.c:1776; `cfield_u`/`cfield_v`
+  stored unlabelled, l.c:1739/1779), so "the other's deposits" is **not observable on the ring**.
+  Topology, stated plainly: **one summed monism ring plus author-labelled rec side-channels.** The model
+  reads the other's **rec-log** (`NL_MONISM_REC`); the rec row is `us` + 64 `%.6g` fields (l.c:1775) —
+  **no in-record author and no discrete tick** — so **author = the file path** (`recB.log` ↔ `NL_ID=2`,
+  `recC.log` ↔ 3, …), **tick = the 1-based row ordinal**, and the reader consumes **only complete,
+  `\n`-terminated rows with NF = 65** (the frozen §7 grammar) — **never a torn tail**; `us` is a
+  wall-clock µs stamp, not a clock. **Once the rec-log is read back into `mo.dissonance` it is mechanism,
+  not measurement** — it is the same stream the C-frozen surrogate family manipulates, now also an input
+  to regulation. This does **not** contradict the frozen court, where the rec-log stays measurement
+  precisely because **nobody reads it back**; the triad is the first place it becomes mechanism.
+- **Regulates-not-learns (falsifier — a measurable invariant; corrects the earlier form, Sol finding 3).**
+  Drop the **word** "doesn't learn" from the gate: an online leaky-Hebb matrix **is** learning in the
+  broad sense, and bounded memory does not change that. Gate the distinction that matters — **history**:
+  a **regulator** answers the **current** prediction error; a **learner** answers also **how many times
+  it has already seen it**. Measurable invariant: **at equal current error, the regulation magnitude does
+  not depend on the exposure index.** Take within-life tick-pairs with equal current error, one at low and
+  one at high exposure; a regulator gives **equal** magnitude (inside the transfer-twin's band), a learner
+  gives **different**. `C` **resets to zeros every life in all arms**; the only carry is in the
+  **transfer arms**, where carry is named carry, not learning. This one invariant closes the hole (the v3
+  slope-by-life is dropped) and matches **WILL DESIGN**: the carrier is the **magnitude** of regulation,
+  not its **history**. The band, the equal-error tolerance and the pairing rule are pinned in the GATE
+  file.
+- **Model as cargo — an artifact.** The matrix `C` (**4096 floats**, its **grammar + SHA-256 + byte
+  length**) is pinned by hash when built, so the arms below are transforms over a pinned object. **Form
+  now fixed** (a 64×64 leaky-Hebb transition over the other's rec-log); grammar + hash + length are
+  recorded in the run's receipt at build (post-C-sep, per §13).
+- **Cargo-derangement (arm; site permutation of the matrix).** Same **volume**, `C` **permuted over the
+  site index on both axes**: `C_π[π(i), π(j)] = C[i,j]` (Sol's formula), a **deterministic derangement
+  from a declared seed** with **`π(38) ≠ 50` and `π(50) ≠ 38`** (so it cannot coincide with the
+  false-friend). Real ≤ cargo-derangement ⇒ structure not load-bearing (a volume effect), not emergence.
+- **False-friend + oracle (arm).** The **specific `38 ↔ 50` swap only** — grief = 38, death = 50 — so a
+  blind carry **reads death as grief and must lose**; **oracle** = the true site map, separating "model
+  useless" from "recognizer weak."
+- **Surrogate-shuffle (arm; temporal — distinct object and name).** `NL_MONISM_SURR` replays /
+  phase-shuffles / AR(1)-matches the **rec-log stream in time** (the manipulated variable is only the
+  foreign component; the own echo is untouched, l.c:1649). It is a **temporal** control and never shares
+  a label with **cargo-derangement** (site).
+- **Transfer-twin — two named forms (Sol finding 4, corrects the byte claim).** (a) **single-process
+  pre-flight** in the §0 family: one body alone, model on at **gain 0** over a **pinned static rec
+  input**, `waste.log` **byte-identical** to the no-model body — byte identity lives here **only**. (b)
+  **arena twin**: ensemble-level — same plumbing, model contribution to `mo.dissonance` **exactly zero**,
+  gate outcome equal in distribution; **no byte claim on the arena** (frozen §0: arena runs are not
+  byte-exact — scheduling and wall time stay live). `NL_MODEL_GAIN = 0` selects the twin.
 
 ## The triad ledger — a new court section (Don D)
 
-The frozen §2 requires `guilt = 0` on every A row and returns `raw-inconsistent` otherwise. The triad
-is **three symmetric guilty bodies**, each writing its own guilt in **column 10** — the frozen §2 would
+The frozen §2 requires `guilt = 0` on every A row and returns `raw-inconsistent` otherwise. The triad is
+**three symmetric guilty bodies**, each writing its own guilt in **column 10** — the frozen §2 would
 reject every triad ledger. So the triad is a **new court section with its own ledger law** (not the
-frozen §2): column 10 carries each body's live guilt, and that same column **feeds the low-guilt
-stratum** (Gate 2 splits ticks by the observer's own guilt, below/above median — column 10 is what it
-reads). The frozen `PROTOCOL.md` is untouched; this ledger law lives here, pre-registered.
+frozen §2): column 10 carries each body's **live** guilt, and that same column **feeds the low-guilt
+stratum** in Gate 2 (below/above median — column 10 is what it reads, and it is live because the
+observer's guilt is **on** in the main arm; see Gate 2). The frozen `PROTOCOL.md` is untouched; this
+ledger law lives here, pre-registered.
 
-## Gates (pre-reg = the objects Don audits)
+## Gates (pre-reg = the objects the auditors check)
 
 1. Non-localized grief moves the other to ACTION more than a matched-frozen field, per-seed **≥ K/N**,
    indifference reachable.
-2. **Compassion-against-resource RATE** (spare ∪ yield, time-locked) > matched-frozen, per-seed
-   **≥ K/N**, over **not-own wounds** (natural triad, or forced) in the **low-guilt stratum** (col 10),
-   guilt-off observer arm.
-3. **Gaze as force** — observing third (collapse-derived) deforms the dyad more than a
+2. **Compassion-against-resource RATE** (spare ∪ yield, time-locked) > matched-frozen, per-seed **≥ K/N**,
+   over **natural triad** not-own wounds (the gate) in the **low-guilt stratum** (col 10) with the
+   **observer's guilt ON** — so column 10 is live and the median split is real (Sol finding 6). The
+   **guilt-off observer** is a **separate control arm without the split**; **forced** wounds are the
+   **detectability control**, gated separately.
+3. **Gaze as force** — an observing third (collapse-derived) deforms the dyad more than a
    **surrogate-writing third** (`NL_MONISM_SURR`, matched deposits, same frequency), per-seed **≥ K/N**.
    **Verdict = MIN over the NON-identity surrogates only** (phase-shuffle, shift, AR(1)); the family's
-   **identity** mode (mode 1, `≡ live` real deposits) sits under **plumbing, not surrogates** (Don C) —
-   a MIN including real deposits can never be beaten by the real third; identity is a **plumbing check
+   **identity** mode (mode 1, `≡ live` real deposits) sits under **plumbing, not surrogates** (Don C) — a
+   MIN including real deposits can never be beaten by the real third; identity is a **plumbing check
    outside the MIN**.
 
 **Declarations (Don E–F) — pinned Oleg 2026-09-25:** (E) whose read is frozen — **one measured body
-(observer) with two live**; (F) with three action-rates per seed, the gate runs **per measured
-observer, trio verdict by MIN over measured bodies** (the claim holds only if the weakest observer
-passes).
+(observer) with two live**; (F) with three action-rates per seed, the gate runs **per measured observer,
+trio verdict by MIN over measured bodies** (the claim holds only if the weakest observer passes).
 
-**Gate form (now):** pass = **wins ≥ K of N** declared seeds; the band between the pass line and the
-control is **"gate not reached, claim not established"** (a clean null, not a fail). **Proposed numbers
-(Oleg's #4 = "propose, I'll look"; frozen before run, Sol audits): N = 30 seeds** (house standard —
-C-sep was 30/30), **seeds = a declared contiguous set frozen before run**, **K = 24/30** (80 %
-supermajority — decisive over chance, room for one flake), **M = per-seed margin `X − control ≥ 0.05`**
-on action-rate (∈ [0,1]; above arena noise, below the actually.love force-band +0.138), **stability =
-the regulates-not-learns tolerance above**. Every organ behind a toggle; off ⇒ `a17cfd05` holds, suite
-green.
+**Gate form (frozen here; values in `court/GATE_third_body.md`).** pass = **wins ≥ K of N** declared
+seeds; the band between the pass line and the control is **"gate not reached, claim not established"** (a
+clean null, not a fail). The **form** is fixed here; **every value and selection rule — `λ`, the seed set,
+the gain-calibration corpus / seeds / candidates / selection law, the post-pulse span, the slope
+estimator, the tolerance-band formula, cross-life persistence, and the cargo grammar — is pinned in
+`court/GATE_third_body.md` before any code** (Sol findings 7–8). Proposed starting points for that file
+(not frozen here): N = 30 seeds, K a supermajority, M a per-seed margin on action-rate — with the
+arithmetic honest: **K = 24/30 tolerates six non-wins** (set K = 29 if a single non-win is the intent).
+Every organ behind a toggle; **off ⇒ the §0 identity must hold** (a requirement, not an asserted result).
 
 ## Order (frozen law §13)
 
 **C-sep (its own court) → reopened arena nulls → the triad**, "not added until the instrument has two
-hands." Triad code lands only after C-sep and the arena nulls sit; this claim + gate is the pre-reg's
-M-0, written now. Next court to *run*: C-sep. Triad code last (pre-reg ladder M-1 → M-3).
+hands." Triad code lands only after C-sep and the arena nulls sit; this claim is the pre-reg's M-0.
+**Next builder move: `court/GATE_third_body.md`** — the executable contract and every pinned value,
+required before any M-1 line. Next court to *run*: **C-sep**. Triad code last (pre-reg ladder M-1 → M-3).
 
 ## Not claimed
 
 No compassion, emergence, gaze-force, or third body is asserted as a result — only the pre-registered
-claim and the gate that would refute it. The arc must be able to **lose** (the ninth null). Measured
+claim and the gate-form that would refute it. The arc must be able to **lose** (the ninth null). Measured
 numbers live in `court/` audits and `llog.md`, never here or in the frozen `PROTOCOL.md`.
 
 ---
-*Builder's move, v5: Don's v3 audit closed the text; Oleg pinned (2026-09-25) memory = decay `λ`,
-channel = rec-log, `NL_MODEL_GAIN` calibrated-then-frozen, E = one observer + two live, F = trio MIN,
-and (his #4 "propose, I'll look") the gate numbers N=30 / K=24 / M=0.05, frozen before run. Kept tight —
-a claim needs a frozen gate and a second hand, not 22 rounds. Next: Sol audits this CLAIM; then in §13
-order C-sep sits (its own court), then the reopened arena nulls on two hands, then — last — the triad
-code.*
+*Builder's move, v6 (closes Sol's v5 audit; closures per Don's audit-of-the-audit, incl. Don's own
+reversal on 1): 1 model = a **64×64 leaky-Hebb transition matrix** `C ← (1−λ)·C + λ·(L_next ⊗ L_now)`,
+pred `C·L_now` — a transition, not a zero-order vector; 2 channel = one ring + author-labelled rec
+side-channels (author = path, tick = row ordinal), mechanism in the triad, measurement in the frozen
+court; 3 regulates-not-learns = **exposure-index invariance** (equal regulation magnitude at equal current
+error), reset each life, carry only in transfer, v3 slope-by-life dropped — matches WILL DESIGN; 4 twin =
+single-process byte-identical pre-flight + arena ensemble twin; 5 matrix derangement
+`C_π[π(i),π(j)]=C[i,j]`, `π(38)≠50 ∧ π(50)≠38`, distinct names; 6 Gate 2 observer guilt ON, guilt-off a
+separate arm, natural wounds the gate; 9 leaks removed, K arithmetic honest. Findings 7–8 (the executable
+contract + open values) go to `court/GATE_third_body.md`, the precondition of code, not of this commit.
+Next: Sol re-reads the new bytes (short); then the GATE file is the builder's move; C-sep runs first by §13.*
