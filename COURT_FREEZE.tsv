@@ -1,0 +1,17 @@
+PROTOCOL.md	4939615:PROTOCOL.md	sha256	40d5c503d1ee7025e446fe8ecfb9313ffa727d884869b550f3d67057aa167c6a	110309
+l.c-natural-leg	0dfad3c:l.c	md5	b202f3b15a67523f7907da806ba3f22e	193026
+l.c-natural-leg	0dfad3c:l.c	sha256	892122efdd79a5ffc2a71ebcf0c781483997ee9a71522cf140bfc46aa4b81353	193026
+l.c-matched-leg	633420f:l.c	md5	ab59ea41c56f1b5b8376c0a3a3eb2882	193701
+l.c-matched-leg	633420f:l.c	sha256	db2b9d0a667147a4d344644e2926064d2841cb2e44ad49d75d6de037fe4c3147	193701
+binary-natural-leg	-	md5	b37cd9d3652128a01363e08e6c794f6d	128848
+binary-natural-leg	-	sha256	c046af10931d7c662bd41b1f27bed86db529c5df144e9c2809c7da42bcbdfa08	128848
+binary-matched-leg	-	md5	cf37114b8532a2a4bf9c04cb5f5becef	128872
+binary-matched-leg	-	sha256	37504168f7f7b91c28179ce21f0db2a92293e9ee1f0148a47d88a630d72f501f	128872
+binary-platform	-	tag	x86_64-clang17	-
+corpus	4939615:lifeis/world.txt	md5	caa87837e0beabc49f6ec437c330c894	440115
+corpus	4939615:lifeis/world.txt	sha256	6d29d0387988d3ac39d423dc88d660517b67d018a3fe0ad69ba120660b938550	440115
+forced_core.tgz	4939615:tests/verdict_raw/forced_core.tgz	sha256	acadb07fc8fbd8f245547fff309e84514490fd7cd684c191c7d3d45ab603c4c8	1593508
+ladder_core.tgz	4939615:tests/verdict_raw/ladder_core.tgz	sha256	dc0041262897886831f5935a10ac65d2cba1d9a1b15dbb9f46d8eddc7c9c2a1b	6363057
+solo-default-trajectory	-	md5	a17cfd058a78b6d86f3e57dcd561dc07	566
+natural-grief-magnitude-m	-	value	0.56	-
+court-2-subset	-	list	full	-
