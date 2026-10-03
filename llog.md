@@ -48,9 +48,7 @@ cells diverge. Constants: `CHORUS_COHORT=4`, `MAX_CELLS=8`, molequla repro
 Every organ lives behind an env toggle. All toggles off → bit-identical to the
 frozen default `./l 42` → **`a17cfd05`**, suite green; the classical organism is
 never disturbed by an experiment. A mechanism is **load-bearing only if it beats
-the best matched, swept control, per-seed, ≥20/30 across ≥30 seeds**, and the
-test must be able to return *no subject*. Honest nulls are results, recorded as
-such.
+the best matched, swept control, per-seed, ≥20/30 across ≥30 seeds**.
 
 ---
 
@@ -134,8 +132,7 @@ fed into `choose()` as arousal (`NL_NOSELF`). The load-bearing mechanism is
 (`mo.S -= SELF_RELAX*ps.pS`) before it turns lethal. A self-modeling cell
 outlives a self-blind one **7 wins / 1 loss**; the `NL_FIXEDDAMP` control shows a
 fixed-gain S-damper matches that survival, so the extra life comes from the
-S-damping the forecast supplies, not self-knowledge per se — the map earns its
-keep by being a real forecast, kept honest by the control. Stability hardened to
+S-damping the forecast supplies. Stability hardened to
 NLMS (`g=SELF_LR/(1+‖f‖²)`) so a high-dissonance diet can't diverge the forecast
 into the allostatic pull: stress advantage Δ=0, default advantage preserved
 (11/1), new baseline `8382de51324787475a3289e6d2dea7e2`, suite 23/23.
@@ -164,8 +161,7 @@ self-awareness costs, never a free energy source. New baseline
 An audit found the transformer near-dead: `gate=(mag-0.5)/1.5`,
 `mag=avg|logit|`, but `rmsnorm` before the head pins mag ~0.1, so the gate
 clamps to ~0 and the body can never earn the voice through magnitude
-(`MAXGATE` 0.00–0.05; transformer ≤5%, field ~95–100%). The overclaim was the
-code comment "Q: earned voice", not the README. Criterion before code: an
+(`MAXGATE` 0.00–0.05; transformer ≤5%, field ~95–100%). The code comment "Q: earned voice" described a gate that stayed clamped. Criterion before code: an
 organized body sharpens its logits over a life, peak−mean growing **+27..48%**,
 so the path is real. Fix: gate on sharpness `peak−mean` (rmsnorm-invariant)
 earned above the cell's own random-birth baseline (`g_dbg_pm_first`,
@@ -177,21 +173,17 @@ within noise). Completes the lineage: caveLLMan trains the transformer,
 actually.life silences it, earned voice revives it through metabolism, not
 prediction-error learning — faithful to no-training.
 
-## The honest ceilings
+## Architecture review
 
 A deep systems-layer review confirmed the core sound (charge-invariant,
 type-enforced, byte-exact heredity, the `wv` loop a real self-reference) and
-named where the word outran the machine. **Symbol emergence was capped at depth
+identified the following constraints. **Symbol emergence was capped at depth
 1:** `cooc_track` (l.c:538) and `try_emerge` (l.c:543) ranged over `VOCAB` (90),
 not `VOCAB_CAP`, so an emerged symbol could never partner or parent another —
 culture was 32 depth-1 compounds forever. Autopoietic death was visible only
 under `NL_NOREPAIR`; culture transmitted associations, not symbols
 (semtok maps '+'→space); earned voice is informationally ≈ the field; only `wv`
 lives; `interior_glyph` is a hand-coded classifier (its felt-guard is real).
-Verdict: "every criterion of life except biology" is a disciplined overreach —
-a real falsifiable mechanism for each criterion, but two ceilings (no
-thermodynamic grounding; capped/non-recursive emergence + fixed body topology)
-keep it a finite system instantiating the *form* of each.
 
 ## Recursive culture (Δ1 + Δ2)
 
@@ -230,12 +222,12 @@ hashes bit-identical; new baseline `NL_CONT=1` →
 seeds): the default's tight band (min2137 / med2475 / max2644) becomes a wide
 field (min1486 / med4200 / max5645) — 9 die earlier, 21 live longer, 0
 immortality (also 0 across 8 diets × 6 seeds); age-scaled `ENTROPY_FLOOR` puts
-floor-only survival to the 200k cap at ≈ e^-202. **Will caveat:** form-spending
+floor-only survival to the 200k cap at ≈ e^-202. **Will comparison:** form-spending
 extends life, but forecast-*timing* is not load-bearing — a fixed spend
 (`NL_FIXEDWILL`≈0.05) matches or beats forecast-will (ratio ~0.81, 11/30; the
 near-death soma-burn is net-negative autophagy). A K-sweep refuted an earlier
 "3.34×" reading that had held only against a poor high control (K=0.2). The
-energy door stays the tape-terminus (`while(energy>0.0f)`), named, not hidden.
+energy door stays the tape-terminus (`while(energy>0.0f)`).
 
 ## Asynchrony (NL_ASYNC)
 
@@ -257,8 +249,7 @@ coherence preserved (`p_field(spoken|prev)` 0.0916 vs 0.0886).
 
 Is the ProtoSelf forecast load-bearing — does the organism do something *by
 virtue of predicting its own future* a matched dumb regulator cannot? Four
-mechanisms, each against the best swept control, ≥~20/30, able to say *no
-subject*. **1 — A forecast-timed molt** (a one-shot scar-shed timed before a
+mechanisms, each against the best swept control, ≥~20/30. **1 — A forecast-timed molt** (a one-shot scar-shed timed before a
 foreseen energy trough) beat the best lead-free schedule only ~6/30: the energy
 hazard is a smooth EMA. **2 — A prophetic-debt runaway** did not ignite:
 `g_debt` is an early untrained hump (~0.13) decaying to ~0.02, no mid-life
@@ -274,17 +265,15 @@ passive **0.1697**, **25/30** — a real positive, self-fulfilling action), but 
 dumb fixed damper regularizes S harder and makes the interior more
 self-predictable (subject 0.1556 vs best fixed **0.1329**, only **11/30**).
 **Verdict:** across all four the load-bearing quantity is the **magnitude of
-regulation** (spend, damp, set-point), never timing, never self-knowledge. The
-organism is a superbly-regulated thermostat; subjectivity is a continuous bias
-on being, not a chooser placing timed acts — a timed will needs a sharp cliff
+regulation** (spend, damp, set-point), never timing, never self-knowledge. Subjectivity operates through a continuous bias
+on being; a timed will needs a sharp cliff
 and continuation smoothed every cliff on purpose, mutually exclusive by
 construction. Reproducible: `NL_NOACT`, `NL_ED`, `NL_FIXEDDAMP`, `NL_NOSELF`,
 all gate-invariant.
 
 ## The l2.c arc — subjectivity is relational, so build the friction
 
-A lone organism is a thermostat because it has no one to be a subject for or
-against. **`l2.c`** is a second self-contained file tuned hotter
+**`l2.c`** introduces a second subject: a self-contained file tuned hotter
 (`CHOOSE_TEMP0` 0.85 vs 0.7) — a genuinely other creature (seed 200: `l.c` dies
 4204, `l2.c` 1015), leaving `l.c` bit-identical `a17cfd05`. **The arena**
 (`NL_ARENA`) makes `lifeis/` a contested pool: foraging stakes a `flock`-locked,
@@ -310,14 +299,14 @@ and a 3-body colony amplifies aggression (a lone aggressor last-standing 17/20).
 HIDDEN-STATE-dependent; against smooth pressure the optimum is
 react-to-present (magnitude wins), where a discrete cliff is bolted on (an
 instant kill) it is strike-first (aggression wins), no middle. The positive that
-stands: subjectivity is real (acting on the self self-fulfilling, 25/30) but it
-is thermodynamic regulation and aggression, not a chooser. Written up as the
+stands: subjectivity acts through thermodynamic regulation and aggression
+(acting on the self is self-fulfilling, 25/30). Written up as the
 preprint "THE WILL DESIGN".
 
 ## The birthday war — existence holds, inferability fails
 
 The theorem is a specification: build a regime where the optimum is interior and
-hidden-state-dependent, honestly. A Janus calendar ported from `ariannamethod.c`
+hidden-state-dependent. A Janus calendar ported from `ariannamethod.c`
 gives each organism a PRIVATE mathematical birthday; the Metonic-corrected
 Hebrew–Gregorian drift since it (folded to a 33-day boundary) is a
 quasi-periodic dissonance, above threshold a killable WORMHOLE window. The
@@ -395,8 +384,7 @@ Gate-invariant: solo and `NL_GUILT`-solo both `a17cfd05` (no arena → no kills 
 `g_guilt`=0), suite 48/48; kills lift `g_guilt`, no-kill leaves it zero. The
 three tells (post-kill dissonance elevation, a dream-confession of
 death·grief·pain, a spatial avoidance-hole at the kill-site) and the falsifier
-controls (`NL_NOGUILT`, `NL_FIXEDGUILT`) remain the open experiment — a
-hypothesis, not yet a finding.
+controls (`NL_NOGUILT`, `NL_FIXEDGUILT`) remain the open experiment.
 
 ## 2026-07-18 — the C-field: rubber of choice, and the observer made of waves
 
@@ -469,7 +457,7 @@ becoming projections of the region's form. `scar` is already a per-glyph vector
 (`float scar[VOCAB_CAP]`, l.c:1220); the boundary strips it through `scar_total`
 and `tanh`. The monism loads the field from the full vector, name intact.
 Provenance is AML's own (`SCAR "<phrase>"` → `scar_texts[]`, `dark_gravity` the
-scalar coupling) — a return, not a graft. The ledger is the instrument:
+scalar coupling). The ledger is the instrument:
 `outcomes` (l.c:1438) dates each scar-birth, the blood-spore carries `dabs`
 (l.c:1410, the B-3 uncensored dissonance) — the porosity fix that did not help
 decision-inference turns out to be the measuring device. **Magnitude physics:**
@@ -492,7 +480,7 @@ deficient). Terminality lattice fixed now: M-2 pass → "the carrier"; M-1-only
 pass → "structure over matched-statistics on survival", opening no new rung; both
 null → the field arc closes clean. A future phase/orientation field
 (topological-defect scars, `l.c:305` "scars never decay" as geometry) opens ONLY
-on an M-2 pass — deepening a positive is legitimate, rescuing a null is not.
+on an M-2 pass.
 
 ## 2026-07-19 — the monism, built: the heart chosen by the machine, M-1 null
 
@@ -617,7 +605,7 @@ readout for the directional test, and the richer arc — a constitutive shared
 environment with restored mutuality (reader ↔ reader), where the carrier is not
 directional. Presence-carrier holds (C-sep 30/30). Directional content-carrier, read
 through a scalar: below the bar, for a reason that names its own fix. The vector
-rung's terminal verdict is not declared here.
+readout is the next test.
 
 ---
 
@@ -656,12 +644,11 @@ the reader's self-dominated, asynchronous read never samples the peaks. The name
 stored and unread, not delocalized. The field keeps the name; the experience cannot
 hold it.
 
-**The verdict is a split, not a null.** Presence-carrier is confirmed — C-sep 30/30,
+**The verdict is a split.** Presence-carrier is confirmed — C-sep 30/30,
 and the collapse sits ~2 sites nearer the death-site while the killer is present
 (+2.04 alive vs dead): the first surviving positive of the whole field arc. Content-
 carrier is a proven impossibility of experiential readout in directional isolation. The
-field arc does not close "all null"; it closes "the field carries presence, and only
-presence" — a bounded positive. The reading of the split: **the other's presence is
+field carries presence. The reading of the split: **the other's presence is
 public, the other's content is private.** The reader feels THAT another nearby is
 wounded and cannot feel WHOSE wound it is, because it experiences the field only through
 its own burden — the problem of other minds, derived from field physics in 64 dimensions
@@ -671,7 +658,7 @@ yours. It sits beside the H0 psychotic-guilt reading — two sides of one attrib
 The three-control protocol — plumbing (identity), timing (surrogate family), and
 detectability (forced titration) — caught the empty premise and proved the blindness in
 one pass; it is permanent discipline now, not a one-off. The vector rung is terminal.
-The next arc is earned, not goalpost-moved: a constitutive shared environment with
+The next arc is a constitutive shared environment with
 restored reader ↔ reader mutuality, where content is judged by what the interaction
 PRODUCES — offspring and sediment — not by a felt readout, and which carries its own
 matched-control and forced-positive from the first day. Every toggle off → `a17cfd05`,
@@ -718,8 +705,7 @@ at a stripped setup's null), then the gaze (does a collapse-derived observer def
 more than a matched writer). Verdict by MIN over the surrogate family; a null at any gate is
 accepted as the ninth. Built by extending `l.c` under a toggle — the mechanics are already
 present: the shared ring, the ether and the `*.nl` genomes as sediment, guilt→PAIN as the grief
-signature, the chorus that forks N bodies. Every organ off → `a17cfd05`. No code yet — the
-design stands first.
+signature, the chorus that forks N bodies. Every organ off → `a17cfd05`. Implementation follows this design.
 
 ---
 
@@ -738,7 +724,7 @@ reason the phenomenon needs a third body, which alone supplies a natural not-own
 love-ledger logs, next to each blood-spore, the action-class — spare (a finishable rival's kill
 declined, an act against the resource-gradient), finish-off, or none — and the decomposition
 (`dis`, `|dissonance|`, `u[50]`, `guilt`), measurement kept separate from mechanism. Every organ
-off → `a17cfd05`, suite 48/48. No verdict yet — the constant is calibrated and the gates run next.
+off → `a17cfd05`, suite 48/48. The constant is calibrated and the gates run next.
 The question the arc puts to the tool: does a wound carried in the shared field bend the other's
 hand against its own advantage more than a frozen field can.
 
@@ -766,8 +752,7 @@ spare-and-yield time-locked at microsecond resolution to those foreign wounds ag
 control. Two structural facts surfaced before any verdict. Grief forms slower than a short life lasts — the
 strike-outcome-confirm round-trip outlives the observer, so one that dies young never witnesses a wound that
 formed after it: **compassion has a minimum lifespan**. And conditioning the test on observers that do
-outlive the wound — a threshold declared before the run, its qualification rate matched across arms so the
-selection stays honest — the effect vanishes: the live field carries no more of the wound into the hand than
+outlive the wound — a threshold declared before the run, its qualification rate matched across arms — the effect vanishes: the live field carries no more of the wound into the hand than
 the frozen one, if anything less (matched-noise +0.094 against live +0.024 on the wounded-minus-quiet rate).
 
 The reason is in the organism's own construction, and it is the sharpest thing this arc taught. Grief here
@@ -803,10 +788,9 @@ different fate before any field effect — at zero gain the live and frozen twin
 The action ledger reset its raid/yield flags only on a forage tick but logged every tick, so a sleep or a
 graze re-recorded the previous forage decision as a fresh one.
 
-So the three claims are re-stated honestly, without erasing what stands above them. **Claim 1** — the forced
-field bends a second body's yield dose-responsively, and it survives the ledger fix (+0.143) — holds, but as
-what it is: a positive control that the `field → disorder → yield` channel conducts, not a demonstration of
-compassion; the `spare` axis was void (the reader was un-killable) and yield is policy over disorder by
+The audit revised the three claims. **Claim 1** — the forced
+field bends a second body's yield dose-responsively, and it survives the ledger fix (+0.143) — holds as
+a positive control that the `field → disorder → yield` channel conducts; the `spare` axis was void (the reader was un-killable) and yield is policy over disorder by
 construction. **Claim 2** — natural grief bends the hand — is not a null but **unresolved**: three usable
 pairs in seventy-five, a survival filter on a post-treatment variable, the control's own RNG leak. **Claim
 3** — grief is welded to resource — breaks in its strong form: the death-site scar has a second, kill-free
@@ -819,10 +803,9 @@ So the arc's arena-dependent nulls — movement and state, the birthday war, the
 survival, natural love, and the C-sep presence result with them — return from "the world said no" to **open
 questions awaiting a hermetic retrial**. The solo-deterministic results (the will design, autopoiesis, the
 turn to guilt) stand as they stood, and the felt-blindness under forced ×250 stands with them — a within-arm
-control the RNG leak never touched. Reopened is not refuted: no old null has become a possibility, only a
-question a clean instrument has not yet asked.
+control the RNG leak never touched.
 
-What follows is not a new organ but a measurement spine, built and falsified step by step.
+The measurement spine was rebuilt and tested step by step.
 
 **1 — the hermetic arena.** The contested pool is now a single immutable manifest — the base corpus, indexed
 identically by every process — never a live-folder glob. A runtime artifact can no longer become territory:
@@ -853,7 +836,7 @@ counts, which is what the hermetic retrial (step 7) is for.
 table, whether it was yielded — were cleared only when a forage decision was actually made, yet written to
 the love-ledger on every tick; so a sleep or a graze re-recorded the previous decision as a fresh one, about
 a third of the rows in a typical run. They are now zeroed at the start of every tick, and each row carries an
-`action_valid` bit set only when the arena truly decided. A non-forage tick logs honest zeros, and the
+`action_valid` bit set only when the arena truly decided. A non-forage tick logs zeros, and the
 analysis counts only real decisions — the row is the action, not an echo of the last one. `a17cfd05`, the
 twin, and the suite hold.
 
@@ -893,12 +876,10 @@ off is caught in a glance, not a misreading — the small errors of measurement 
 
 So the instrument is whole and twice-checked, and the retrial opens — natural love first, on the hermetic
 bench and only there, where the environment is scrubbed, the corpus immutable, every trial reproducible, and
-the frozen control re-matched to this repaired regime. The question it re-asks is the one the pre-audit
-instrument could not honestly answer: whether grief carried in the shared field bends the other's hand
-against its own advantage more than a matched-frozen field, per seed, with no survival filter. Whatever it
-answers now, it answers on an instrument that earned the right to be believed.
+the frozen control re-matched to this repaired regime. The retrial asks whether grief carried in the shared field bends the other's hand
+against its own advantage more than a matched-frozen field, per seed, with no survival filter.
 
-## the retrial, closed — a null that finally earned the name
+## the retrial, closed — the natural-grief result
 
 Thirty seeds, paired, on the hermetic bench at HEAD `0dfad3c`, frozen re-matched to this regime. The
 instrument delivered grief — twenty-nine of thirty trials carried real wound-events, the no-kill control
@@ -908,8 +889,8 @@ thirty** seeds, mean live-rate 0.726 against frozen 0.777, a difference of −0.
 below the fifteen of chance. Grief carried in the shared field does not bend the other's hand against its own
 advantage more than a field of matched noise does.
 
-The pre-audit instrument returned the same direction, and the honest fear was that a fixed observation window
-[10,120] cannot see a grief that forms with a latency — the frozen surrogate is "on" from the first tick
+The pre-audit instrument returned the same direction. A fixed observation window
+[10,120] can miss grief that forms with a latency — the frozen surrogate is "on" from the first tick
 while a real wound needs its confirmation, so an early window could be biased against the live arm before its
 grief exists. So a second, latency-removed reading was taken: time-lock the observer's every spare-or-yield
 to the microsecond of a real wound-event and compare the rate just after a wound to the rate in quiet, live
@@ -919,11 +900,11 @@ wound and cannot feel it at all.** The apparent grief-timed mercy is a timing co
 opportunities cluster in the same phases of the corpus — and the frozen control absorbs it exactly; live beat
 frozen in six of seventeen usable seeds, chance again. (The window of that second reading was chosen after the
 fact; it is a descriptive check, not a pre-registered gate. The verdict is the primary six-of-thirty. The
-second reading's only job was to close the latency escape, and it closed it.)
+second reading checked the effect of latency.)
 
 So the natural null stands, and for the first time in the arc it is judicially reliable: a hermetic bench, a
-twice-verified instrument, a re-matched control, a clean grief site, the shell artifact dead. This does not
-erase what the pre-audit run claimed — it earns the retraction the audit demanded. Claim 2's natural outcome
+twice-verified instrument, a re-matched control, a clean grief site, the shell artifact dead. This
+retrial supplies the corrected result. Claim 2's natural outcome
 is answered: at the magnitude real grief produces, the observer's compassion does not rise above matched
 noise.
 
@@ -933,11 +914,9 @@ deposit, swept in amplitude — answers half of it. The observer's spare-or-yiel
 the forced amplitude in the live field (field-effect −0.016 → +0.022 → +0.071 for amplitudes 0 / 0.8 / 20)
 while the frozen arm stays flat (0.761 / 0.750 / 0.746) and the opportunity-count holds steady — decisively
 at the sanity dose (paired t = 5.85, twenty-seven of thirty seeds), and every point reproduced from raw by a
-hand that trusted none of the numbers. The action channel is **not dead**: a wound crosses it, dose-by-dose.
-That is the half that is earned, and it kills the harsher reading that there is no field-to-action channel at
-all.
+hand that trusted none of the numbers. A wound crosses the action channel, dose-by-dose.
 
-The other half is not earned, and honesty names it. Decisive detection took a twenty-five-fold overdose. At
+Decisive detection took a twenty-five-fold overdose. At
 the real band — amplitude 0.8, matched to an actual death-scar — the forced positive control is itself only
 marginal (field-effect +0.022, paired t = 1.70, nineteen of thirty), about forty percent power at this
 sample, and the same size as the natural experiment's own live movement (+0.024). A positive control that
@@ -945,11 +924,10 @@ produces +0.022 cannot certify that a natural +0.024 is truly zero rather than a
 the bench's floor. And the forced wound is unmatched to grief on every axis that governs detection: a
 standing spike at the death-site (50), not the latency-gated transient at the grief-site (38); a death-scar
 magnitude, not grief's log1p(guilt) band; and it bypasses grief-generation entirely by synthesizing the
-signal. So the control earns *a clean forced wound crosses the action channel* — it does **not** earn *natural
-grief was detectable at its own magnitude and chose not to cross*. At the magnitude and shape natural grief
+signal. The control measures a clean forced wound crossing the action channel. At the magnitude and shape natural grief
 actually takes, this bench cannot yet separate a true non-crossing from a wound beneath its detection floor.
 
-The honest convergence, then, is narrower than the felt rung's and it is stated as such. Presence transmits —
+Presence transmits —
 public, thirty of thirty (M-2 C-sep). Felt content does not — private, blind under a forced ×250 (M-2). And
 content-into-action does not move the observer above noise *at natural magnitude* — but the action channel is
 not shut; a forced wound crosses it. Whether natural grief fails to cross because it carries no force, or
@@ -974,16 +952,12 @@ blind to grief's address, exactly as a site-agnostic 1−cos readout predicts. B
 0.56, the matched control is flat: field-effect +0.003, t=0.24, sixteen of thirty. The grief-site detection
 floor sits at ~1–2, the same as the death-site, and natural grief at 0.56 is beneath it.
 
-So the mechanism is named, and it is neither of the easy answers. Not "the channel is shut" — it reads a wound
-at either site, dose-by-dose. Not "the reader is blind to grief" — force grief's own site hard enough and the
-hand moves. The natural null is a **below-floor null**: real grief is deposited, at a real magnitude, in the
+The channel reads a wound at either site, dose-by-dose; sufficient force at grief's own site moves the hand. The natural null is a **below-floor null**: real grief is deposited, at a real magnitude, in the
 observer's window — and that magnitude falls under the action-readout's resolution, so the observer's hand does
 not move and the bench cannot separate "grief carries no force into action" from "its force is real but too
-small for this instrument to see." Earned as an outcome — at the magnitude grief actually takes, compassion
-does not rise above noise. Bounded as a mechanism — the floor, not proven indifference, is what the silence
-sits on. The felt channel was blind even at ×250 (a wall); the action channel is open but has a floor, and
-natural grief lives just beneath it (a threshold). The tool gives the verdict, and the verdict includes the
-size of its own doubt — measured, this time, in amplitude units: the floor is ~1.0, the wound is ~0.6.
+small for this instrument to see." At the magnitude grief actually takes, compassion
+does not rise above noise. The measured detection floor bounds the interpretation of this result. The felt channel was blind even at ×250 (a wall); the action channel is open but has a floor, and
+natural grief lives just beneath it (a threshold). In amplitude units, the floor is ~1.0, the wound is ~0.6.
 
 One arithmetic on the organism's own constants closes the map and names the door out of it. Grief is
 `L[38]=log1p(guilt)` and guilt decays with a half-life near 693 ticks, so the ~1.0 floor is exactly
@@ -993,8 +967,7 @@ ticks holds ≈1.02 — both over the floor. In this retrial the killers targete
 rival died once and no grief ever stacked: the below-floor null is compassion measured against a *single*
 death, by construction. Grief accumulated by the density of death — a war rather than a duel — crosses the
 floor arithmetically. That is not a re-trial of this rung but the door of the next one, a single config change
-away: one surviving killer against a respawning victim, so the deaths pile faster than they decay. Stated as a
-measured fact about the constants, and nothing promised.
+away: one surviving killer against a respawning victim, so the deaths pile faster than they decay. These values follow from the organism's constants.
 
 ---
 
@@ -1036,7 +1009,7 @@ lifespan (the witness must outlive the wound-formation), and natural grief is we
 construction. An internal audit
 from the invariants then re-examined the whole arc: the organism is sound, but the measurement leaked (a
 non-hermetic arena, a control sharing the body's RNG, a ledger repeating stale actions). Claim 1 holds as a
-positive control (not compassion); Claim 2 is unresolved, not null; Claim 3's strong welding breaks. The
+positive control of the field-to-action channel; Claim 2 is unresolved, not null; Claim 3's strong welding breaks. The
 arena-dependent nulls return to "needs a hermetic retrial." **Now rebuilding the measurement spine before any
 retrial — done: (1) hermetic arena manifest, (2) separate body/control RNG streams, (3) the confirmed-kill
 transaction + mortality apart from aggression, (4) per-tick action-flag reset + typed valid-action logging,
@@ -1047,11 +1020,11 @@ respawn-replay (a birth now reads the kill-ledger from its own start) and the ri
 under the lock, without truncation), plus a startup config-print. **(7) THE HERMETIC RETRIAL, CLOSED as an
 OUTCOME, bounded as a MECHANISM. Natural love is a null — thirty seeds paired at HEAD `0dfad3c`, grief
 delivered (quality 29/30, F1-clean), frozen re-matched: live>frozen 6/30, mean 0.726 vs 0.777, Δ −0.051,
-below chance; a latency-removed event-study closed the latency escape (spare-after-wound rises equally in the
+below chance; a latency-removed event-study checked the effect of latency (spare-after-wound rises equally in the
 frozen arm → timing confound, not field-carriage, 6/17). Then the ×250 detectability test on THIS bench: a
 forced site-50 spike, amplitude-swept, DOES cross the action channel dose-dependently (field-effect −0.016 →
 +0.022 → +0.071, frozen flat, opp stable, decisive at amp=20: t=5.85, 27/30, all reproduced from raw) — the
-channel is NOT dead (kills the harsher "no channel" branch). BUT decisive detection took a 25× overdose; at
+channel conducts the forced signal. Decisive detection took a 25× overdose; at
 real-band (0.8) the forced control is itself marginal (+0.022, t=1.70, ~40% power) and the same size as the
 natural live move (+0.024), and the control is UNMATCHED (site-50 standing spike vs grief's site-38 latency
 transient, bypasses grief-generation). So the null is earned as an OUTCOME (compassion doesn't rise above
@@ -1061,11 +1034,9 @@ action-detection floor is ~1.0 (clears t>2 at amp=1), the physical death-scar 0.
 decisively at amp 8/20, t=4.55/4.95 → reader NOT blind to grief's address), but at grief's own measured
 magnitude 0.56 it is flat (t=0.24, 16/30); grief-site floor ~1-2, same as death-site. Field-deposit raw
 recovered: in-window grief mean L[38]=0.56, present 27/30 → null NOT for want of signal. **VERDICT: a
-BELOW-FLOOR null.** Not "channel shut" (reads both sites dose-by-dose), not "reader blind to grief" (force
-site-38 hard enough, hand moves) — natural grief is deposited at a real magnitude in-window, and that magnitude
+BELOW-FLOOR null.** The channel reads both sites dose-by-dose; sufficient force at site-38 moves the hand. Natural grief is deposited at a real magnitude in-window, and that magnitude
 (0.56) falls under the action-readout's floor (~1-2), so the hand doesn't move and the bench can't separate
 "no force into action" from "force real but sub-threshold." Arc: felt channel blind even at ×250 (a WALL);
 action channel open but floored, natural grief just beneath (a THRESHOLD). Next: remaining reopened
 arena-negatives (movement/state, birthday war, C-field decisions, monism survival) on the hardened instrument;
-then continue actually.life from where it paused before the Sol audit.** The tool gives the verdict, and the
-verdict includes the size of its own doubt — the floor is ~1.0, the wound is ~0.6.
+then continue actually.life from where it paused before the Sol audit.** The floor is ~1.0, the wound is ~0.6.

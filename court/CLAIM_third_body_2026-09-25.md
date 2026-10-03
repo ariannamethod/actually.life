@@ -1,9 +1,8 @@
 # CLAIM — the third body (post-freeze rotation) — v6
 
-Status: **Claim, no code.** Court froze 2026-09-25 (`4939615` + `18a3e8b`). Builder's move: the **claim and
+Status: **Pre-registered design.** Court froze 2026-09-25 (`4939615` + `18a3e8b`). Builder's move: the **claim and
 the falsifier whose gate-form would refute it, before a measured line**. An **adaptation of
-`_notes/ACTUALLY_LOVE_PREREG_2026-07-27.md` (v1.2, M-0)** into the frozen court and the rotation — not an
-invention, and **not** the Netta lineage/transfer body (a different third body). The **gate form is frozen
+`_notes/ACTUALLY_LOVE_PREREG_2026-07-27.md` (v1.2, M-0)** into the frozen court and the rotation. The Netta lineage/transfer body is a separate design. The **gate form is frozen
 here**; every value and selection rule lives in **`court/GATE_third_body.md`** (the executable contract,
 written before M-1 code — not before this commit). Frozen `PROTOCOL.md`, `l.c`, `l2.c` untouched.
 
@@ -11,7 +10,7 @@ written before M-1 code — not before this commit). Frozen `PROTOCOL.md`, `l.c`
 Sol's v5 audit** — 9 findings, all genuine (Don's audit-of-the-audit, `court/AUDIT_sol_audit_third_body_don_2026-09-26.md`):
 the model is now defined computationally (a **64×64 leaky-Hebb transition matrix** — a profile→profile map,
 not a zero-order vector), the channel is
-restated honestly against `l.c`, "regulates-not-learns" is narrowed to a **measurable invariant**, the twin
+restated against `l.c`, "regulates-not-learns" is narrowed to a **measurable invariant**, the twin
 is split into **two named forms**, the cargo transform is made exact, Gate 2's symmetry is fixed, the
 prior-result leaks are removed, and the executable gate contract (findings 7–8) moves to the GATE file.
 
@@ -44,8 +43,7 @@ Each body carries a **predictive model of the other two**; the mutual modeling *
     `kprob = KILL_PROB·(1 − LOVE_DAMP·tanh(0.1·|diss|))`), scaled by **`NL_MODEL_GAIN`** — **never a
     reward-seeking update**. `C` is **4096 floats**, **initialised to zeros and reset to zeros every
     life** (finding 3); the only cross-life carry is the **cargo** in the transfer arms.
-  It **tracks** the other's transition within a life; whether that counts as "learning" is **not** the
-  gate — the gate is the **exposure-index invariance** below.
+  It **tracks** the other's transition within a life; the gate measures **exposure-index invariance** below.
 - **Channel — one ring, author-labelled side-channels (Sol finding 2, corrected).** The shared ring is
   **one summed table with no author tag** (`g_cfield_u[i] += L[i]`, l.c:1776; `cfield_u`/`cfield_v`
   stored unlabelled, l.c:1739/1779), so "the other's deposits" is **not observable on the ring**.
@@ -56,8 +54,8 @@ Each body carries a **predictive model of the other two**; the mutual modeling *
   `\n`-terminated rows with NF = 65** (the frozen §7 grammar) — **never a torn tail**; `us` is a
   wall-clock µs stamp, not a clock. **Once the rec-log is read back into `mo.dissonance` it is mechanism,
   not measurement** — it is the same stream the C-frozen surrogate family manipulates, now also an input
-  to regulation. This does **not** contradict the frozen court, where the rec-log stays measurement
-  precisely because **nobody reads it back**; the triad is the first place it becomes mechanism.
+  to regulation. In the frozen court, the rec-log stays measurement because **nobody reads it back**;
+  in the triad, it becomes mechanism.
 - **Regulates-not-learns (falsifier — a measurable invariant; corrects the earlier form, Sol finding 3).**
   Drop the **word** "doesn't learn" from the gate: an online leaky-Hebb matrix **is** learning in the
   broad sense, and bounded memory does not change that. Gate the distinction that matters — **history**:
@@ -129,8 +127,8 @@ the gain-calibration corpus / seeds / candidates / selection law, the post-pulse
 estimator, the tolerance-band formula, cross-life persistence, and the cargo grammar — is pinned in
 `court/GATE_third_body.md` before any code** (Sol findings 7–8). Proposed starting points for that file
 (not frozen here): N = 30 seeds, K a supermajority, M a per-seed margin on action-rate — with the
-arithmetic honest: **K = 24/30 tolerates six non-wins** (set K = 29 if a single non-win is the intent).
-Every organ behind a toggle; **off ⇒ the §0 identity must hold** (a requirement, not an asserted result).
+arithmetic explicit: **K = 24/30 tolerates six non-wins** (set K = 29 if a single non-win is the intent).
+Every organ behind a toggle; **off ⇒ the §0 identity must hold**.
 
 ## Order (frozen law §13)
 
@@ -139,11 +137,9 @@ hands." Triad code lands only after C-sep and the arena nulls sit; this claim is
 **Next builder move: `court/GATE_third_body.md`** — the executable contract and every pinned value,
 required before any M-1 line. Next court to *run*: **C-sep**. Triad code last (pre-reg ladder M-1 → M-3).
 
-## Not claimed
+## Measurement records
 
-No compassion, emergence, gaze-force, or third body is asserted as a result — only the pre-registered
-claim and the gate-form that would refute it. The arc must be able to **lose** (the ninth null). Measured
-numbers live in `court/` audits and `llog.md`, never here or in the frozen `PROTOCOL.md`.
+Measured numbers live in `court/` audits and `llog.md`.
 
 ---
 *Builder's move, v6 (closes Sol's v5 audit; closures per Don's audit-of-the-audit, incl. Don's own
@@ -154,6 +150,6 @@ court; 3 regulates-not-learns = **exposure-index invariance** (equal regulation 
 error), reset each life, carry only in transfer, v3 slope-by-life dropped — matches WILL DESIGN; 4 twin =
 single-process byte-identical pre-flight + arena ensemble twin; 5 matrix derangement
 `C_π[π(i),π(j)]=C[i,j]`, `π(38)≠50 ∧ π(50)≠38`, distinct names; 6 Gate 2 observer guilt ON, guilt-off a
-separate arm, natural wounds the gate; 9 leaks removed, K arithmetic honest. Findings 7–8 (the executable
+separate arm, natural wounds the gate; 9 leaks removed, K arithmetic explicit. Findings 7–8 (the executable
 contract + open values) go to `court/GATE_third_body.md`, the precondition of code, not of this commit.
 Next: Sol re-reads the new bytes (short); then the GATE file is the builder's move; C-sep runs first by §13.*
