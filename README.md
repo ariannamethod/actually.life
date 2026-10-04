@@ -2,6 +2,8 @@
 
 the most atomic way to build digital life from scratch in C.
 no deps. no GPU. nothing is required. you either.
+
+> **Read the [Arianna Method Manifesto](ARIANNA_METHOD_MANIFESTO.md) first.** This repository is governed by it; every instruction here, `CLAUDE.md` included, is subordinate to it.
   
 ## what
   
