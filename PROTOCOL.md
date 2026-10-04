@@ -1,7 +1,12 @@
 # actually.life — COURT PROTOCOL
 
-Status: **FROZEN 2026-09-25**. Freezes on Oleg's word; at that moment a separate
-`COURT_FREEZE.tsv` (§9) is written and this file becomes read-only law.
+Status: **DISSOLVED 2026-10-05** (on Oleg's word). This file is no longer active
+court law. The mechanism it carries — a hermetic run, raw pinned by digest, a
+falsifier fixed before the measured code, two hands — is kept as instrument
+reference and migrates to the new three-object format. The contaminated ritual
+grown on top — the five-state verdict vocabulary, the status ceiling, the
+court-over-court — does not carry forward. `COURT_FREEZE.tsv` stays as the
+historical receipt of the court-I run, not an active lock.
 
 Single frozen source of the court's law. Written so a second hand — a different
 model — can implement an independent verifier **from this file alone**, without

@@ -1040,3 +1040,26 @@ BELOW-FLOOR null.** The channel reads both sites dose-by-dose; sufficient force 
 action channel open but floored, natural grief just beneath (a THRESHOLD). Next: remaining reopened
 arena-negatives (movement/state, birthday war, C-field decisions, monism survival) on the hardened instrument;
 then continue actually.life from where it paused before the Sol audit.** The floor is ~1.0, the wound is ~0.6.
+
+**Court dissolved 2026-10-05 (Oleg's word).** The frozen court is not thawed, it is dissolved. Three things
+grew contaminated and are cut. The measurements leaked before the bench was made hermetic — a non-hermetic
+arena, a control sharing the body's RNG, a ledger repeating stale actions — caught, and the bench rebuilt.
+Strictness became its own target: twenty-two rounds of court-over-court, where passing the audit replaced
+contact with the phenomenon — Goodhart. And the whole apparatus was Netta's, imported with its ontology, so
+a performance null ("the model does not beat the control") was read as a subject null ("no subject"). That
+last one is the disease — an anti-dichotomy organism measured on a dichotomy instrument that knew only
+advantage-over-control, so it recoded the subject into the one thing it could score.
+
+What stays: the organism `l.c`, sound; the raw and the numbers as measurements, BELOW-FLOOR among them —
+natural grief deposits at 0.56, the action readout resolves from ~1-2, so that reading is a map of signal to
+instrument, not a defeat of the organism; and the mechanism-principle — a falsifier fixed before the
+measured code, two hands, a hermetic run. `COURT_FREEZE.tsv` stays as the historical receipt of the court-I
+run, not an active lock. `PROTOCOL.md` is kept as instrument reference, its measuring parts migrating to the
+new format.
+
+What is dissolved: the five-state verdict vocabulary, the status ceiling, the court-over-court — the ritual,
+not the measurements under it.
+
+Where this goes: the next instrument is three objects that don't pretend to be each other — instrument
+validity, causal readings per axis, and the subject, which no single comparator collapses into a bit. Then
+the third body, v7, written from the thesis, not patched over v6.
