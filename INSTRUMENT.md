@@ -1,6 +1,6 @@
 # INSTRUMENT — actually.life
 
-**DRAFT v2.1 2026-11-17** — closes Sol's frame review (`court/SOL_REVIEW_INSTRUMENT_2026-11-17.md`) and Don's two machine checks (`court/DON_INSTRUMENT_machine_check_2026-11-17.md`, `court/DON_INSTRUMENT_v2_schema_check_2026-11-17.md`). Pending Don's re-verify of the schema and Sol's frame-closure confirmation; the DRAFT marker lifts when both close. Subordinate to the [Arianna Method Manifesto](ARIANNA_METHOD_MANIFESTO.md).
+**DRAFT v2.2 2026-11-17** — v2.1 closed Sol's frame review and Don's two machine checks (`court/SOL_REVIEW_INSTRUMENT_2026-11-17.md`, `court/DON_INSTRUMENT_machine_check_2026-11-17.md`, `court/DON_INSTRUMENT_v2_schema_check_2026-11-17.md`); v2.2 repairs the two total-law contradictions Sol's frame-closure found — recursive `sensitivity_positive`, and the historical example selecting rule 1 not rule 2 — and folds in Don's two parser branches (non-finite fields, the consistency law). Pending Sol's re-check of closures A and B and Don's compute-order verify; the DRAFT marker lifts when both close. Subordinate to the [Arianna Method Manifesto](ARIANNA_METHOD_MANIFESTO.md).
 
 This file replaces the dissolved court's verdict apparatus (`PROTOCOL.md`, DISSOLVED 2026-10-05). It is an instrument: it maps causal relations and the resolution boundary of each readout. Theory and the authors read subjecthood from that map.
 
@@ -20,11 +20,11 @@ Named checks, each a separate fact (`1` holds, `0` fails):
 - `parser_ok` — the raw parses under the declared grammar, no torn tail.
 - `raw_integrity` — the raw matches its recorded `artifact_set` digest.
 - `control_streams` — the control matches the live arm on every stream in the named list, differing in the one declared way only. The list is fixed here: `seqB`, `seqC`, the seed set, the `bin` md5, the `corpus` md5, the `cm=` manifest line (carried from the old §7). Arena runs are not byte-exact — scheduling and wall time stay live — so the identity is these streams, not the whole process.
-- `sensitivity_positive` — the forced-signal row at the declared magnitude, run through the reading law below, returns `detected`. The bit is computed, not judged; the old `t > 2` by eye is retired.
+- `sensitivity_positive` — `base_valid` and the forced-signal row meets the `detected` numeric rule computed from Layer-1 fields alone: `forced_lower >= forced_claim_threshold` and `forced_N >= forced_N_min`. The four `forced_*` are record fields (or one reference into `ladder_artifact` carrying them), not `readings.tsv`, so sensitivity never calls the live-reading law that needs `instrument_valid`. The bit is computed, not judged; the old `t > 2` by eye is retired.
 - `resolution_measured` — the floor and resolution numbers above are measured, not asserted.
 - `provenance_ok` — every manifest in `artifact_set` carries `force_site` (the intervention site, not only the directory prefix), a source hash, a `HEAD` whose tree contains that hash, and a build record (command, flags, `bin` hash; one `bin` per ladder, or the build line recoverable). On the committed ladder this is `0`: all 540 manifests record `HEAD=0dfad3c` with `l.c=ab59ea41…` (`= 633420f:l.c`), and one source hash carries two `bin` hashes. See `tests/verdict_raw/README.md`.
 
-`instrument_valid` is the per-record conjunction of these six, carried beside them, never alone. A failed check yields `reading = unresolved` with the failed check named; the other axes keep their readings.
+`base_valid` is the conjunction of the five checks other than `sensitivity_positive` — `parser_ok`, `raw_integrity`, `control_streams`, `resolution_measured`, `provenance_ok`. `sensitivity_positive` is calibrated against `base_valid`, and `instrument_valid = base_valid ∧ sensitivity_positive`, so the calibration bit is never defined through the bit it calibrates. The stored `instrument_valid` must equal this recomputed conjunction; a mismatch invalidates the record, and all its rows read `unresolved`. A failed check yields `reading = unresolved` with the failed check named; the other axes keep their readings.
 
 ## Layer 2 — causal readings, per axis (at reading time)
 
@@ -50,7 +50,7 @@ reading              detected | contradicted | below_resolution | unresolved
 
 `reading` is assigned by one deterministic precedence, first match wins:
 
-1. **unresolved** — `instrument_valid` is `0` for this `instrument_id`, or `N < N_min`.
+1. **unresolved** — `instrument_valid` is `0` for this `instrument_id`; or `N < N_min`; or any numeric field of the row or its Layer-1 record is empty or non-finite (NA, ±inf, NaN), with the field named.
 2. **below_resolution** — `signal_magnitude <= input_floor_lo`, or `claim_threshold < output_resolution`. Decided before the data: the readout cannot resolve this claim at this magnitude, a fact about the instrument entered in its map.
 3. **detected** — `lower >= claim_threshold`, on a valid, sensitive instrument.
 4. **contradicted** — `upper < claim_threshold`, on a sensitive instrument with a valid control. Bounded to this one claim, this regime, above this resolution; the map records only that.
@@ -58,7 +58,7 @@ reading              detected | contradicted | below_resolution | unresolved
 
 `below_resolution` and `unresolved` are completed readings; a null is a reading, not an absence.
 
-Worked example (historical, grief axis): `signal_magnitude = 0.56`, and the committed site-38 ladder fixes `input_floor_lo = 0.56`, `input_floor_hi = 2` (input 0.56 → effect +0.0028, t=0.24; input 2 → +0.0243, t=2.25). Rule 2 reads `0.56 <= input_floor_lo` and selects `below_resolution` — a map of signal to instrument. The floor is a bound (`lo < hi`), not a measured point; a formal row needs a site-38 ladder at `0.8/1/1.5` with `force_site` in every manifest (see `tests/verdict_raw/README.md`).
+Worked example (historical, grief axis): `signal_magnitude = 0.56`, and the committed site-38 ladder fixes `input_floor_lo = 0.56`, `input_floor_hi = 2` (input 0.56 → effect +0.0028, t=0.24; input 2 → +0.0243, t=2.25). On this archive `provenance_ok = 0` — the manifests fail provenance (see `tests/verdict_raw/README.md`) — so `instrument_valid = 0` and rule 1 returns `unresolved`: the formal v2 reading of the old artifact. The historical numbers and the bound `(0.56, 2]` stand; `below_resolution` becomes the machine reading once a provenance-complete site-38 ladder (`0.8/1/1.5` with `force_site`) is run, where rule 2 reads `signal_magnitude <= input_floor_lo`.
 
 ## Layer 3 — the subject
 

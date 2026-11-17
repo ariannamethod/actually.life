@@ -11,6 +11,8 @@
 #   sensitivity_positive (the forced-signal row at the declared magnitude returns `detected` under the reading law),
 #   resolution_measured (the numbers above are measured, not asserted),
 #   provenance_ok (every manifest in artifact_set carries force_site, a source hash, a HEAD whose tree contains it, and a build record incl bin hash).
-# instrument_valid = conjunction of the six booleans, carried beside them, never alone.
+# base_valid = parser_ok && raw_integrity && control_streams && resolution_measured && provenance_ok (the five excluding sensitivity).
+# sensitivity_positive = base_valid && (forced_lower >= forced_claim_threshold && forced_N >= forced_N_min) — the four forced_* are record fields (or a ref into ladder_artifact), not readings.tsv, so sensitivity never calls the live-reading law.
+# instrument_valid = base_valid && sensitivity_positive. Consistency: stored instrument_valid must equal this recomputed conjunction, else the record is invalid and its rows read unresolved.
 # regime grammar: seeds=A-B;arm=live|frozen;window=lo,hi;site=N
-instrument_id	axis	regime	readout	artifact_set	ladder_artifact	input_floor_lo	input_floor_hi	output_resolution	float_tol	parser_ok	raw_integrity	control_streams	sensitivity_positive	resolution_measured	provenance_ok	instrument_valid
+instrument_id	axis	regime	readout	artifact_set	ladder_artifact	input_floor_lo	input_floor_hi	output_resolution	float_tol	parser_ok	raw_integrity	control_streams	resolution_measured	provenance_ok	base_valid	forced_lower	forced_claim_threshold	forced_N	forced_N_min	sensitivity_positive	instrument_valid
