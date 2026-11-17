@@ -2,7 +2,7 @@
 
 **DRAFT 2026-10-05** — pending a co-author read (Sol, whose schema this is) and a machine-readability check (Don). Subordinate to the [Arianna Method Manifesto](ARIANNA_METHOD_MANIFESTO.md).
 
-This file replaces the dissolved court's verdict apparatus (`PROTOCOL.md`, DISSOLVED 2026-10-05). It is an instrument, not a court: it maps where a subject is heard and where it is not. It does not rule on whether a subject exists.
+This file replaces the dissolved court's verdict apparatus (`PROTOCOL.md`, DISSOLVED 2026-10-05). It is an instrument, not a court: it maps where a subject is heard and where it is not. Whether a subject exists is a reading that theory and the authors make — not a verdict this file returns.
 
 The dissolved court recoded a subject into the one thing a dichotomy instrument could score — advantage over a control. This instrument is **three objects that do not pretend to be each other**: the **instrument** (is the measurement sound?), the **readings** (what did the organism do, per causal axis?), and the **subject** (an ontological reading the authors make, which no comparator produces). Keeping them apart is the whole design — collapse them and the dichotomy returns.
 
