@@ -1,10 +1,12 @@
-# Layer 2 — causal readings, one axis per row. Schema for INSTRUMENT.md.
-# Two scales: signal_magnitude/input_floor are input (intervention) scale; effect/lower/upper/
-# output_resolution/claim_threshold are output scale. Keep them apart.
+# Layer 2 — causal readings, one axis per row, at reading time. Schema for INSTRUMENT.md.
+# input_floor_lo/hi, output_resolution, float_tol are copied by instrument_id from instrument.tsv (fixed before the reading).
+# Two scales: signal_magnitude is input; effect/lower/upper/claim_threshold are output.
+# Sign: effect/lower/upper are signed along predicted_direction (positive = as predicted); claim_threshold > 0.
+# predicted_direction in {+,-}; reading in {detected,contradicted,below_resolution,unresolved}.
 # reading is assigned by one deterministic precedence, first match wins:
-#   1 unresolved      instrument_valid=0, or provenance incomplete, or N below predeclared power
-#   2 below_resolution  signal_magnitude < input_floor, OR claim_threshold < output_resolution  (fixed before data)
-#   3 detected        lower >= claim_threshold in predicted_direction, valid + sensitive instrument
-#   4 contradicted    upper < claim_threshold, sensitive instrument, valid control
-#   5 unresolved      interval straddles claim_threshold with no resolution failure (underpowered)
-instrument_id	axis	regime	claim	estimand	predicted_direction	signal_magnitude	input_floor	effect	lower	upper	interval_method	interval_level	N	output_resolution	claim_threshold	reading
+#   1 unresolved       instrument_valid=0 (for this instrument_id), OR N < N_min
+#   2 below_resolution  signal_magnitude <= input_floor_lo, OR claim_threshold < output_resolution   (decided before data)
+#   3 detected         lower >= claim_threshold, instrument valid + sensitive
+#   4 contradicted     upper < claim_threshold, sensitive instrument, valid control
+#   5 unresolved       lower < claim_threshold <= upper (interval straddles; underpowered for this claim)
+instrument_id	axis	regime	claim	estimand	predicted_direction	signal_magnitude	effect	lower	upper	interval_method	interval_level	N	N_min	claim_threshold	reading

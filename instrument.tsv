@@ -1,6 +1,16 @@
-# Layer 1 — instrument validity, one record per row. Schema for INSTRUMENT.md.
-# Validity is per reading, keyed to instrument_id/axis/regime/readout/artifact_set — never global.
-# Each check is a separate fact; instrument_valid is their conjunction, carried beside them.
-# A failed check -> the keyed reading is `unresolved` with the failed check named (see readings.tsv).
-# Boolean fields: 1 = holds, 0 = fails. control_streams names the streams that must match.
-instrument_id	axis	regime	readout	artifact_set	parser_ok	raw_integrity	control_streams	sensitivity_positive	resolution_measured	instrument_valid
+# Layer 1 — instrument validity, one record per row, fixed BEFORE the live reading. Schema for INSTRUMENT.md.
+# Keyed per Sol finding 1 to instrument_id/axis/regime/readout; a broken axis fails only its own reading.
+# artifact_set, ladder_artifact: `path:sha256` pairs
+#   (e.g. ladder_artifact = tests/verdict_raw/ladder_core.tgz:dc0041262897886831f5935a10ac65d2cba1d9a1b15dbb9f46d8eddc7c9c2a1b).
+# Resolution numbers are fixed here, not at reading time:
+#   input_floor_lo (largest input shown NOT to cross), input_floor_hi (smallest shown to cross; a measured point has lo=hi),
+#   output_resolution, float_tol.
+# Boolean checks (1 holds / 0 fails):
+#   parser_ok, raw_integrity (raw matches the artifact_set digest),
+#   control_streams (the named list fixed in INSTRUMENT.md: seqB,seqC,seeds,bin-md5,corpus-md5,cm=),
+#   sensitivity_positive (the forced-signal row at the declared magnitude returns `detected` under the reading law),
+#   resolution_measured (the numbers above are measured, not asserted),
+#   provenance_ok (every manifest in artifact_set carries force_site, a source hash, a HEAD whose tree contains it, and a build record incl bin hash).
+# instrument_valid = conjunction of the six booleans, carried beside them, never alone.
+# regime grammar: seeds=A-B;arm=live|frozen;window=lo,hi;site=N
+instrument_id	axis	regime	readout	artifact_set	ladder_artifact	input_floor_lo	input_floor_hi	output_resolution	float_tol	parser_ok	raw_integrity	control_streams	sensitivity_positive	resolution_measured	provenance_ok	instrument_valid

@@ -53,6 +53,16 @@ restatement of that bound, not a measured site-38 floor. Together with `forced_c
 `amp<m>` rungs) this is every amplitude needed to recompute the detection floor from preserved raw.
 `COURT_FREEZE.tsv` is the historical receipt of the court-I run (`PROTOCOL.md` is DISSOLVED 2026-10-05).
 
+Provenance boundary (Don's manifest check): every ladder manifest records `HEAD=0dfad3c
+l.c=ab59ea41c56f1b5b8376c0a3a3eb2882`, but `0dfad3c:l.c` has md5 `b202f3b15a67523f7907da806ba3f22e` while
+`ab59ea41…` is `633420f:l.c` (the commit that introduced `NL_FORCE_SITE`, 2026-08-18). The ladder ran on a
+working copy later committed as `633420f` with `HEAD` taken from the checkout of the moment, so `HEAD` and
+`l.c` disagree across all 540 sets; a verifier cross-checking them returns invalid on the whole ladder.
+With that one source hash, the site-50 rungs carry `bin=b37cd9d3652128a01363e08e6c794f6d` and the site-38
+rungs `bin=cf37114b8532a2a4bf9c04cb5f5becef` — two binaries, uncommitted, with no build line, so which
+build carried which is not recoverable from the repo. A formal Layer-1 row needs the manifest to carry
+`force_site`, a source hash consistent with `HEAD`, and a build record.
+
 ## full raw (not committed)
 
 Every amplitude at both sites, including the 64-float-per-tick field-deposit logs (`recB`/`recC`, needed to
