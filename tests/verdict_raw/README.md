@@ -32,6 +32,27 @@ in-window grief presence and magnitude); `seqB.txt`/`seqC.txt` (the exact respaw
 only statistically reproducible); and `manifest.txt` (instrument hashes + regime). Unpack: `tar xzf
 forced_core.tgz`.
 
+## `ladder_core.tgz` (committed, ~6.1 MB — the floor-law amplitudes)
+
+The forced amplitudes the floor law needs, **ledgers only** (`loveA.log` + `manifest.txt` + `seqB.txt` +
+`seqC.txt`, no rec files — the floor is a rate quantity). Exact archive population:
+
+- `forced/` — 360 sets: death-site amplitudes `0.8/1/2/4/8/20`, two arms, thirty seeds each.
+- `forced_site38/` — 180 sets: grief-site amplitudes `2/8/20`, two arms, thirty seeds each.
+
+The site-38 steps are present as archive members. Their intervention site lives in the directory prefix
+(`forced_site38/`) and the historical run account only — the manifest records `cm=NL_ARENA=1 NL_MONISM=1
+NL_MONISM_HEART=2 NL_MONISM_GAIN=0.3` and never writes `NL_FORCE_SITE=38`, so a machine can count the
+site-38 data but cannot establish the intervention site from the manifest alone. A formal Layer-1 row for
+the grief axis needs a site-38 ladder around the boundary (`0.8/1/1.5` is the proposed set) with
+`force_site` written into every manifest before the run.
+
+The committed site-38 readings bound the input floor at `(0.56, 2]` under the old `t > 2` criterion
+(input `0.56` → effect `+0.0028`, t=0.24; input `2` → effect `+0.0243`, t=2.25); `~1–2` was a loose
+restatement of that bound, not a measured site-38 floor. Together with `forced_core.tgz` (the `amp0` and
+`amp<m>` rungs) this is every amplitude needed to recompute the detection floor from preserved raw.
+`COURT_FREEZE.tsv` is the historical receipt of the court-I run (`PROTOCOL.md` is DISSOLVED 2026-10-05).
+
 ## full raw (not committed)
 
 Every amplitude at both sites, including the 64-float-per-tick field-deposit logs (`recB`/`recC`, needed to

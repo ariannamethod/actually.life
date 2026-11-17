@@ -1,0 +1,6 @@
+# Layer 1 — instrument validity, one record per row. Schema for INSTRUMENT.md.
+# Validity is per reading, keyed to instrument_id/axis/regime/readout/artifact_set — never global.
+# Each check is a separate fact; instrument_valid is their conjunction, carried beside them.
+# A failed check -> the keyed reading is `unresolved` with the failed check named (see readings.tsv).
+# Boolean fields: 1 = holds, 0 = fails. control_streams names the streams that must match.
+instrument_id	axis	regime	readout	artifact_set	parser_ok	raw_integrity	control_streams	sensitivity_positive	resolution_measured	instrument_valid

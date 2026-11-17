@@ -1,0 +1,10 @@
+# Layer 2 — causal readings, one axis per row. Schema for INSTRUMENT.md.
+# Two scales: signal_magnitude/input_floor are input (intervention) scale; effect/lower/upper/
+# output_resolution/claim_threshold are output scale. Keep them apart.
+# reading is assigned by one deterministic precedence, first match wins:
+#   1 unresolved      instrument_valid=0, or provenance incomplete, or N below predeclared power
+#   2 below_resolution  signal_magnitude < input_floor, OR claim_threshold < output_resolution  (fixed before data)
+#   3 detected        lower >= claim_threshold in predicted_direction, valid + sensitive instrument
+#   4 contradicted    upper < claim_threshold, sensitive instrument, valid control
+#   5 unresolved      interval straddles claim_threshold with no resolution failure (underpowered)
+instrument_id	axis	regime	claim	estimand	predicted_direction	signal_magnitude	input_floor	effect	lower	upper	interval_method	interval_level	N	output_resolution	claim_threshold	reading
